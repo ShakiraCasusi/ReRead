@@ -5,14 +5,14 @@ let allOrders = [];
 let currentFilter = 'all';
 
 // Load orders on page load
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     await loadOrders();
 });
 
 async function loadOrders() {
     try {
         const token = localStorage.getItem('accessToken');
-        
+
         if (!token) {
             showEmptyState();
             return;
@@ -126,13 +126,13 @@ function filterOrders(status) {
         tab.style.color = '#111827';
         tab.style.borderColor = '#d1d5db';
     });
-    
+
     const activeTab = event.target;
     activeTab.classList.add('active');
     activeTab.style.background = '#111827';
     activeTab.style.color = '#ffffff';
     activeTab.style.borderColor = '#111827';
-    
+
     displayOrders();
 }
 
