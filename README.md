@@ -2,7 +2,7 @@
 
 Re;Read is an online platform for buying and selling second-hand books.  
 It gives students and readers access to quality and affordable books.  
-The site is built with HTML, CSS, JavaScript, and Bootstrap.
+The site is built with HTML, CSS, JavaScript, Bootstrap, Node.js, and MongoDB.
 
 ---
 
@@ -26,6 +26,7 @@ The site is built with HTML, CSS, JavaScript, and Bootstrap.
 Re;Read provides a simple way to browse, select, and purchase used books.  
 It focuses on ease of use, mobile responsiveness, and a clean shopping flow.  
 The project follows a static front-end structure that can be integrated with backend services later.
+The project is a full-stack application integrated with a Node.js backend and MongoDB database.
 
 **Key Highlights:**
 
@@ -46,6 +47,8 @@ The project follows a static front-end structure that can be integrated with bac
 - Checkout with PH regions and provinces
 - Responsive header and footer
 - Unified navigation across pages
+- **RESTful API** integration
+- **CRUD operations** for cart and orders
 
 ---
 
@@ -60,6 +63,8 @@ ReRead-Website/
 │  ├─ cart.html               → Cart page
 │  ├─ signin.html             → Sign in
 │  ├─ about.html              → About page
+│  ├─ profile.html            → User profile
+│  ├─ orders.html             → Order history
 │  ├─ sell.html               → Sell books page
 │
 ├─ styles/
@@ -69,6 +74,9 @@ ReRead-Website/
 ├─ scripts/
 │  ├─ main.js                 → Header and navigation logic
 │  ├─ shop.js                 → Shop logic
+│  ├─ auth.js                 → Authentication logic
+│  ├─ profile.js              → Profile management
+│  ├─ orders.js               → Order history logic
 │  ├─ checkout.js             → Checkout and PH regions handling
 │
 ├─ images/                    → Assets and icons
@@ -85,6 +93,9 @@ ReRead-Website/
 - JavaScript (Vanilla)
 - Bootstrap 5
 - JSON (for PH locations)
+- Node.js (Backend)
+- MongoDB (Database)
+- RESTful API
 
 ---
 
@@ -99,10 +110,11 @@ ReRead-Website/
 
 2. Open the folder:
    `cd ReRead-Website`
-   `code .`
+   `npm install`
 
-3. Run with Live Server in VS Code:
-   Right-click `index.html` → Open with Live Server
+3. Start the application:
+   `npm start`
+   (Ensure backend server is running on port 5000)
 
 ---
 
@@ -118,30 +130,29 @@ ReRead-Website/
 
 ## 🆕 Recent Updates (October 2025)
 
+- **Integrated Node.js & MongoDB Backend**
+- Added User Authentication (Login/Signup)
+- Implemented Profile and Order History pages
+- Connected Shop to live Database via API
 - Refactored header and navigation to be fully responsive
 - Standardized mobile icon order (Cart, then Menu)
-- Unified cart badge logic with hidden attribute
-- Replaced custom buttons with Bootstrap buttons
-- Cleaned redundant CSS and consolidated responsive header styling
-- Synced navigation structure across all pages
-- Improved checkout flow using PH region dataset
+- Implemented CRUD operations for Cart
 
 ---
 
 ## 🔮 Future Improvements
 
-- Add user authentication system
-- Connect to a database for user accounts and orders
 - Add seller and admin dashboards
 - Improve accessibility and SEO
 - Implement real checkout with backend
+- Payment Gateway Integration
+- Improved structure of codes (Still reviewing; also used Prettier VSCode Extension)
 
 **How To Run Locally**
 
 1. Open this folder in VS Code or your editor.
-2. Use Live Server (recommended) or open index.html directly in a browser.
-   - If using Live Server: right-click `index.html` → "Open with Live Server".
-3. For full checkout testing, serve the project from an HTTP server (Live Server or Apache) so fetch()/relative paths work correctly.
+2. Ensure the backend is running.
+3. Run `npm start` to launch the frontend server.
 
 Windows PowerShell quick start (from project root):
 
@@ -172,7 +183,7 @@ I would like to thank the following people and resources for their valuable guid
 - **Bryl Lim (TikTok Dev Content Creator, FullStack Dev)** — tips and best practices.
 - **Rics (TikTok Dev Content Creator, Cloud Engineer)** — tips and best practices.
 - **PaulSong213 (GitHub)** — ph-locations dataset
-- **Lebron Piraman** — assistance with [book].png URL links finding in G00gle scripts/shop.js.
+- **Lebron Piraman** — assistance with [book].png URL links finding in G00gle scripts/shop.js. [NOW IN API, Dec 2025]
 
 Their insights and educational content helped me gain a deeper understanding of web development concepts and best practices.
 
@@ -182,5 +193,6 @@ Their insights and educational content helped me gain a deeper understanding of 
 
 - **Developer:** Shakira Casusi
 - **Focus:** FrontEnd Dev
-- **Date:** October 2025
+- **Date Started:** September 2025
+- **Date Ended:** --- 2026
 - **Project Status:** ---
