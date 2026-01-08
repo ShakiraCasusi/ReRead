@@ -1,0 +1,530 @@
+/* About page styles — hero, mission/vision, values, problem/solution, contact */
+
+/* Global font */
+* {
+  font-family: "Inter", sans-serif !important;
+}
+
+/* ==================== About Hero Section ==================== */
+.about-hero {
+  background: #f9fafb;
+  padding: 80px 0;
+  text-align: center;
+}
+
+.about-hero-header h2 {
+  font-size: 36px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 16px;
+}
+
+.about-hero-description {
+  font-size: 20px;
+  color: #6b7280;
+  line-height: 1.8;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ==================== Mission & Vision Section ==================== */
+.about-mission-vision {
+  padding: 80px 0;
+  background: #fff;
+}
+
+.mission-vision-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.mission-vision-card {
+  flex: 1;
+  padding: 40px 30px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mission-vision-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.mission-vision-card h3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 20px;
+}
+
+.mission-vision-icon {
+  font-size: 32px;
+  color: #030213;
+  background-color: #f3f4f6;
+  padding: 16px;
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mission-vision-text {
+  font-size: 20px;
+  color: #4b5563;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ==================== Core Values Section ==================== */
+.about-values {
+  background: #f9fafb;
+  padding: 80px 0;
+}
+
+.about-section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.about-section-header h2 {
+  font-size: 36px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 16px;
+}
+
+.values-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.value-card {
+  flex: 1;
+  padding: 40px 24px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.value-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.value-icon {
+  font-size: 40px;
+  color: #030213;
+  background-color: #f3f4f6;
+  padding: 16px;
+  border-radius: 50%;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+}
+
+.value-card h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 16px;
+}
+
+.value-description {
+  font-size: 18px;
+  color: #4b5563;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ==================== Problem Section ==================== */
+.about-problem {
+  padding: 80px 0;
+  background: #fff;
+}
+
+.problem-solution-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.problem-solution-card {
+  flex: 1;
+  padding: 40px 30px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.problem-solution-card h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.problem-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.problem-list li {
+  font-size: 18px;
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 12px;
+  padding-left: 24px;
+  position: relative;
+}
+
+.problem-list li::before {
+  content: "•";
+  color: #ef4444;
+  font-size: 20px;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+/* ==================== Solution Section ==================== */
+.about-solution {
+  background: #f9fafb;
+  padding: 80px 0;
+}
+
+.solution-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.solution-list li {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 12px;
+  font-size: 18px;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.solution-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* ==================== Who We Serve Section ==================== */
+.about-serve {
+  background: #fff;
+  padding: 80px 0;
+}
+
+.serve-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.serve-card {
+  text-align: center;
+  padding: 30px 20px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.serve-card:hover {
+  transform: translateY(-2px);
+}
+
+.serve-card h3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 16px;
+}
+
+.serve-icon {
+  font-size: 36px;
+  color: #030213;
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 50%;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e5e7eb;
+}
+
+.serve-description {
+  font-size: 18px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ==================== Quality Commitment Section ==================== */
+.about-commitment {
+  background: #f9fafb;
+  padding: 80px 1rem;
+}
+
+.commitment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1280px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  min-height: 200px;
+}
+
+.commitment-card {
+  padding: 40px 30px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.commitment-all {
+  background: #111827;
+  color: #fff;
+}
+
+.commitment-second {
+  background: #f3f4f6;
+  color: #030213;
+}
+
+.commitment-old {
+  background: #fff;
+  color: #111827;
+  border-left: 1px solid #e5e7eb;
+}
+
+.commitment-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.commitment-description {
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ==================== Contact Section ==================== */
+.about-contact {
+  background: #fff;
+  padding: 80px 0;
+}
+
+.about-contact-subtitle {
+  font-size: 18px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-top: 16px;
+}
+
+.about-contact-form {
+  max-width: 600px;
+  margin: 40px auto 0;
+  padding: 40px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.about-contact-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.about-contact-form input,
+.about-contact-form textarea {
+  padding: 16px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: "Inter", sans-serif;
+}
+
+.about-contact-form input:focus,
+.about-contact-form textarea:focus {
+  border-color: #6b7280;
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
+}
+
+.about-contact-form textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.about-submit-btn {
+  background: #030213;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 32px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: "Inter", sans-serif;
+}
+
+.about-submit-btn:hover {
+  background: #1f2937;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 1024px) {
+  .mission-vision-grid,
+  .values-grid,
+  .problem-solution-grid {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .serve-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .commitment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .commitment-old {
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-hero,
+  .about-mission-vision,
+  .about-values,
+  .about-problem,
+  .about-solution,
+  .about-serve,
+  .about-commitment,
+  .about-contact {
+    padding: 60px 0;
+  }
+
+  .about-hero {
+    padding: 60px 0 40px 0;
+  }
+
+  .about-commitment {
+    padding: 60px 1rem;
+  }
+
+  .about-hero-header h2,
+  .about-section-header h2 {
+    font-size: 28px;
+  }
+
+  .about-hero-description,
+  .about-contact-subtitle {
+    font-size: 16px;
+  }
+
+  .serve-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .about-contact-form {
+    padding: 30px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-hero,
+  .about-mission-vision,
+  .about-values,
+  .about-problem,
+  .about-solution,
+  .about-serve,
+  .about-contact {
+    padding: 40px 0;
+  }
+
+  .about-hero {
+    padding: 40px 0 30px 0;
+  }
+
+  .about-commitment {
+    padding: 40px 0.75rem;
+  }
+
+  .mission-vision-card,
+  .value-card,
+  .problem-solution-card,
+  .serve-card {
+    padding: 24px 16px;
+  }
+
+  .about-contact-form {
+    padding: 20px 16px;
+  }
+}

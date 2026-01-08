@@ -1,0 +1,264 @@
+const express = require('express');
+const router = express.Router();
+const Order = require('../models/Phase3Models').Order;
+const Cart = require('../models/Phase3Models').Cart;
+const Book = require('../models/Book');
+const User = require('../models/User');
+const tokenManager = require('../utils/tokenManager');
+
+// Middleware to authenticate requests
+const authenticateToken = tokenManager.authenticateToken;
+
+// Create order from cart (Phase 3 - New)
+router.post('/', authenticateToken, async (req, res) => {
+    try {
+        const { shippingAddress, totalAmount, paymentIntentId } = req.body;
+
+        if (!shippingAddress || !totalAmount) {
+            return res.status(400).json({
+                success: false,
+                message: 'Shipping address and total amount are required'
+            });
+        }
+
+        // Get user's cart
+        const cart = await Cart.findOne({ userId: req.user.userId })
+            .populate('items.bookId');
+
+        if (!cart || cart.items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cart is empty'
+            });
+        }
+
+        // Group items by seller
+        const itemsBySeller = {};
+        cart.items.forEach(item => {
+            const sellerId = item.bookId.sellerId;
+            if (!itemsBySeller[sellerId]) {
+                itemsBySeller[sellerId] = [];
+            }
+            itemsBySeller[sellerId].push({
+                bookId: item.bookId._id,
+                title: item.bookId.title,
+                author: item.bookId.author,
+                quantity: item.quantity,
+                pricePerUnit: item.priceAtTime,
+                subtotal: item.priceAtTime * item.quantity
+            });
+        });
+
+        // Create orders for each seller
+        const orders = [];
+        for (const [sellerId, items] of Object.entries(itemsBySeller)) {
+            const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+
+            const order = await Order.create({
+                buyerId: req.user.userId,
+                sellerId,
+                items,
+                totalAmount: subtotal,
+                shippingAddress,
+                status: 'pending',
+                paymentStatus: 'pending',
+                paymentIntentId: paymentIntentId || null
+            });
+
+            orders.push(order);
+        }
+
+        // Clear cart
+        cart.items = [];
+        await cart.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Order created successfully',
+            notificationType: 'ORDER_CREATED',
+            data: { orders, orderCount: orders.length }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Get buyer's orders
+router.get('/buyer', authenticateToken, async (req, res) => {
+    try {
+        const orders = await Order.find({ buyerId: req.user.userId })
+            .populate('sellerId', 'username email')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: orders
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Get seller's orders
+router.get('/seller', authenticateToken, async (req, res) => {
+    try {
+        // Check if user is a seller
+        const user = await User.findById(req.user.userId);
+        if (!user.isSeller) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only sellers can view seller orders'
+            });
+        }
+
+        const orders = await Order.find({ sellerId: req.user.userId })
+            .populate('buyerId', 'username email address')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: orders
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Get order by ID
+router.get('/:orderId', authenticateToken, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.orderId)
+            .populate('buyerId', 'username email')
+            .populate('sellerId', 'username email');
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        // Check authorization
+        if (order.buyerId._id.toString() !== req.user.userId &&
+            order.sellerId._id.toString() !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized access to order'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: order
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Update order status (seller only)
+router.put('/:orderId/status', authenticateToken, async (req, res) => {
+    try {
+        const { status, trackingNumber } = req.body;
+
+        const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid status. Valid statuses: ${validStatuses.join(', ')}`
+            });
+        }
+
+        const order = await Order.findById(req.params.orderId);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        // Check authorization - only seller can update
+        if (order.sellerId.toString() !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only seller can update order status'
+            });
+        }
+
+        order.status = status;
+        if (trackingNumber) {
+            order.trackingNumber = trackingNumber;
+        }
+
+        await order.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Order status updated to ${status}`,
+            notificationType: 'ORDER_STATUS_UPDATED',
+            data: order
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Update payment status
+router.put('/:orderId/payment', authenticateToken, async (req, res) => {
+    try {
+        const { paymentStatus, paymentIntentId } = req.body;
+
+        const order = await Order.findById(req.params.orderId);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        // Check authorization
+        if (order.buyerId.toString() !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized access to order'
+            });
+        }
+
+        order.paymentStatus = paymentStatus;
+        if (paymentIntentId) {
+            order.paymentIntentId = paymentIntentId;
+        }
+
+        await order.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Payment status updated',
+            data: order
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+module.exports = router;

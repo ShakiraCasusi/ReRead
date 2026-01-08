@@ -1,0 +1,532 @@
+/* ==================== Sell Your Books - UI Design Match ==================== */
+
+/* Ensure consistent font */
+* {
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* Main Sell Page Container */
+.sell-main {
+  background: #f9fafb;
+}
+
+/* ==================== Hero Section ==================== */
+.sell-hero {
+  background: #f9fafb;
+  padding: 80px 0;
+  text-align: center;
+}
+
+.sell-books-header h2 {
+  font-size: 36px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 16px;
+}
+
+.sell-books-description {
+  font-size: 20px;
+  color: #6b7280;
+  line-height: 1.8;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ==================== 4 Cards Section ==================== */
+.about-sell {
+  background: #fff;
+  padding: 80px 0;
+}
+
+.sell-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.sell-card {
+  text-align: center;
+  padding: 30px 20px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sell-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.sell-card h3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 16px;
+}
+
+.sell-icon {
+  font-size: 36px;
+  color: #030213;
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 50%;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e5e7eb;
+}
+
+.sell-description {
+  font-size: 18px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ==================== List Books Section ==================== */
+.list-books {
+  background: #f9fafb;
+  padding: 80px 0;
+}
+
+.list-books-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 40px;
+  align-items: start;
+}
+
+.list-books-main {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.list-books-header {
+  margin-bottom: 32px;
+}
+
+.list-books-header h2 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #030213;
+  margin-bottom: 0;
+}
+
+.list-books h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #030213;
+  margin: 24px 0 8px 0;
+}
+
+.list-books-description {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+/* ==================== Upload Photos Section ==================== */
+.upload-photos {
+  margin-bottom: 32px;
+}
+
+.photo-placeholder {
+  background: #fff;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+  margin-bottom: 16px;
+}
+
+.photo-placeholder:hover {
+  border-color: #030213;
+  background: #f9fafb;
+}
+
+.photo-placeholder i {
+  font-size: 48px;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+.photo-placeholder p {
+  font-size: 16px;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0;
+}
+
+.choose-photos-btn {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.choose-photos-btn:hover {
+  background: #e5e7eb;
+}
+
+.choose-photos-btn i {
+  font-size: 16px;
+}
+
+/* ==================== Form Styles ==================== */
+.panel-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-group label .required {
+  color: #ef4444;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #030213;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #9ca3af;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.course-description {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* ==================== Form Buttons ==================== */
+.form-buttons {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn-submit {
+  background: #030213;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn-submit:hover {
+  background: #111827;
+}
+
+.btn-submit i {
+  font-size: 16px;
+}
+
+.btn-reset {
+  background: #fff;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reset:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+/* ==================== Sidebar ==================== */
+.list-books-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 24px;
+}
+
+.sidebar-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #030213;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-card h3 i {
+  font-size: 20px;
+  color: #6b7280;
+}
+
+/* Pricing Tips Styles */
+.pricing-tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pricing-tip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.pricing-tip .condition {
+  color: #6b7280;
+}
+
+.pricing-tip .percentage {
+  color: #030213;
+  font-weight: 600;
+}
+
+/* Selling Tips Styles */
+.selling-tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selling-tips-list li {
+  font-size: 14px;
+  color: #6b7280;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.selling-tips-list li::before {
+  content: "•";
+  color: #030213;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+/* Safety First Styles */
+.safety-tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.safety-tips-list li {
+  font-size: 14px;
+  color: #6b7280;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.safety-tips-list li::before {
+  content: "•";
+  color: #030213;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 1024px) {
+  .sell-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .list-books-container {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .list-books-sidebar {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sell-hero {
+    padding: 60px 0;
+  }
+
+  .sell-books-header h2 {
+    font-size: 28px;
+  }
+
+  .sell-books-description {
+    font-size: 18px;
+  }
+
+  .about-sell,
+  .list-books {
+    padding: 60px 0;
+  }
+
+  .sell-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 16px;
+  }
+
+  .list-books-main {
+    padding: 24px;
+  }
+
+  .panel-form {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .list-books-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .sell-hero {
+    padding: 40px 0;
+  }
+
+  .sell-books-header h2 {
+    font-size: 24px;
+  }
+
+  .sell-books-description {
+    font-size: 16px;
+  }
+
+  .about-sell,
+  .list-books {
+    padding: 40px 0;
+  }
+
+  .sell-card {
+    padding: 24px 16px;
+  }
+
+  .sell-card h3 {
+    font-size: 18px;
+  }
+
+  .sell-description {
+    font-size: 16px;
+  }
+
+  .list-books-main {
+    padding: 20px;
+  }
+
+  .sidebar-card {
+    padding: 20px;
+  }
+
+  .form-buttons {
+    flex-direction: column;
+  }
+
+  .btn-submit {
+    order: 1;
+  }
+
+  .btn-reset {
+    order: 2;
+  }
+}

@@ -1,0 +1,276 @@
+/* styles/signin.css - Authentication Page Styles */
+
+.auth-page {
+  background-color: #f9fafb;
+  min-height: calc(100vh - 150px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.auth-wrapper {
+  width: 100%;
+  max-width: 450px;
+}
+
+.auth-card {
+  background: #fff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  background: #111827;
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.brand-text {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.auth-welcome {
+  margin-bottom: 30px;
+}
+
+.welcome-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* Tabs Styling */
+.auth-tabs {
+  position: relative;
+  background-color: #f3f4f6;
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.auth-tabs input[type="radio"] {
+  display: none;
+}
+
+.auth-tabs .tab {
+  position: relative;
+  z-index: 2;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.auth-tabs input[type="radio"]:checked + .tab {
+  color: #111827;
+}
+
+.tab-underline {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: calc(50% - 1.5px); /* Perfectly center the indicator */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 1;
+}
+
+#tab-signin:checked ~ .tab-underline {
+  transform: translateX(0);
+}
+
+#tab-signup:checked ~ .tab-underline {
+  transform: translateX(100%);
+}
+
+.auth-panels {
+  margin-top: 16px;
+}
+
+.auth-panel {
+  display: none;
+}
+
+/* Input Group Styling */
+.input-group {
+  position: relative;
+  margin-bottom: 16px; /* Add space between input groups */
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  transition: border-color 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.input-group .password-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 16px;
+  padding: 0;
+}
+
+.input-icon {
+  padding: 0 14px;
+  color: #9ca3af;
+}
+
+.input-group.has-error {
+  border-color: #ef4444;
+}
+
+.input-group:focus-within {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
+}
+
+.input-group input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 12px 14px 12px 0;
+  background: transparent;
+  font-size: 15px;
+}
+
+.field-error-container {
+  display: none; /* Hidden by default */
+  color: #ef4444;
+  font-size: 13px;
+  text-align: left;
+  margin-top: 6px;
+  margin-bottom: 0; /* Spacing is now handled by the input-group */
+  min-height: 1em; /* Reserve space to prevent layout shift */
+}
+
+/* Ensure the last error container doesn't add extra space before the 'auth-row' */
+.auth-row {
+  display: flex; /* Ensure vertical alignment of checkbox and link */
+  margin-top: 0; /* Use the error container's margin for consistent spacing */
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.forgot-link {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+  text-decoration: none !important;
+}
+
+.forgot-link:hover {
+  text-decoration: underline !important;
+}
+
+/* Buttons and Divider */
+.divider {
+  margin: 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: #e5e7eb;
+}
+
+.social-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid #dee2e6;
+  background-color: #fff;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.social-btn:hover {
+  background-color: #f9fafb;
+  border-color: #adb5bd;
+}
+
+.social-btn .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-btn.google .icon svg {
+  fill: #ea4335; /* Use the brand color */
+}
+
+.social-btn.facebook {
+  background-color: #1877f2;
+  border-color: #1877f2;
+  color: #fff;
+}
+
+.social-btn.facebook:hover {
+  background-color: #166fe5;
+  border-color: #166fe5;
+}
