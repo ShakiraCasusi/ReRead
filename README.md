@@ -25,13 +25,11 @@ The site is built with HTML, CSS, JavaScript, Bootstrap, Node.js, and MongoDB.
 
 Re;Read provides a simple way to browse, select, and purchase used books.  
 It focuses on ease of use, mobile responsiveness, and a clean shopping flow.  
-The project follows a static front-end structure that can be integrated with backend services later.
-The project is a full-stack application integrated with a Node.js backend and MongoDB database.
+The project follows a static front-end structure that can be integrated with backend services. The project is a full-stack application integrated with a Node.js backend and MongoDB database.
 
 **Key Highlights:**
 
 - Mobile-responsive UI
-- Fast and lightweight
 - PH region-based checkout logic
 - Organized page structure
 - Bootstrap UI components
@@ -68,8 +66,7 @@ ReRead-Website/
 │  ├─ sell.html               → Sell books page
 │
 ├─ styles/
-│  ├─ main.css                → Global styling
-│  └─ responsive.css          → Mobile styling
+│  └─ main.css                → Global styling
 │
 ├─ scripts/
 │  ├─ main.js                 → Header and navigation logic
@@ -79,7 +76,7 @@ ReRead-Website/
 │  ├─ orders.js               → Order history logic
 │  ├─ checkout.js             → Checkout and PH regions handling
 │
-├─ images/                    → Assets and icons
+├─ images/                    → Assets and icons (FRONTEND ASSETS FROM LAST TERM)
 ├─ ph-locations.json          → PH regions dataset
 └─ README.md                  → Project documentation
 ```
@@ -99,7 +96,7 @@ ReRead-Website/
 
 ---
 
-## 🖥️ Installation
+## 🖥️ Installation Guide
 
 1. Clone the repository:
 
@@ -108,11 +105,14 @@ ReRead-Website/
 
    ```
 
-2. Open the folder:
-   `cd ReRead-Website`
+2. Open the folder.
+   Go to backend folder and run in your terminal:
+   `cd C:\Users\Client\Downloads\ReRead\backend`
    `npm install`
+   `npm run seed` (if books do not appear on the site)
+   `npm run dev`
 
-3. Start the application:
+3. Then, open the frontend folder and run in your terminal:
    `npm start`
    (Ensure backend server is running on port 5000)
 
@@ -128,15 +128,16 @@ ReRead-Website/
 
 ---
 
-## 🆕 Recent Updates (October 2025)
+## 🆕 Recent Updates (November 2025)
 
 - **Integrated Node.js & MongoDB Backend**
+- **Implemented CRUD operations for Cart**
 - Added User Authentication (Login/Signup)
 - Implemented Profile and Order History pages
 - Connected Shop to live Database via API
 - Refactored header and navigation to be fully responsive
 - Standardized mobile icon order (Cart, then Menu)
-- Implemented CRUD operations for Cart
+
 
 ---
 
@@ -147,17 +148,6 @@ ReRead-Website/
 - Implement real checkout with backend
 - Payment Gateway Integration
 - Improved structure of codes (Still reviewing; also used Prettier VSCode Extension)
-
-**How To Run Locally**
-
-1. Open this folder in VS Code or your editor.
-2. Ensure the backend is running.
-3. Run `npm start` to launch the frontend server.
-
-Windows PowerShell quick start (from project root):
-
-- Live Server: use the VS Code extension.
-- To delete old batchfile docs (local cleanup), run the removal command provided below.
 
 ---
 
@@ -178,7 +168,7 @@ I would like to thank the following people and resources for their valuable guid
 
 - **SDPT Solutions (YouTube)**
 - **W3Schools**
-- **StackOverflow** - some devs insights/quick tutorials in the comments
+- **StackOverflow** - some devs insights/quick tutorials
 - **Felix Macaspac (TikTok Dev Content Creator, FrontEnd Dev)** — tips and best practices using HTML/CSS/JS.
 - **Bryl Lim (TikTok Dev Content Creator, FullStack Dev)** — tips and best practices.
 - **Rics (TikTok Dev Content Creator, Cloud Engineer)** — tips and best practices.
@@ -191,8 +181,16 @@ Their insights and educational content helped me gain a deeper understanding of 
 
 ## 👥 Contributor
 
-- **Developer:** Shakira Casusi
-- **Focus:** FrontEnd Dev
+- **Developer:** Shakira Angela Casusi
+- **Focus:** FrontEnd & BackEnd Development
 - **Date Started:** September 2025
 - **Date Ended:** --- 2026
 - **Project Status:** ---
+
+- **Support/Co-Developer:** Paul Kenneth Agripa
+- **Focus:** ---
+- **Date Started:** December 2025
+- **Date Ended:** --- 2026
+- **Project Status:** ---
+
+
