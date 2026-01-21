@@ -147,7 +147,7 @@ ReRead-Website/
 - Improve accessibility and SEO
 - Implement real checkout with backend
 - Payment Gateway Integration
-- Improved structure of codes (Still reviewing; also used Prettier VSCode Extension)
+- Improve structure of codes (Still reviewing; also used Prettier VSCode Extension)
 
 ---
 
