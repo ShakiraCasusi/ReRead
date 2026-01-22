@@ -98,23 +98,8 @@ ReRead-Website/
 
 ## 🖥️ Installation Guide
 
-1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/ShakiraCasusi/ReRead-Website.git
-
-   ```
-
-2. Open the folder.
-   Go to backend folder and run in your terminal:
-   `cd C:\Users\Client\Downloads\ReRead\backend`
-   `npm install`
-   `npm run seed` (if books do not appear on the site)
-   `npm run dev`
-
-3. Then, open the frontend folder and run in your terminal:
-   `npm start`
-   (Ensure backend server is running on port 5000)
+[Documentation](https://docs.google.com/document/d/e/2PACX-1vTvfrCYI20_51vzLveFvCZ2oU3REWhclaSW9Hstf9uHFjYp5le1V4jBEMPjGQoor6Q5WomuTDnkj8Qg/pub)
 
 ---
 
