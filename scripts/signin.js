@@ -11,6 +11,13 @@ const authMessages = {
   },
 };
 
+// Track login attempts
+const loginAttempts = {
+  count: 0,
+  maxAttempts: 5,
+  lastAttemptTime: null,
+};
+
 document.addEventListener("DOMContentLoaded", function () {
   initSigninPage();
 });
@@ -20,6 +27,7 @@ function initSigninPage() {
   initFormValidation();
   initSocialLogin();
   initPasswordToggle();
+  initRememberMe();
 
   // initialize panel based on which radio is checked (prevents mismatch)
   const signinRadio = document.getElementById("tab-signin");
@@ -414,6 +422,30 @@ function initSocialLogin() {
   });
 }
 
+function initRememberMe() {
+  // Ensure remember me checkbox is unchecked by default
+  const rememberCheckbox = document.querySelector('input[name="remember-me"]');
+  if (rememberCheckbox) {
+    rememberCheckbox.checked = false;
+  }
+
+  // Check if user previously chose to be remembered
+  const savedUser = localStorage.getItem("rereadUserRemembered");
+  if (savedUser) {
+    try {
+      const user = JSON.parse(savedUser);
+      const signinEmailInput = document.querySelector("#signin-email");
+      if (signinEmailInput) {
+        signinEmailInput.value = user.email;
+      }
+      rememberCheckbox.checked = true;
+    } catch (error) {
+      console.error("Error parsing saved user:", error);
+      localStorage.removeItem("rereadUserRemembered");
+    }
+  }
+}
+
 async function submitSignin(email, password) {
   // Show loading state
   const submitBtn = document.querySelector(".panel-signin .btn");
@@ -432,17 +464,33 @@ async function submitSignin(email, password) {
     const result = await response.json();
 
     if (result.success) {
+      // Reset login attempts on successful signin
+      loginAttempts.count = 0;
+
+      // Check if remember me is checked
+      const rememberCheckbox = document.querySelector('input[name="remember-me"]');
+      const isRemembered = rememberCheckbox && rememberCheckbox.checked;
+
       // Store user session in localStorage
-      localStorage.setItem(
-        "rereadUser",
-        JSON.stringify({
-          id: result.data.id,
-          username: result.data.username,
-          email: result.data.email,
-          role: result.data.role,
-          signinTime: new Date().toISOString(),
-        })
-      );
+      const userSession = {
+        id: result.data.id,
+        username: result.data.username,
+        email: result.data.email,
+        role: result.data.role,
+        signinTime: new Date().toISOString(),
+      };
+
+      localStorage.setItem("rereadUser", JSON.stringify(userSession));
+
+      // Only save for remember me if checkbox is checked
+      if (isRemembered) {
+        localStorage.setItem("rereadUserRemembered", JSON.stringify({
+          email: email,
+        }));
+      } else {
+        // Clear remembered user if checkbox is unchecked
+        localStorage.removeItem("rereadUserRemembered");
+      }
 
       showSuccessMessage("Sign in successful! Redirecting...");
 
@@ -451,7 +499,20 @@ async function submitSignin(email, password) {
         window.location.href = "../index.html";
       }, 1000);
     } else {
-      showErrorMessage(result.message || "Sign in failed. Please try again.");
+      // Increment login attempts
+      loginAttempts.count++;
+      loginAttempts.lastAttemptTime = new Date();
+
+      const attemptsRemaining = loginAttempts.maxAttempts - loginAttempts.count;
+      let errorMsg = "The username or password you entered is incorrect.";
+
+      if (attemptsRemaining > 0) {
+        errorMsg += ` You have ${attemptsRemaining} attempt${attemptsRemaining !== 1 ? 's' : ''} remaining.`;
+      } else {
+        errorMsg = "Maximum login attempts exceeded. Please try again later or contact support.";
+      }
+
+      showErrorMessage(errorMsg);
       submitBtn.textContent = originalText;
       submitBtn.disabled = false;
     }
@@ -492,7 +553,7 @@ async function submitSignup(name, email, password, confirmPassword) {
     const result = await response.json();
 
     if (result.success) {
-      showSuccessMessage("Account created successfully! Switching to sign in...");
+      showSuccessMessage("Account created successfully! Please log in with your credentials.", true);
 
       // Switch to signin panel after brief delay
       setTimeout(() => {
@@ -506,9 +567,10 @@ async function submitSignup(name, email, password, confirmPassword) {
           const signinEmailInput = document.querySelector("#signin-email");
           if (signinEmailInput) {
             signinEmailInput.value = email;
+            signinEmailInput.focus();
           }
         }
-      }, 1500);
+      }, 2000);
 
       submitBtn.textContent = originalText;
       submitBtn.disabled = false;
@@ -525,34 +587,75 @@ async function submitSignup(name, email, password, confirmPassword) {
   }
 }
 
-function showSuccessMessage(message) {
+function showSuccessMessage(message, isSignup = false) {
+  console.log("Showing success message:", message);
+
   // Create and show success message
   const alertDiv = document.createElement('div');
-  alertDiv.className = 'alert alert-success alert-dismissible fade show';
-  alertDiv.innerHTML = `
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  alertDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+    padding: 15px 20px;
+    z-index: 9999;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 500px;
+    word-wrap: break-word;
   `;
+  alertDiv.innerHTML = `<strong>Success!</strong> ${message}`;
 
-  const container = document.querySelector('.auth-container');
-  if (container) {
-    container.insertBefore(alertDiv, container.firstChild);
-  }
+  document.body.appendChild(alertDiv);
+  console.log("Alert added to body");
+
+  // Auto-dismiss after longer delay for signup success
+  const dismissDelay = isSignup ? 3000 : 2000;
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.remove();
+      console.log("Alert removed");
+    }
+  }, dismissDelay);
 }
 
 function showErrorMessage(message) {
+  console.log("Showing error message:", message);
+
   // Create and show error message
   const alertDiv = document.createElement('div');
-  alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-  alertDiv.innerHTML = `
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  alertDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 15px 20px;
+    z-index: 9999;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 500px;
+    word-wrap: break-word;
   `;
+  alertDiv.innerHTML = `<strong>Error!</strong> ${message}`;
 
-  const container = document.querySelector('.auth-container');
-  if (container) {
-    container.insertBefore(alertDiv, container.firstChild);
-  }
+  document.body.appendChild(alertDiv);
+  console.log("Alert added to body");
+
+  // Auto-dismiss after delay
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.remove();
+      console.log("Alert removed");
+    }
+  }, 4000);
 }
 
 // Check if user is already signed in
