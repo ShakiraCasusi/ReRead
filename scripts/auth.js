@@ -1,5 +1,5 @@
 // Frontend Authentication Manager
-// Manages user session, login/logout, and UI updates
+// Manages user session, login/logout, and UI updates :)))
 
 class AuthManager {
     constructor() {
@@ -54,10 +54,10 @@ class AuthManager {
                 btn.style.display = 'none';
             });
 
-            // Add user menu/logout button if not already present
+            // Added a user menu/logout button if not already present
             this.createUserMenu();
         } else {
-            // User is not logged in - show signin
+            // User is not logged in = show signin
             signinButtons.forEach(btn => {
                 btn.style.display = 'inline-block';
             });
@@ -65,6 +65,9 @@ class AuthManager {
             // Remove user menu
             this.removeUserMenu();
         }
+
+        // Update header visibility for authentication state
+        this.updateHeaderVisibility();
     }
 
     // Create user profile menu
@@ -114,6 +117,23 @@ class AuthManager {
         const menu = document.getElementById('userProfileMenu');
         if (menu) {
             menu.remove();
+        }
+    }
+
+    // Update header visibility based on authentication state
+    updateHeaderVisibility() {
+        const user = localStorage.getItem('rereadUser');
+
+        // Hide Sign In link (Desktop)
+        const desktopSignIn = document.querySelector('nav a[href="pages/signin.html"]');
+        if (desktopSignIn) {
+            desktopSignIn.style.display = user ? 'none' : 'block';
+        }
+
+        // Hide Sign In link (Mobile)
+        const mobileSignIn = document.querySelector('#mobileMenu a[href="pages/signin.html"]');
+        if (mobileSignIn) {
+            mobileSignIn.style.display = user ? 'none' : 'block';
         }
     }
 }
