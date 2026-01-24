@@ -496,6 +496,8 @@ async function submitSignin(email, password) {
 
       // Redirect to home page after brief delay
       setTimeout(() => {
+        // Trigger storage event to notify other tabs/windows
+        window.dispatchEvent(new Event("storage"));
         window.location.href = "../index.html";
       }, 1000);
     } else {
