@@ -26,11 +26,6 @@ const bookSchema = new mongoose.Schema(
             required: true,
             min: 0,
         },
-        condition: {
-            type: String,
-            enum: ['Like New', 'Very Good', 'Good', 'Fair', 'Poor'],
-            default: 'Good',
-        },
         quality: {
             type: String,
             enum: ['New', 'Like New', 'Very Good', 'Good', 'Fair', 'Poor'],
@@ -39,13 +34,6 @@ const bookSchema = new mongoose.Schema(
         genre: {
             type: String,
             trim: true,
-        },
-        category: {
-            type: String,
-            trim: true,
-        },
-        imageUrl: {
-            type: String,
         },
         image: {
             type: String,
@@ -73,28 +61,20 @@ const bookSchema = new mongoose.Schema(
             default: 1,
             min: 0,
         },
-        seller: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-        },
-        openLibraryId: {
-            type: String,
-        },
-
         sellerId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true
         },
-
-        sellerName: String,
+        sellerName: {
+            type: String,
+        },
         averageRating: {
             type: Number,
             default: 0,
             min: 0,
             max: 5
         },
-
         reviewCount: {
             type: Number,
             default: 0
