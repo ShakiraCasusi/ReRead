@@ -11,6 +11,7 @@ router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', tokenManager.authenticateToken, authController.logout);
 router.get('/profile', tokenManager.authenticateToken, authController.getCurrentProfile);
 router.put('/profile', tokenManager.authenticateToken, authController.updateProfile);
+router.delete('/profile', tokenManager.authenticateToken, authController.deleteAccount);
 router.post('/become-seller', tokenManager.authenticateToken, authController.becomeSeller);
 
 module.exports = router;

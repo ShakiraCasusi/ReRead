@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/database");
@@ -37,7 +37,10 @@ app.use((req, res) => {
 // Connect and start
 async function start() {
     try {
-        await connectDB();
+        const conn = await connectDB();
+        if (!conn) {
+            throw new Error("MongoDB connection failed. Check MONGODB_URI in backend/.env");
+        }
         const PORT = process.env.PORT || 5000;
         const server = app.listen(PORT, () => {
             console.log("Server running on port " + PORT);
