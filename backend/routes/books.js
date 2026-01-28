@@ -3,7 +3,8 @@ const router = express.Router();
 const bookController = require('../controllers/bookController');
 const openLibraryService = require('../services/openLibraryService');
 
-// External API routes (MUST be first)
+// Specific routes MUST come before generic /:id route
+router.get('/search', bookController.searchBooks);
 router.get('/external/search', async (req, res) => {
     try {
         const { query } = req.query;
@@ -46,10 +47,9 @@ router.get('/external/author/:authorName', async (req, res) => {
     }
 });
 
-// Local database routes
+// Generic routes
 router.get('/', bookController.getAllBooks);
 router.post('/', bookController.createBook);
-router.get('/search', bookController.searchBooks);
 router.get('/:id', bookController.getBook);
 router.put('/:id', bookController.updateBook);
 router.delete('/:id', bookController.deleteBook);
