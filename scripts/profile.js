@@ -1,126 +1,473 @@
-// Profile page script - all logic is now in profile.html inline script
-// This file is kept for backward compatibility
+// Profile page script - CRUD operations with API integration
 
 console.log("profile.js loaded");
 
+const API_BASE_URL = "http://localhost:5000/api";
+let currentUser = null;
+let isEditMode = false;
 
+// Initialize profile page
+document.addEventListener("DOMContentLoaded", async function () {
+  console.log("Profile page initializing...");
+
+  // Check if user is logged in
+  const accessToken = sessionStorage.getItem("accessToken");
+  if (!accessToken) {
+    showErrorState("Please sign in to view your profile.");
+    return;
+  }
+
+  // Load profile data
+  await loadProfile();
+
+  // Update cart badge
+  if (typeof updateCartBadge === "function") {
+    updateCartBadge();
+  }
+});
+
+// Load user profile from API
 async function loadProfile() {
-    try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch('http://localhost:5000/api/auth/profile', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
+  try {
+    showLoadingState();
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                window.location.href = 'signin.html';
-            }
-            throw new Error('Failed to load profile');
-        }
-
-        const data = await response.json();
-        currentUser = data.data;
-        displayProfile();
-    } catch (error) {
-        console.error('Error loading profile:', error);
-        alert('Error loading profile');
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("No access token found");
     }
-}
 
-function displayProfile() {
-    if (!currentUser) return;
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-    // Header
-    document.getElementById('displayName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-    document.getElementById('displayEmail').textContent = currentUser.email;
-
-    const joinDate = new Date(currentUser.createdAt);
-    document.getElementById('memberSince').textContent = `Member since ${joinDate.toLocaleDateString()}`;
-
-    // Personal Info
-    document.getElementById('viewFirstName').textContent = currentUser.firstName || '-';
-    document.getElementById('viewLastName').textContent = currentUser.lastName || '-';
-    document.getElementById('viewUsername').textContent = currentUser.username || '-';
-    document.getElementById('viewEmail').textContent = currentUser.email || '-';
-
-    // Edit form
-    document.getElementById('editFirstName').value = currentUser.firstName || '';
-    document.getElementById('editLastName').value = currentUser.lastName || '';
-    document.getElementById('editUsername').value = currentUser.username || '';
-    document.getElementById('editEmail').value = currentUser.email || '';
-
-    // Seller info
-    if (currentUser.isSeller) {
-        document.getElementById('sellerBadge').style.display = 'block';
-        document.getElementById('sellerTab').style.display = 'block';
-        document.getElementById('sellerNotAvailable').style.display = 'none';
-        document.getElementById('sellerInfo').style.display = 'block';
-
-        if (currentUser.sellerInfo) {
-            document.getElementById('viewStoreName').textContent = currentUser.sellerInfo.storeName || '-';
-            document.getElementById('viewAccountHolder').textContent = currentUser.sellerInfo.accountHolder || '-';
-            document.getElementById('viewBankName').textContent = currentUser.sellerInfo.bankName || '-';
-            document.getElementById('viewBankAccount').textContent = currentUser.sellerInfo.bankAccount || '-';
-        }
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token expired or invalid
+        sessionStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        sessionStorage.removeItem("user");
+        window.location.href = "signin.html";
+        return;
+      }
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to load profile");
     }
-}
 
-function toggleEditMode() {
-    const viewMode = document.getElementById('viewMode');
-    const editForm = document.getElementById('editForm');
-
-    if (editForm.style.display === 'none') {
-        viewMode.style.display = 'none';
-        editForm.style.display = 'block';
+    const result = await response.json();
+    if (result.success && result.data) {
+      currentUser = result.data;
+      displayProfile();
+      hideErrorState();
     } else {
-        viewMode.style.display = 'block';
-        editForm.style.display = 'none';
+      throw new Error("Invalid response from server");
     }
+  } catch (error) {
+    console.error("Error loading profile:", error);
+    showErrorState(
+      error.message || "Failed to load profile. Please try again.",
+    );
+  }
 }
 
+// Display profile data in the UI
+function displayProfile() {
+  if (!currentUser) {
+    console.error("No user data to display");
+    return;
+  }
+
+  try {
+    // Profile Header
+    const displayName = document.getElementById("displayName");
+    const displayUsername = document.getElementById("displayUsername");
+    const memberSinceText = document.getElementById("memberSinceText");
+
+    if (displayName) {
+      const fullName =
+        `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() ||
+        currentUser.username ||
+        "User";
+      displayName.textContent = fullName;
+    }
+
+    if (displayUsername) {
+      displayUsername.textContent = `@${currentUser.username || "username"}`;
+    }
+
+    if (memberSinceText && currentUser.createdAt) {
+      const joinDate = new Date(currentUser.createdAt);
+      memberSinceText.textContent = `Member since ${joinDate.toLocaleDateString(
+        "en-US",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        },
+      )}`;
+    }
+
+    // View Mode - Account Information
+    const viewFirstName = document.getElementById("viewFirstName");
+    const viewLastName = document.getElementById("viewLastName");
+    const viewUsername = document.getElementById("viewUsername");
+    const viewEmail = document.getElementById("viewEmail");
+
+    if (viewFirstName) {
+      viewFirstName.textContent = currentUser.firstName || "-";
+    }
+    if (viewLastName) {
+      viewLastName.textContent = currentUser.lastName || "-";
+    }
+    if (viewUsername) {
+      viewUsername.textContent = currentUser.username || "-";
+    }
+    if (viewEmail) {
+      viewEmail.textContent = currentUser.email || "-";
+    }
+
+    // Edit Form - Pre-populate fields
+    const editFirstName = document.getElementById("editFirstName");
+    const editLastName = document.getElementById("editLastName");
+    const editUsername = document.getElementById("editUsername");
+    const editEmail = document.getElementById("editEmail");
+
+    if (editFirstName) {
+      editFirstName.value = currentUser.firstName || "";
+    }
+    if (editLastName) {
+      editLastName.value = currentUser.lastName || "";
+    }
+    if (editUsername) {
+      editUsername.value = currentUser.username || "";
+    }
+    if (editEmail) {
+      editEmail.value = currentUser.email || "";
+    }
+
+    // Seller Badge
+    const sellerBadge = document.getElementById("sellerBadge");
+    if (sellerBadge) {
+      if (currentUser.isSeller) {
+        sellerBadge.style.display = "block";
+      } else {
+        sellerBadge.style.display = "none";
+      }
+    }
+
+    console.log("Profile displayed successfully");
+  } catch (error) {
+    console.error("Error displaying profile:", error);
+    showErrorState("Error displaying profile data");
+  }
+}
+
+// Toggle between view and edit modes
+function toggleEditMode() {
+  const viewMode = document.getElementById("viewMode");
+  const editForm = document.getElementById("editForm");
+  const editToggleBtn = document.getElementById("editToggleBtn");
+
+  if (!viewMode || !editForm) {
+    console.error("Edit mode elements not found");
+    return;
+  }
+
+  isEditMode = !isEditMode;
+
+  if (isEditMode) {
+    // Switch to edit mode
+    viewMode.style.display = "none";
+    editForm.style.display = "block";
+    if (editToggleBtn) {
+      editToggleBtn.innerHTML = '<i class="fas fa-times me-2"></i>Cancel';
+      editToggleBtn.onclick = toggleEditMode;
+    }
+  } else {
+    // Switch back to view mode
+    viewMode.style.display = "block";
+    editForm.style.display = "none";
+    if (editToggleBtn) {
+      editToggleBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Edit';
+      editToggleBtn.onclick = toggleEditMode;
+    }
+  }
+}
+
+// Handle profile update (UPDATE operation)
 async function handleProfileUpdate(e) {
-    e.preventDefault();
-    try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch('http://localhost:5000/api/auth/profile', {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                firstName: document.getElementById('editFirstName').value,
-                lastName: document.getElementById('editLastName').value,
-                username: document.getElementById('editUsername').value,
-                email: document.getElementById('editEmail').value
-            })
-        });
+  e.preventDefault();
 
-        if (!response.ok) throw new Error('Failed to update profile');
-
-        const data = await response.json();
-        currentUser = data.data;
-        displayProfile();
-        toggleEditMode();
-        alert('Profile updated successfully!');
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        alert('Error updating profile');
+  try {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) {
+      showNotification("Please sign in to update your profile", "error");
+      window.location.href = "signin.html";
+      return;
     }
+
+    // Get form values
+    const firstName = document.getElementById("editFirstName").value.trim();
+    const lastName = document.getElementById("editLastName").value.trim();
+    const username = document.getElementById("editUsername").value.trim();
+    const email = document.getElementById("editEmail").value.trim();
+
+    // Basic validation
+    if (!firstName || !lastName || !username || !email) {
+      showNotification("All fields are required", "error");
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showNotification("Please enter a valid email address", "error");
+      return;
+    }
+
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : "";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    }
+
+    // Send update request
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        firstName,
+        lastName,
+        username,
+        email,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to update profile");
+    }
+
+    if (result.success && result.data) {
+      // Update current user data
+      currentUser = result.data;
+
+      // Update sessionStorage user data if it exists
+      const sessionUser = sessionStorage.getItem("user");
+      if (sessionUser) {
+        const userData = JSON.parse(sessionUser);
+        userData.firstName = result.data.firstName;
+        userData.lastName = result.data.lastName;
+        userData.username = result.data.username;
+        userData.email = result.data.email;
+        sessionStorage.setItem("user", JSON.stringify(userData));
+      }
+
+      // Refresh display
+      displayProfile();
+      toggleEditMode();
+      showNotification("Profile updated successfully!", "success");
+    } else {
+      throw new Error(result.message || "Update failed");
+    }
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    showNotification(
+      error.message || "Error updating profile. Please try again.",
+      "error",
+    );
+  } finally {
+    // Restore button state
+    const submitBtn = document.querySelector('#editForm button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Save Changes';
+    }
+  }
 }
 
-async function becomeSeller() {
-    window.location.href = 'sell.html';
+// Navigate to orders page
+function goToOrders() {
+  window.location.href = "orders.html";
 }
 
-function deleteAccount() {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-        alert('Account deletion feature coming soon');
+// Handle account deletion (DELETE operation)
+function handleDeleteAccount() {
+  // Show the delete account modal
+  const deleteModal = new bootstrap.Modal(
+    document.getElementById("deleteAccountModal"),
+  );
+  deleteModal.show();
+
+  // Reset the input field when modal is shown
+  document.getElementById("deleteConfirmText").value = "";
+  document.getElementById("confirmDeleteBtn").disabled = true;
+
+  // Add event listener to input field for enabling/disabling delete button
+  const deleteInput = document.getElementById("deleteConfirmText");
+  deleteInput.addEventListener("input", function () {
+    document.getElementById("confirmDeleteBtn").disabled =
+      this.value !== "DELETE";
+  });
+
+  // Handle the confirm delete button click
+  document.getElementById("confirmDeleteBtn").onclick = async function () {
+    await performAccountDeletion();
+    deleteModal.hide();
+  };
+}
+
+// Perform the actual account deletion
+async function performAccountDeletion() {
+  try {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) {
+      showNotification("Please sign in to delete your account", "error");
+      window.location.href = "signin.html";
+      return;
     }
+
+    // Show loading state
+    showNotification("Deleting account...", "info");
+
+    // Send DELETE request
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to delete account");
+    }
+
+    if (result.success) {
+      // Clear all user data from storage
+      sessionStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("user");
+      localStorage.removeItem("rereadUser");
+      localStorage.removeItem("rereadUserRemembered");
+      localStorage.removeItem("rereadCart");
+
+      // Show success message
+      showNotification(
+        "Account deleted successfully. Redirecting...",
+        "success",
+      );
+
+      // Redirect to home page after delay
+      setTimeout(() => {
+        window.location.href = "../index.html";
+      }, 2000);
+    } else {
+      throw new Error(result.message || "Delete failed");
+    }
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    showNotification(
+      error.message || "Error deleting account. Please try again.",
+      "error",
+    );
+  }
+}
+
+// Show loading state
+function showLoadingState() {
+  const errorState = document.getElementById("errorState");
+  if (errorState) {
+    errorState.style.display = "none";
+  }
+  // You can add a loading spinner here if needed
+}
+
+// Show error state
+function showErrorState(message) {
+  const errorState = document.getElementById("errorState");
+  const errorMessage = document.getElementById("errorMessage");
+
+  if (errorState) {
+    errorState.style.display = "block";
+    if (errorMessage) {
+      errorMessage.textContent =
+        message || "An error occurred while loading your profile.";
+    }
+  }
+}
+
+// Hide error state
+function hideErrorState() {
+  const errorState = document.getElementById("errorState");
+  if (errorState) {
+    errorState.style.display = "none";
+  }
+}
+
+// Show notification
+function showNotification(message, type = "success") {
+  const colors = {
+    success: "#10b981",
+    error: "#ef4444",
+    info: "#3b82f6",
+    warning: "#f59e0b",
+  };
+
+  const notification = document.createElement("div");
+  notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${colors[type] || colors.success};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease;
+        max-width: 400px;
+    `;
+  notification.textContent = message;
+
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.style.animation = "slideOut 0.3s ease";
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 300);
+  }, 3000);
+}
+
+// Add CSS animations if not already present
+if (!document.querySelector("#profile-notification-styles")) {
+  const style = document.createElement("style");
+  style.id = "profile-notification-styles";
+  style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+  document.head.appendChild(style);
 }

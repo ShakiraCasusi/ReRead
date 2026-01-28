@@ -467,6 +467,33 @@ async function submitSignin(email, password) {
       // Reset login attempts on successful signin
       loginAttempts.count = 0;
 
+      // Save JWT tokens for API-authenticated pages (Profile, Orders, etc.)
+      // Backend returns: result.data.accessToken / result.data.refreshToken / result.data.expiresIn
+      if (result.data && result.data.accessToken) {
+        sessionStorage.setItem("accessToken", result.data.accessToken);
+        if (result.data.refreshToken) {
+          localStorage.setItem("refreshToken", result.data.refreshToken);
+        }
+
+        const expiresInMs = Number(result.data.expiresIn || 900000); // default 15 minutes
+        sessionStorage.setItem(
+          "tokenExpiryTime",
+          String(Date.now() + expiresInMs)
+        );
+
+        // Store user for JWT-based auth manager (authPhase3-style)
+        sessionStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: result.data.id,
+            username: result.data.username,
+            email: result.data.email,
+            role: result.data.role,
+            isSeller: result.data.isSeller,
+          })
+        );
+      }
+
       // Check if remember me is checked
       const rememberCheckbox = document.querySelector('input[name="remember-me"]');
       const isRemembered = rememberCheckbox && rememberCheckbox.checked;
@@ -555,23 +582,49 @@ async function submitSignup(name, email, password, confirmPassword) {
     const result = await response.json();
 
     if (result.success) {
-      showSuccessMessage("Account created successfully! Please log in with your credentials.", true);
-
-      // Switch to signin panel after brief delay
-      setTimeout(() => {
-        const signinRadio = document.getElementById("tab-signin");
-        if (signinRadio) {
-          signinRadio.checked = true;
-          signinRadio.dispatchEvent(new Event('change', { bubbles: true }));
-          showPanel("signin");
-
-          // Pre-fill email
-          const signinEmailInput = document.querySelector("#signin-email");
-          if (signinEmailInput) {
-            signinEmailInput.value = email;
-            signinEmailInput.focus();
-          }
+      // Auto-sign-in after successful registration (so Profile becomes dynamic immediately)
+      if (result.data && result.data.accessToken) {
+        sessionStorage.setItem("accessToken", result.data.accessToken);
+        if (result.data.refreshToken) {
+          localStorage.setItem("refreshToken", result.data.refreshToken);
         }
+
+        const expiresInMs = Number(result.data.expiresIn || 900000);
+        sessionStorage.setItem(
+          "tokenExpiryTime",
+          String(Date.now() + expiresInMs)
+        );
+
+        sessionStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: result.data.id,
+            username: result.data.username,
+            email: result.data.email,
+            role: result.data.role,
+            isSeller: result.data.isSeller,
+          })
+        );
+
+        // Keep existing localStorage user session too (used by scripts/auth.js)
+        localStorage.setItem(
+          "rereadUser",
+          JSON.stringify({
+            id: result.data.id,
+            username: result.data.username,
+            email: result.data.email,
+            role: result.data.role,
+            signinTime: new Date().toISOString(),
+          })
+        );
+      }
+
+      showSuccessMessage("Account created successfully! Signing you in...", true);
+
+      // Redirect after brief delay
+      setTimeout(() => {
+        window.dispatchEvent(new Event("storage"));
+        window.location.href = "../pages/profile.html";
       }, 2000);
 
       submitBtn.textContent = originalText;
