@@ -91,7 +91,7 @@ function validateImageUrl(imageUrl) {
     return url;
   }
 
-  // Anything else gets the default placeholder
+  // Anything else gets the default placeholder :)
   return DEFAULT_PLACEHOLDER;
 }
 
