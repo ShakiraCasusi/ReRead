@@ -7,6 +7,7 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 // Books Database - fetched from API
 let booksDatabase = [];
+let availableGenres = new Set(); // Track genres from API
 
 // Global variables
 let currentPage = 1;
@@ -26,61 +27,29 @@ let isLoadingBooks = false;
 // Default placeholder image (safe SVG - no external requests)
 const DEFAULT_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';
 
-// Fetch books from API
-async function fetchBooksFromAPI() {
-  if (isLoadingBooks) return;
-
-  isLoadingBooks = true;
-  try {
-    const response = await fetch(`${API_BASE_URL}/books`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-      booksDatabase = result.data.map((book) => ({
-        id: book._id,
-        title: book.title || 'Unknown Title',
-        author: book.author || 'Unknown Author',
-        genre: book.genre || 'General',
-        quality: book.quality || book.condition || 'Good',
-        price: Number(book.price) || 0,
-        originalPrice: Number(book.originalPrice) || Number(book.price) || 0,
-        rating: Number(book.rating) || 0,
-        image: validateImageUrl(book.image),
-        featured: Boolean(book.featured) || false,
-        isNewBook: Boolean(book.isNewBook) || false,
-      }));
-
-      filteredBooks = [...booksDatabase];
-      console.log(`✅ Loaded ${booksDatabase.length} books from API`);
-      console.log('📚 Sample book:', booksDatabase[0]);
-      return true;
-    } else if (result.success && (!result.data || result.data.length === 0)) {
-      console.warn('⚠️ No books found in database');
-      booksDatabase = [];
-      filteredBooks = [];
-      return true; // Still a success, just empty
-    } else {
-      console.error('❌ Failed to fetch books:', result.message || 'Unknown error');
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ Error fetching books:', error);
-    booksDatabase = [];
-    filteredBooks = [];
-    return false;
-  } finally {
-    isLoadingBooks = false;
-  }
-}
+// Genre list for comprehensive loading
+const GENRES_TO_LOAD = [
+  "fiction",
+  "romance",
+  "adventure",
+  "mystery",
+  "science fiction",
+  "fantasy",
+  "horror",
+  "thriller",
+  "business",
+  "education",
+  "self-help",
+  "biography",
+  "memoir",
+  "history",
+  "science",
+  "spirituality"
+];
 
 // Validate and return safe image URL
 function validateImageUrl(imageUrl) {
-  if (!imageUrl || imageUrl === null || imageUrl === undefined || imageUrl.trim() === '') {
+  if (!imageUrl || imageUrl === null || imageUrl === undefined) {
     return DEFAULT_PLACEHOLDER;
   }
 
@@ -91,8 +60,197 @@ function validateImageUrl(imageUrl) {
     return url;
   }
 
-  // Anything else gets the default placeholder :)
   return DEFAULT_PLACEHOLDER;
+}
+
+// Map Open Library subjects to ReRead genre categories
+function mapOpenLibraryGenre(subjects) {
+  if (!subjects || !Array.isArray(subjects) || subjects.length === 0) return 'General';
+
+  const subject = String(subjects[0]).toLowerCase();
+
+  // Romance
+  if (subject.includes('romance') || subject.includes('love stories')) return 'Romance';
+
+  // Adventure
+  if (subject.includes('adventure') || subject.includes('journeys')) return 'Adventure';
+
+  // Business
+  if (subject.includes('business') || subject.includes('entrepreneurship')) return 'Business';
+
+  // Education
+  if (subject.includes('education') || subject.includes('learning') || subject.includes('academic')) return 'Education';
+
+  // Financial
+  if (subject.includes('finance') || subject.includes('money') || subject.includes('investing')) return 'Financial';
+
+  // Memoir/Biography
+  if (subject.includes('biography') || subject.includes('memoir') || subject.includes('autobiography')) return 'Memoir';
+
+  // Self-Help
+  if (subject.includes('self-help') || subject.includes('personal development') || subject.includes('psychology')) return 'Self-Help';
+
+  // Spiritual
+  if (subject.includes('spiritual') || subject.includes('religion') || subject.includes('faith') || subject.includes('mindfulness')) return 'Spiritual';
+
+  // Women
+  if (subject.includes('women') || subject.includes('feminist')) return 'Women';
+
+  // Science Fiction
+  if (subject.includes('science fiction')) return 'Science Fiction';
+
+  // Mystery/Thriller
+  if (subject.includes('mystery') || subject.includes('thriller') || subject.includes('detective')) return 'Mystery';
+
+  // Horror
+  if (subject.includes('horror') || subject.includes('scary')) return 'Horror';
+
+  // History
+  if (subject.includes('history')) return 'History';
+
+  return 'General';
+}
+
+// Generate prices based on quality
+function generatePricesByQuality(quality) {
+  let originalPrice, discountedPrice;
+
+  switch (quality) {
+    case 'New':
+      originalPrice = Math.floor(Math.random() * (2000 - 1500) + 1500); // 1500-2000
+      discountedPrice = Math.floor(Math.random() * (400 - 350) + 350); // 350-400
+      break;
+    case 'Like New':
+      originalPrice = Math.floor(Math.random() * (1800 - 1200) + 1200); // 1200-1800
+      discountedPrice = Math.floor(Math.random() * (380 - 300) + 300); // 300-380
+      break;
+    case 'Very Good':
+      originalPrice = Math.floor(Math.random() * (1500 - 900) + 900); // 900-1500
+      discountedPrice = Math.floor(Math.random() * (280 - 220) + 220); // 220-280
+      break;
+    case 'Good':
+      originalPrice = Math.floor(Math.random() * (1200 - 600) + 600); // 600-1200
+      discountedPrice = Math.floor(Math.random() * (200 - 150) + 150); // 150-200
+      break;
+    case 'Fair':
+      originalPrice = Math.floor(Math.random() * (800 - 500) + 500); // 500-800
+      discountedPrice = Math.floor(Math.random() * (150 - 100) + 100); // 100-150
+      break;
+    default:
+      originalPrice = 1000;
+      discountedPrice = 250;
+  }
+
+  return { originalPrice, discountedPrice };
+}
+
+// Helper function to parse book data
+function parseBook(book, index) {
+  const coverUrl = book.cover_i
+    ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+    : null;
+
+  const mappedGenre = mapOpenLibraryGenre(book.subject);
+  availableGenres.add(mappedGenre); // Track this genre
+
+  const quality = ['New', 'Like New', 'Very Good', 'Good', 'Fair'][Math.floor(Math.random() * 5)];
+  const { originalPrice, discountedPrice } = generatePricesByQuality(quality);
+
+  return {
+    id: book.key || book.isbn_0?.[0] || `book-${index}-${Math.random()}`,
+    title: book.title || 'Unknown Title',
+    author: book.author_name?.[0] || 'Unknown Author',
+    genre: mappedGenre,
+    subjects: book.subject || [],
+
+    // Generated marketplace data
+    quality: quality,
+    price: discountedPrice, // Current selling price (100-499)
+    originalPrice: originalPrice, // Original price (500-2000)
+    rating: (Math.random() * (5 - 2.5) + 2.5).toFixed(1),
+
+    image: validateImageUrl(coverUrl),
+    featured: Math.random() < 0.15,
+    isNewBook: book.first_publish_year && book.first_publish_year > 2020,
+  };
+}
+
+// Fetch books from API
+async function fetchBooksFromAPI() {
+  if (isLoadingBooks) return;
+
+  isLoadingBooks = true;
+  try {
+    const allBooks = [];
+    const uniqueIds = new Set();
+
+    // If search is active, search for that term. Otherwise, load all genres
+    if (activeFilters.search && activeFilters.search.trim().length > 0) {
+      const query = activeFilters.search;
+      try {
+        const response = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=100`);
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+
+        if (result.docs && Array.isArray(result.docs)) {
+          result.docs.forEach((book, index) => {
+            if (!uniqueIds.has(book.key)) {
+              uniqueIds.add(book.key);
+              allBooks.push(parseBook(book, index));
+            }
+          });
+        }
+      } catch (searchError) {
+        console.error('Search error:', searchError);
+      }
+    } else {
+      // Load books from multiple genres
+      for (const genre of GENRES_TO_LOAD) {
+        try {
+          const response = await fetch(`https://openlibrary.org/search.json?subject=${encodeURIComponent(genre)}&limit=50`);
+          if (!response.ok) continue;
+
+          const result = await response.json();
+          if (result.docs && Array.isArray(result.docs)) {
+            result.docs.forEach((book, index) => {
+              if (!uniqueIds.has(book.key)) {
+                uniqueIds.add(book.key);
+                allBooks.push(parseBook(book, index));
+              }
+            });
+          }
+          console.log(`✅ Loaded ${result.docs?.length || 0} books from genre: ${genre}`);
+        } catch (error) {
+          console.warn(`Failed to fetch ${genre}:`, error);
+        }
+
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    if (allBooks.length > 0) {
+      booksDatabase = allBooks;
+      filteredBooks = [...booksDatabase];
+      console.log(`✅ Total loaded: ${booksDatabase.length} books from Open Library`);
+      console.log('📚 Available genres:', Array.from(availableGenres));
+      console.log('📚 Sample book:', booksDatabase[0]);
+      return true;
+    } else {
+      console.warn('⚠️ No books found');
+      booksDatabase = [];
+      filteredBooks = [];
+      return true;
+    }
+  } catch (error) {
+    console.error('❌ Error fetching books from Open Library:', error);
+    booksDatabase = [];
+    filteredBooks = [];
+    return false;
+  } finally {
+    isLoadingBooks = false;
+  }
 }
 
 // Initialize shop page
@@ -107,8 +265,28 @@ document.addEventListener("DOMContentLoaded", async function () {
     `;
   }
 
+  // Step 1: Set initial filters from URL parameters BEFORE fetching data.
+  const urlParams = new URLSearchParams(window.location.search);
+  const genreParam = urlParams.get("genre");
+  const filterParam = urlParams.get("filter");
+  const searchParam = urlParams.get("search");
+
+  if (genreParam) {
+    activeFilters.genre = genreParam;
+  }
+  if (filterParam === "featured") {
+    activeFilters.special = "featured";
+  } else if (filterParam === "new") {
+    activeFilters.special = "new";
+  }
+  if (searchParam) {
+    activeFilters.search = searchParam;
+  }
+
+  // Step 2: Fetch books from the API. It will now use the correct search query.
   const success = await fetchBooksFromAPI();
 
+  // Step 3: Initialize the page UI and render the fetched books.
   if (success) {
     initShopPage();
   } else {
@@ -128,55 +306,67 @@ document.addEventListener("DOMContentLoaded", async function () {
 function initShopPage() {
   console.log("initShopPage() called");
 
+  // Initialize event listeners
+  populateDynamicGenres(); // Add this line to populate genres from API
   initFilters();
   initSearch();
   initPagination();
   initAddToCartButtons();
   updateCartBadge();
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const genreParam = urlParams.get("genre");
-  const filterParam = urlParams.get("filter");
-  const searchParam = urlParams.get("search");
-  const hasUrlFilter = Boolean(genreParam || filterParam || searchParam);
-
   currentPage = 1;
 
-  // Apply URL filters
-  if (genreParam) {
-    activeFilters.genre = genreParam;
-    const genreLink = document.querySelector(`[data-genre="${genreParam}"]`);
+  // Update UI elements to reflect the active filters that were set from the URL
+  if (activeFilters.genre !== 'all') {
+    const genreLink = document.querySelector(`[data-genre="${activeFilters.genre}"]`);
     if (genreLink) {
       document.querySelectorAll("[data-genre]").forEach((l) => l.classList.remove("active"));
       genreLink.classList.add("active");
       const genreBtn = document.querySelector('.filter-btn[data-filter="genre"]');
-      if (genreBtn) genreBtn.childNodes[0].textContent = genreParam + " ";
+      if (genreBtn) genreBtn.innerHTML = `${genreLink.textContent.trim()} <i class="fas fa-chevron-down"></i>`;
     }
   } else {
     const defaultGenre = document.querySelector('[data-genre="all"]');
     if (defaultGenre) defaultGenre.classList.add("active");
   }
 
-  if (filterParam === "featured") {
-    activeFilters.special = "featured";
-  } else if (filterParam === "new") {
-    activeFilters.special = "new";
-  }
-
-  if (searchParam) {
-    activeFilters.search = searchParam;
+  if (activeFilters.search) {
     const searchInputs = document.querySelectorAll('[data-role="shop-search"]');
     if (searchInputs.length > 0) {
-      searchInputs.forEach((input) => (input.value = searchParam));
+      searchInputs.forEach((input) => (input.value = activeFilters.search));
     }
   }
 
+  // Set default active states for other filters
   const defaultQuality = document.querySelector('[data-quality="all"]');
   const defaultPrice = document.querySelector('[data-price="all"]');
   if (defaultQuality) defaultQuality.classList.add("active");
   if (defaultPrice) defaultPrice.classList.add("active");
 
-  applyFilters(!hasUrlFilter);
+  // Data is fetched, now apply filters and render the initial view.
+  applyFilters(true); // Pass true to reset to page 1
+}
+
+// Populate genre filter with available genres from API
+function populateDynamicGenres() {
+  const genreDropdown = document.getElementById("genreFilterDropdown");
+  if (!genreDropdown) return;
+
+  // Get unique genres from availableGenres Set and sort them
+  const sortedGenres = Array.from(availableGenres).sort();
+
+  // Clear and rebuild dropdown
+  genreDropdown.innerHTML = '<a href="#" data-genre="all">All Genres</a>';
+
+  sortedGenres.forEach(genre => {
+    if (genre !== 'General') { // Skip 'General' unless it has many books
+      const link = document.createElement('a');
+      link.href = '#';
+      link.dataset.genre = genre;
+      link.textContent = genre;
+      genreDropdown.appendChild(link);
+    }
+  });
 }
 
 // Render books on page
@@ -290,7 +480,7 @@ function addBookToCart(bookData) {
 
     cart.push({
       title: bookData.title,
-      author: bookData.author || "Unknown Author",
+      author: bookData.author,
       price: bookData.price.toString().startsWith('₱') ? bookData.price : `₱${bookData.price}`,
       image: cartImage,
       quantity: 1,
@@ -429,7 +619,15 @@ function closeAllDropdowns() {
 // Apply all filters
 function applyFilters(resetPage = true) {
   filteredBooks = booksDatabase.filter((book) => {
-    if (activeFilters.genre !== "all" && book.genre !== activeFilters.genre) return false;
+    // Genre filter - check both exact genre and subjects
+    if (activeFilters.genre !== "all") {
+      const genreMatch = book.genre === activeFilters.genre;
+      const subjectMatch = book.subjects && book.subjects.some(subj =>
+        mapOpenLibraryGenre([subj]) === activeFilters.genre
+      );
+      if (!genreMatch && !subjectMatch) return false;
+    }
+
     if (activeFilters.quality !== "all" && book.quality !== activeFilters.quality) return false;
 
     if (activeFilters.price !== "all") {
@@ -491,7 +689,13 @@ function initSearch() {
       searchTimeout = setTimeout(() => {
         activeFilters.search = value;
         activeFilters.special = null;
-        applyFilters();
+
+        // Reload from Open Library API with new search term
+        const booksGrid = document.getElementById("booksGrid");
+        if (booksGrid) {
+          booksGrid.innerHTML = '<div class="loading-state" style="grid-column: 1/-1; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Searching Open Library...</div>';
+        }
+        fetchBooksFromAPI().then(() => applyFilters());
       }, 300);
     });
   });
@@ -526,63 +730,45 @@ function updatePagination() {
       currentPage++;
     } else if (target.classList.contains("page-number")) {
       const page = parseInt(target.dataset.page, 10);
-      if (page !== currentPage) currentPage = page;
+      if (page && page !== currentPage) {
+        currentPage = page;
+      }
     }
+
+    updatePagination();
     renderBooks();
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  pageNumbers.innerHTML = "";
-
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-      const pageBtn = document.createElement("button");
-      pageBtn.className = `page-number ${i === currentPage ? "active" : ""}`;
-      pageBtn.dataset.page = i;
-      pageBtn.textContent = i;
-      pageNumbers.appendChild(pageBtn);
-    } else if (i === currentPage - 2 || i === currentPage + 2) {
-      const ellipsis = document.createElement("span");
-      ellipsis.textContent = "...";
-      pageNumbers.appendChild(ellipsis);
-    }
-  }
+  // Initial pagination render
+  pageNumbers.innerHTML = Array.from({ length: totalPages }, (_, i) => {
+    const page = i + 1;
+    return `<button class="page-number${page === currentPage ? ' active' : ''}" data-page="${page}">${page}</button>`;
+  }).join("");
 }
 
-// Update results count
+// Update results count display
 function updateResultsCount() {
   const resultsCount = document.getElementById("resultsCount");
+  if (!resultsCount) return;
+
   resultsCount.textContent = filteredBooks.length;
 }
 
 // Show notification
-function showNotification(message, type = "success") {
-  const colors = {
-    success: "#10b981",
-    error: "#ef4444",
-    info: "#3b82f6",
-  };
-
+function showNotification(message, type = "info") {
   const notification = document.createElement("div");
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: ${colors[type]};
-    color: white;
-    padding: 16px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  `;
+  notification.className = `notification ${type}`;
   notification.textContent = message;
 
   document.body.appendChild(notification);
 
   setTimeout(() => {
-    notification.style.animation = "slideOut 0.3s ease";
-    setTimeout(() => notification.remove(), 300);
+    notification.classList.add("fade-out");
   }, 3000);
+
+  setTimeout(() => {
+    notification.remove();
+  }, 3500);
 }
+
+//# sourceMappingURL=shop.js.map

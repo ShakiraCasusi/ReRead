@@ -46,7 +46,7 @@
           <div class="search-bar d-flex align-items-center bg-light rounded-3 px-3 py-2">
             <i class="fas fa-search text-secondary me-2"></i>
             <input type="text" class="border-0 bg-transparent" placeholder="Search books, authors, subjects..."
-              style="width: 400px; outline: none" />
+              style="width: 400px; outline: none" data-role="shop-search" />
           </div>
 
           <!-- Browse Dropdown (Desktop) -->
@@ -194,7 +194,7 @@
             <div class="search-bar-mobile d-flex align-items-center bg-light rounded-3 px-3 py-2">
               <i class="fas fa-search text-secondary me-2"></i>
               <input type="text" class="border-0 bg-transparent w-100" placeholder="Search books..."
-                style="outline: none" />
+                style="outline: none" data-role="shop-search" />
             </div>
           </div>
 
@@ -368,17 +368,9 @@
               <button class="filter-btn" data-filter="genre">
                 Genre <i class="fas fa-chevron-down"></i>
               </button>
-              <div class="filter-dropdown-content">
+              <div class="filter-dropdown-content" id="genreFilterDropdown">
                 <a href="#" data-genre="all">All Genres</a>
-                <a href="#" data-genre="Romance">Romance</a>
-                <a href="#" data-genre="Adventure">Adventure</a>
-                <a href="#" data-genre="Business">Business</a>
-                <a href="#" data-genre="Education">Education</a>
-                <a href="#" data-genre="Financial">Financial Literacy</a>
-                <a href="#" data-genre="Memoir">Memoir</a>
-                <a href="#" data-genre="Self-Help">Self-Help</a>
-                <a href="#" data-genre="Spiritual">Spiritual</a>
-                <a href="#" data-genre="Women">Women</a>
+                <!-- Other genres will be populated by JavaScript -->
               </div>
             </div>
 
