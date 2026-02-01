@@ -3,11 +3,13 @@
 console.log("shop.js loaded successfully");
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = "http://localhost:5000/api";
 
 // Books Database - fetched from API
 let booksDatabase = [];
 let availableGenres = new Set(); // Track genres from API
+let localBooks = [];
+let openLibraryBooks = [];
 
 // Global variables
 let currentPage = 1;
@@ -25,7 +27,51 @@ let activeFilters = {
 let isLoadingBooks = false;
 
 // Default placeholder image (safe SVG - no external requests)
-const DEFAULT_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';
+const DEFAULT_PLACEHOLDER =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+";
+
+function titleCase(value) {
+  return String(value)
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function normalizeGenreName(value) {
+  if (!value) return "General";
+  const raw = String(value).trim();
+  const normalized = raw.toLowerCase();
+
+  if (normalized === "all") return "all";
+
+  const map = {
+    romance: "Romance",
+    adventure: "Adventure",
+    business: "Business",
+    education: "Education",
+    financial: "Financial",
+    "financial literacy": "Financial",
+    memoir: "Memoir",
+    biography: "Memoir",
+    "self-help": "Self-Help",
+    "self help": "Self-Help",
+    spiritual: "Spiritual",
+    spirituality: "Spiritual",
+    women: "Women",
+    "science fiction": "Science Fiction",
+    scifi: "Science Fiction",
+    mystery: "Mystery",
+    thriller: "Mystery",
+    horror: "Horror",
+    history: "History",
+    fantasy: "Fantasy",
+    fiction: "Fiction",
+    general: "General",
+  };
+
+  return map[normalized] || titleCase(raw);
+}
 
 // Genre list for comprehensive loading
 const GENRES_TO_LOAD = [
@@ -44,7 +90,7 @@ const GENRES_TO_LOAD = [
   "memoir",
   "history",
   "science",
-  "spirituality"
+  "spirituality",
 ];
 
 // Validate and return safe image URL
@@ -56,7 +102,11 @@ function validateImageUrl(imageUrl) {
   const url = String(imageUrl).trim();
 
   // Only allow http/https/data URIs
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("data:")
+  ) {
     return url;
   }
 
@@ -65,50 +115,85 @@ function validateImageUrl(imageUrl) {
 
 // Map Open Library subjects to ReRead genre categories
 function mapOpenLibraryGenre(subjects) {
-  if (!subjects || !Array.isArray(subjects) || subjects.length === 0) return 'General';
+  if (!subjects || !Array.isArray(subjects) || subjects.length === 0)
+    return "General";
 
   const subject = String(subjects[0]).toLowerCase();
 
   // Romance
-  if (subject.includes('romance') || subject.includes('love stories')) return 'Romance';
+  if (subject.includes("romance") || subject.includes("love stories"))
+    return "Romance";
 
   // Adventure
-  if (subject.includes('adventure') || subject.includes('journeys')) return 'Adventure';
+  if (subject.includes("adventure") || subject.includes("journeys"))
+    return "Adventure";
 
   // Business
-  if (subject.includes('business') || subject.includes('entrepreneurship')) return 'Business';
+  if (subject.includes("business") || subject.includes("entrepreneurship"))
+    return "Business";
 
   // Education
-  if (subject.includes('education') || subject.includes('learning') || subject.includes('academic')) return 'Education';
+  if (
+    subject.includes("education") ||
+    subject.includes("learning") ||
+    subject.includes("academic")
+  )
+    return "Education";
 
   // Financial
-  if (subject.includes('finance') || subject.includes('money') || subject.includes('investing')) return 'Financial';
+  if (
+    subject.includes("finance") ||
+    subject.includes("money") ||
+    subject.includes("investing")
+  )
+    return "Financial";
 
   // Memoir/Biography
-  if (subject.includes('biography') || subject.includes('memoir') || subject.includes('autobiography')) return 'Memoir';
+  if (
+    subject.includes("biography") ||
+    subject.includes("memoir") ||
+    subject.includes("autobiography")
+  )
+    return "Memoir";
 
   // Self-Help
-  if (subject.includes('self-help') || subject.includes('personal development') || subject.includes('psychology')) return 'Self-Help';
+  if (
+    subject.includes("self-help") ||
+    subject.includes("personal development") ||
+    subject.includes("psychology")
+  )
+    return "Self-Help";
 
   // Spiritual
-  if (subject.includes('spiritual') || subject.includes('religion') || subject.includes('faith') || subject.includes('mindfulness')) return 'Spiritual';
+  if (
+    subject.includes("spiritual") ||
+    subject.includes("religion") ||
+    subject.includes("faith") ||
+    subject.includes("mindfulness")
+  )
+    return "Spiritual";
 
   // Women
-  if (subject.includes('women') || subject.includes('feminist')) return 'Women';
+  if (subject.includes("women") || subject.includes("feminist")) return "Women";
 
   // Science Fiction
-  if (subject.includes('science fiction')) return 'Science Fiction';
+  if (subject.includes("science fiction")) return "Science Fiction";
 
   // Mystery/Thriller
-  if (subject.includes('mystery') || subject.includes('thriller') || subject.includes('detective')) return 'Mystery';
+  if (
+    subject.includes("mystery") ||
+    subject.includes("thriller") ||
+    subject.includes("detective")
+  )
+    return "Mystery";
 
   // Horror
-  if (subject.includes('horror') || subject.includes('scary')) return 'Horror';
+  if (subject.includes("horror") || subject.includes("scary")) return "Horror";
 
   // History
-  if (subject.includes('history')) return 'History';
+  if (subject.includes("history")) return "History";
 
-  return 'General';
+  return "General";
 }
 
 // Generate prices based on quality
@@ -116,23 +201,23 @@ function generatePricesByQuality(quality) {
   let originalPrice, discountedPrice;
 
   switch (quality) {
-    case 'New':
+    case "New":
       originalPrice = Math.floor(Math.random() * (2000 - 1500) + 1500); // 1500-2000
       discountedPrice = Math.floor(Math.random() * (400 - 350) + 350); // 350-400
       break;
-    case 'Like New':
+    case "Like New":
       originalPrice = Math.floor(Math.random() * (1800 - 1200) + 1200); // 1200-1800
       discountedPrice = Math.floor(Math.random() * (380 - 300) + 300); // 300-380
       break;
-    case 'Very Good':
+    case "Very Good":
       originalPrice = Math.floor(Math.random() * (1500 - 900) + 900); // 900-1500
       discountedPrice = Math.floor(Math.random() * (280 - 220) + 220); // 220-280
       break;
-    case 'Good':
+    case "Good":
       originalPrice = Math.floor(Math.random() * (1200 - 600) + 600); // 600-1200
       discountedPrice = Math.floor(Math.random() * (200 - 150) + 150); // 150-200
       break;
-    case 'Fair':
+    case "Fair":
       originalPrice = Math.floor(Math.random() * (800 - 500) + 500); // 500-800
       discountedPrice = Math.floor(Math.random() * (150 - 100) + 100); // 100-150
       break;
@@ -145,21 +230,27 @@ function generatePricesByQuality(quality) {
 }
 
 // Helper function to parse book data
-function parseBook(book, index) {
+function parseBook(book, index, fallbackGenre) {
   const coverUrl = book.cover_i
     ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
     : null;
 
-  const mappedGenre = mapOpenLibraryGenre(book.subject);
+  const mappedGenreFromSubject = mapOpenLibraryGenre(book.subject);
+  const mappedGenre =
+    mappedGenreFromSubject === "General" && fallbackGenre
+      ? normalizeGenreName(fallbackGenre)
+      : mappedGenreFromSubject;
   availableGenres.add(mappedGenre); // Track this genre
 
-  const quality = ['New', 'Like New', 'Very Good', 'Good', 'Fair'][Math.floor(Math.random() * 5)];
+  const quality = ["New", "Like New", "Very Good", "Good", "Fair"][
+    Math.floor(Math.random() * 5)
+  ];
   const { originalPrice, discountedPrice } = generatePricesByQuality(quality);
 
   return {
     id: book.key || book.isbn_0?.[0] || `book-${index}-${Math.random()}`,
-    title: book.title || 'Unknown Title',
-    author: book.author_name?.[0] || 'Unknown Author',
+    title: book.title || "Unknown Title",
+    author: book.author_name?.[0] || "Unknown Author",
     genre: mappedGenre,
     subjects: book.subject || [],
 
@@ -175,6 +266,65 @@ function parseBook(book, index) {
   };
 }
 
+function parseLocalBook(book, index) {
+  const normalizedGenre = normalizeGenreName(book.genre || "General");
+  availableGenres.add(normalizedGenre);
+
+  const quality = book.quality || "Good";
+  const originalPrice =
+    typeof book.originalPrice === "number"
+      ? book.originalPrice
+      : Math.round((Number(book.price) || 0) * 2);
+
+  return {
+    id: book._id || `local-book-${index}`,
+    title: book.title || "Unknown Title",
+    author: book.author || "Unknown Author",
+    genre: normalizedGenre,
+    subjects: book.genre ? [book.genre] : [],
+
+    quality,
+    price: Number(book.price) || 0,
+    originalPrice,
+    rating:
+      typeof book.rating === "number"
+        ? book.rating
+        : typeof book.averageRating === "number"
+          ? book.averageRating
+          : (Math.random() * (5 - 2.5) + 2.5).toFixed(1),
+
+    image: validateImageUrl(book.image),
+    featured: Boolean(book.featured),
+    isNewBook: Boolean(book.isNewBook),
+  };
+}
+
+function rebuildBooksDatabase() {
+  booksDatabase = [...localBooks, ...openLibraryBooks];
+  filteredBooks = [...booksDatabase];
+}
+
+async function fetchLocalBooks() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/books`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const result = await response.json();
+    const books = Array.isArray(result.data) ? result.data : [];
+
+    localBooks = books.map((book, index) => parseLocalBook(book, index));
+    rebuildBooksDatabase();
+
+    console.log(`✅ Loaded ${localBooks.length} local books from API`);
+    return true;
+  } catch (error) {
+    console.warn("⚠️ Failed to load local books:", error.message);
+    localBooks = [];
+    rebuildBooksDatabase();
+    return false;
+  }
+}
+
 // Fetch books from API
 async function fetchBooksFromAPI() {
   if (isLoadingBooks) return;
@@ -188,9 +338,12 @@ async function fetchBooksFromAPI() {
     if (activeFilters.search && activeFilters.search.trim().length > 0) {
       const query = activeFilters.search;
       try {
-        const response = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=100`);
+        const response = await fetch(
+          `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=20`,
+        );
 
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
 
         if (result.docs && Array.isArray(result.docs)) {
@@ -202,13 +355,15 @@ async function fetchBooksFromAPI() {
           });
         }
       } catch (searchError) {
-        console.error('Search error:', searchError);
+        console.error("Search error:", searchError);
       }
     } else {
       // Load books from multiple genres
       for (const genre of GENRES_TO_LOAD) {
         try {
-          const response = await fetch(`https://openlibrary.org/search.json?subject=${encodeURIComponent(genre)}&limit=50`);
+          const response = await fetch(
+            `https://openlibrary.org/search.json?subject=${encodeURIComponent(genre)}&limit=5`,
+          );
           if (!response.ok) continue;
 
           const result = await response.json();
@@ -216,38 +371,42 @@ async function fetchBooksFromAPI() {
             result.docs.forEach((book, index) => {
               if (!uniqueIds.has(book.key)) {
                 uniqueIds.add(book.key);
-                allBooks.push(parseBook(book, index));
+                allBooks.push(parseBook(book, index, genre));
               }
             });
           }
-          console.log(`✅ Loaded ${result.docs?.length || 0} books from genre: ${genre}`);
+          console.log(
+            `✅ Loaded ${result.docs?.length || 0} books from genre: ${genre}`,
+          );
         } catch (error) {
           console.warn(`Failed to fetch ${genre}:`, error);
         }
 
         // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
     if (allBooks.length > 0) {
-      booksDatabase = allBooks;
-      filteredBooks = [...booksDatabase];
-      console.log(`✅ Total loaded: ${booksDatabase.length} books from Open Library`);
-      console.log('📚 Available genres:', Array.from(availableGenres));
-      console.log('📚 Sample book:', booksDatabase[0]);
+      openLibraryBooks = allBooks;
+      rebuildBooksDatabase();
+      console.log(
+        `✅ Total loaded: ${booksDatabase.length} books from Open Library`,
+      );
+      console.log("📚 Available genres:", Array.from(availableGenres));
+      console.log("📚 Sample book:", booksDatabase[0]);
       return true;
     } else {
-      console.warn('⚠️ No books found');
-      booksDatabase = [];
-      filteredBooks = [];
+      console.warn("⚠️ No books found");
+      openLibraryBooks = [];
+      rebuildBooksDatabase();
       return true;
     }
   } catch (error) {
-    console.error('❌ Error fetching books from Open Library:', error);
-    booksDatabase = [];
-    filteredBooks = [];
-    return false;
+    console.error("❌ Error fetching books from Open Library:", error);
+    openLibraryBooks = [];
+    rebuildBooksDatabase();
+    return localBooks.length > 0;
   } finally {
     isLoadingBooks = false;
   }
@@ -272,7 +431,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   const searchParam = urlParams.get("search");
 
   if (genreParam) {
-    activeFilters.genre = genreParam;
+    activeFilters.genre = normalizeGenreName(genreParam);
   }
   if (filterParam === "featured") {
     activeFilters.special = "featured";
@@ -283,11 +442,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     activeFilters.search = searchParam;
   }
 
-  // Step 2: Fetch books from the API. It will now use the correct search query.
+  // Step 2: Fetch local seeded books and Open Library results.
+  await fetchLocalBooks();
   const success = await fetchBooksFromAPI();
 
   // Step 3: Initialize the page UI and render the fetched books.
-  if (success) {
+  if (success || booksDatabase.length > 0) {
     initShopPage();
   } else {
     if (booksGrid) {
@@ -317,13 +477,20 @@ function initShopPage() {
   currentPage = 1;
 
   // Update UI elements to reflect the active filters that were set from the URL
-  if (activeFilters.genre !== 'all') {
-    const genreLink = document.querySelector(`[data-genre="${activeFilters.genre}"]`);
+  if (activeFilters.genre !== "all") {
+    const genreLink = document.querySelector(
+      `[data-genre="${activeFilters.genre}"]`,
+    );
     if (genreLink) {
-      document.querySelectorAll("[data-genre]").forEach((l) => l.classList.remove("active"));
+      document
+        .querySelectorAll("[data-genre]")
+        .forEach((l) => l.classList.remove("active"));
       genreLink.classList.add("active");
-      const genreBtn = document.querySelector('.filter-btn[data-filter="genre"]');
-      if (genreBtn) genreBtn.innerHTML = `${genreLink.textContent.trim()} <i class="fas fa-chevron-down"></i>`;
+      const genreBtn = document.querySelector(
+        '.filter-btn[data-filter="genre"]',
+      );
+      if (genreBtn)
+        genreBtn.innerHTML = `${genreLink.textContent.trim()} <i class="fas fa-chevron-down"></i>`;
     }
   } else {
     const defaultGenre = document.querySelector('[data-genre="all"]');
@@ -358,10 +525,11 @@ function populateDynamicGenres() {
   // Clear and rebuild dropdown
   genreDropdown.innerHTML = '<a href="#" data-genre="all">All Genres</a>';
 
-  sortedGenres.forEach(genre => {
-    if (genre !== 'General') { // Skip 'General' unless it has many books
-      const link = document.createElement('a');
-      link.href = '#';
+  sortedGenres.forEach((genre) => {
+    if (genre !== "General") {
+      // Skip 'General' unless it has many books
+      const link = document.createElement("a");
+      link.href = "#";
       link.dataset.genre = genre;
       link.textContent = genre;
       genreDropdown.appendChild(link);
@@ -396,12 +564,14 @@ function renderBooks() {
 
   booksGrid.innerHTML = booksToShow
     .map((book) => {
-      const imageSrc = (book.image && (book.image.startsWith("http") || book.image.startsWith("data:")))
-        ? book.image
-        : DEFAULT_PLACEHOLDER;
+      const imageSrc =
+        book.image &&
+        (book.image.startsWith("http") || book.image.startsWith("data:"))
+          ? book.image
+          : DEFAULT_PLACEHOLDER;
 
-      const safeTitle = (book.title || 'Unknown').replace(/'/g, "\\'");
-      const safeAuthor = (book.author || 'Unknown').replace(/'/g, "\\'");
+      const safeTitle = (book.title || "Unknown").replace(/'/g, "\\'");
+      const safeAuthor = (book.author || "Unknown").replace(/'/g, "\\'");
 
       return `
     <article class="book-card" data-id="${book.id}" data-genre="${book.genre}" data-quality="${book.quality}" data-price="${book.price}">
@@ -414,7 +584,7 @@ function renderBooks() {
       <p class="price">₱${book.price} <span class="original-price">₱${book.originalPrice}</span></p>
       <p class="rating">${book.rating} ★</p>
       <div class="book-actions">
-        <button class="btn btn-dark add-to-cart" data-book-id="${book.id}" data-book-title="${safeTitle}" data-book-author="${safeAuthor}" data-book-price="${book.price}" data-book-image="${imageSrc}" data-book-quality="${book.quality || ''}">
+        <button class="btn btn-dark add-to-cart" data-book-id="${book.id}" data-book-title="${safeTitle}" data-book-author="${safeAuthor}" data-book-price="${book.price}" data-book-image="${imageSrc}" data-book-quality="${book.quality || ""}">
           <i class="fas fa-shopping-cart"></i> Add to Cart
         </button>
         <a href="#" class="btn btn-outline-secondary view-book">View</a>
@@ -446,8 +616,8 @@ function initAddToCartButtons() {
     const bookQuality = addToCartBtn.dataset.bookQuality;
 
     if (!bookId) {
-      console.error('Book ID not found in data attributes');
-      showNotification('Error: Book ID not found', "error");
+      console.error("Book ID not found in data attributes");
+      showNotification("Error: Book ID not found", "error");
       return;
     }
 
@@ -457,7 +627,7 @@ function initAddToCartButtons() {
       author: bookAuthor,
       price: bookPrice,
       image: bookImage,
-      quality: bookQuality
+      quality: bookQuality,
     });
   });
 }
@@ -465,7 +635,7 @@ function initAddToCartButtons() {
 // Add book to cart
 function addBookToCart(bookData) {
   if (!bookData.title) {
-    showNotification('Error: Invalid book data', "error");
+    showNotification("Error: Invalid book data", "error");
     return;
   }
 
@@ -481,7 +651,9 @@ function addBookToCart(bookData) {
     cart.push({
       title: bookData.title,
       author: bookData.author,
-      price: bookData.price.toString().startsWith('₱') ? bookData.price : `₱${bookData.price}`,
+      price: bookData.price.toString().startsWith("₱")
+        ? bookData.price
+        : `₱${bookData.price}`,
       image: cartImage,
       quantity: 1,
       condition: bookData.quality || "Good",
@@ -499,8 +671,8 @@ function addToCartFromShop(bookId) {
   const bookIdStr = String(bookId);
   const book = booksDatabase.find((b) => String(b.id) === bookIdStr);
   if (!book) {
-    console.error('Book not found:', bookId);
-    showNotification('Book not found', "error");
+    console.error("Book not found:", bookId);
+    showNotification("Book not found", "error");
     return;
   }
 
@@ -557,32 +729,41 @@ function initFilters() {
     const sort = target.dataset.sort;
 
     if (genre) {
-      activeFilters.genre = genre;
+      activeFilters.genre = normalizeGenreName(genre);
       const btn = document.querySelector('.filter-btn[data-filter="genre"]');
       const displayText = genre === "all" ? "Genre" : target.textContent.trim();
-      if (btn) btn.innerHTML = `${displayText} <i class="fas fa-chevron-down"></i>`;
+      if (btn)
+        btn.innerHTML = `${displayText} <i class="fas fa-chevron-down"></i>`;
     } else if (quality) {
       activeFilters.quality = quality;
       const btn = document.querySelector('.filter-btn[data-filter="quality"]');
-      const displayText = quality === "all" ? "Quality" : target.textContent.trim();
-      if (btn) btn.innerHTML = `${displayText} <i class="fas fa-chevron-down"></i>`;
+      const displayText =
+        quality === "all" ? "Quality" : target.textContent.trim();
+      if (btn)
+        btn.innerHTML = `${displayText} <i class="fas fa-chevron-down"></i>`;
     } else if (price) {
       activeFilters.price = price;
       const btn = document.querySelector('.filter-btn[data-filter="price"]');
       const displayText = price === "all" ? "Price" : target.textContent.trim();
-      if (btn) btn.innerHTML = `${displayText} <i class="fas fa-chevron-down"></i>`;
+      if (btn)
+        btn.innerHTML = `${displayText} <i class="fas fa-chevron-down"></i>`;
     } else if (sort) {
       activeFilters.sort = sort;
-      document.getElementById("currentSort").textContent = target.textContent.trim();
+      document.getElementById("currentSort").textContent =
+        target.textContent.trim();
     }
 
     if (genre || quality || price || sort) {
       activeFilters.special = null;
     }
 
-    const parentDropdown = target.closest(".filter-dropdown-content, .sort-dropdown-content");
+    const parentDropdown = target.closest(
+      ".filter-dropdown-content, .sort-dropdown-content",
+    );
     if (parentDropdown) {
-      parentDropdown.querySelectorAll("a").forEach((l) => l.classList.remove("active"));
+      parentDropdown
+        .querySelectorAll("a")
+        .forEach((l) => l.classList.remove("active"));
       target.classList.add("active");
     }
 
@@ -611,9 +792,11 @@ function initFilters() {
 }
 
 function closeAllDropdowns() {
-  document.querySelectorAll(".filter-dropdown, .sort-dropdown").forEach((dropdown) => {
-    dropdown.classList.remove("active");
-  });
+  document
+    .querySelectorAll(".filter-dropdown, .sort-dropdown")
+    .forEach((dropdown) => {
+      dropdown.classList.remove("active");
+    });
 }
 
 // Apply all filters
@@ -621,14 +804,21 @@ function applyFilters(resetPage = true) {
   filteredBooks = booksDatabase.filter((book) => {
     // Genre filter - check both exact genre and subjects
     if (activeFilters.genre !== "all") {
-      const genreMatch = book.genre === activeFilters.genre;
-      const subjectMatch = book.subjects && book.subjects.some(subj =>
-        mapOpenLibraryGenre([subj]) === activeFilters.genre
-      );
+      const filterGenre = normalizeGenreName(activeFilters.genre);
+      const genreMatch = normalizeGenreName(book.genre) === filterGenre;
+      const subjectMatch =
+        book.subjects &&
+        book.subjects.some(
+          (subj) => mapOpenLibraryGenre([subj]) === filterGenre,
+        );
       if (!genreMatch && !subjectMatch) return false;
     }
 
-    if (activeFilters.quality !== "all" && book.quality !== activeFilters.quality) return false;
+    if (
+      activeFilters.quality !== "all" &&
+      book.quality !== activeFilters.quality
+    )
+      return false;
 
     if (activeFilters.price !== "all") {
       const price = book.price;
@@ -649,7 +839,8 @@ function applyFilters(resetPage = true) {
 
     if (activeFilters.search) {
       const searchTerm = activeFilters.search.toLowerCase();
-      const searchable = `${book.title} ${book.author} ${book.genre}`.toLowerCase();
+      const searchable =
+        `${book.title} ${book.author} ${book.genre}`.toLowerCase();
       if (!searchable.includes(searchTerm)) return false;
     }
 
@@ -693,7 +884,8 @@ function initSearch() {
         // Reload from Open Library API with new search term
         const booksGrid = document.getElementById("booksGrid");
         if (booksGrid) {
-          booksGrid.innerHTML = '<div class="loading-state" style="grid-column: 1/-1; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Searching Open Library...</div>';
+          booksGrid.innerHTML =
+            '<div class="loading-state" style="grid-column: 1/-1; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Searching Open Library...</div>';
         }
         fetchBooksFromAPI().then(() => applyFilters());
       }, 300);
@@ -726,7 +918,10 @@ function updatePagination() {
 
     if (target.classList.contains("prev-btn") && currentPage > 1) {
       currentPage--;
-    } else if (target.classList.contains("next-btn") && currentPage < totalPages) {
+    } else if (
+      target.classList.contains("next-btn") &&
+      currentPage < totalPages
+    ) {
       currentPage++;
     } else if (target.classList.contains("page-number")) {
       const page = parseInt(target.dataset.page, 10);
@@ -742,7 +937,7 @@ function updatePagination() {
   // Initial pagination render
   pageNumbers.innerHTML = Array.from({ length: totalPages }, (_, i) => {
     const page = i + 1;
-    return `<button class="page-number${page === currentPage ? ' active' : ''}" data-page="${page}">${page}</button>`;
+    return `<button class="page-number${page === currentPage ? " active" : ""}" data-page="${page}">${page}</button>`;
   }).join("");
 }
 

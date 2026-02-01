@@ -1,321 +1,556 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Online Bookstore - Philippines | Re;Read PH</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Online Bookstore - Philippines | Re;Read PH</title>
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Google Fonts - Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Add Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
 
-  <!-- Add Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    <!--Custom CSS file-->
+    <link rel="stylesheet" href="../styles/styles.css" />
+    <link rel="stylesheet" href="../styles/main.css" />
+    <link rel="stylesheet" href="../styles/about.css" />
+  </head>
 
-  <!--Custom CSS file-->
-  <link rel="stylesheet" href="../styles/styles.css" />
-  <link rel="stylesheet" href="../styles/main.css" />
-  <link rel="stylesheet" href="../styles/about.css" />
-</head>
-
-<body>
-  <!-- Navbar Section -->
-  <header class="header sticky-top bg-white border-bottom">
-    <div class="container-fluid">
-      <div class="row align-items-center py-2 px-3">
-        <!-- Logo (Always visible) -->
-        <div class="col-auto">
-          <h1 class="logo mb-0">
-            <a href="../index.html" class="text-decoration-none">Re;Read</a>
-          </h1>
-        </div>
-
-        <!-- Spacer for desktop -->
-        <div class="col d-none d-lg-block"></div>
-
-        <!-- Desktop Navigation (Hidden on mobile) -->
-        <nav class="col-auto d-none d-lg-flex align-items-center gap-3">
-          <!-- Search Bar (Desktop only) -->
-          <div class="search-bar d-flex align-items-center bg-light rounded-3 px-3 py-2">
-            <i class="fas fa-search text-secondary me-2"></i>
-            <input type="text" class="border-0 bg-transparent" placeholder="Search books, authors, subjects..."
-              style="width: 400px; outline: none" />
+  <body>
+    <!-- Navbar Section -->
+    <header class="header sticky-top bg-white border-bottom">
+      <div class="container-fluid">
+        <div class="row align-items-center py-2 px-3">
+          <!-- Logo (Always visible) -->
+          <div class="col-auto">
+            <h1 class="logo mb-0">
+              <a href="../index.html" class="text-decoration-none">Re;Read</a>
+            </h1>
           </div>
 
-          <!-- Browse Dropdown (Desktop) -->
-          <div class="dropdown">
-            <button class="btn btn-link text-dark text-decoration-none dropdown-toggle" type="button"
-              id="browseDropdownDesktop" data-bs-toggle="dropdown" aria-expanded="false">
-              Browse
-            </button>
+          <!-- Spacer for desktop -->
+          <div class="col d-none d-lg-block"></div>
 
-            <div class="dropdown-menu dropdown-menu-custom p-4" aria-labelledby="browseDropdownDesktop"
-              style="min-width: 600px">
-              <div class="row">
-                <!-- Fiction Column -->
-                <div class="col-md-6">
-                  <h6 class="fw-bold border-bottom pb-2 mb-3">Fiction</h6>
-                  <ul class="list-unstyled">
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Romance" class="text-decoration-none d-block">
-                        <span class="text-dark"><i class="fas fa-heart text-secondary me-2"></i>Romance</span>
-                        <small class="text-muted d-block ms-4">Love stories and romantic fiction</small>
-                      </a>
-                    </li>
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Adventure" class="text-decoration-none d-block">
-                        <span class="text-dark"><i class="fas fa-compass text-secondary me-2"></i>Adventure</span>
-                        <small class="text-muted d-block ms-4">Thrilling journeys and epic quests</small>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
+          <!-- Desktop Navigation (Hidden on mobile) -->
+          <nav class="col-auto d-none d-lg-flex align-items-center gap-3">
+            <!-- Search Bar (Desktop only) -->
+            <div
+              class="search-bar d-flex align-items-center bg-light rounded-3 px-3 py-2"
+            >
+              <i class="fas fa-search text-secondary me-2"></i>
+              <input
+                type="text"
+                class="border-0 bg-transparent"
+                placeholder="Search books, authors, subjects..."
+                style="width: 400px; outline: none"
+              />
+            </div>
 
-                <!-- Non-Fiction Column -->
-                <div class="col-md-6">
-                  <h6 class="fw-bold border-bottom pb-2 mb-3">Non-Fiction</h6>
-                  <ul class="list-unstyled">
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Business" class="text-decoration-none d-block">
-                        <span class="text-dark"><i class="fas fa-briefcase text-secondary me-2"></i>Business</span>
-                        <small class="text-muted d-block ms-4">Professional development and
-                          entrepreneurship</small>
-                      </a>
-                    </li>
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Education" class="text-decoration-none d-block">
-                        <span class="text-dark"><i
-                            class="fas fa-graduation-cap text-secondary me-2"></i>Education</span>
-                        <small class="text-muted d-block ms-4">Learning resources and academic guides</small>
-                      </a>
-                    </li>
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Financial" class="text-decoration-none d-block">
-                        <span class="text-dark"><i class="fas fa-dollar-sign text-secondary me-2"></i>Financial
-                          Literacy</span>
-                        <small class="text-muted d-block ms-4">Money management and investing</small>
-                      </a>
-                    </li>
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Memoir" class="text-decoration-none d-block">
-                        <span class="text-dark"><i class="fas fa-file-alt text-secondary me-2"></i>Memoir</span>
-                        <small class="text-muted d-block ms-4">Personal stories and autobiographies</small>
-                      </a>
-                    </li>
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Self-Help" class="text-decoration-none d-block">
-                        <span class="text-dark"><i class="fas fa-users text-secondary me-2"></i>Self-Help</span>
-                        <small class="text-muted d-block ms-4">Personal development and wellness</small>
-                      </a>
-                    </li>
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Spiritual" class="text-decoration-none d-block">
-                        <span class="text-dark"><i
-                            class="fa-solid fa-person-praying text-secondary me-2"></i>Spiritual</span>
-                        <small class="text-muted d-block ms-4">Faith, mindfulness, and spiritual growth</small>
-                      </a>
-                    </li>
-                    <li class="mb-2">
-                      <a href="shop.html?genre=Women" class="text-decoration-none d-block">
-                        <span class="text-dark"><i class="fa-solid fa-venus text-secondary me-2"></i>Women</span>
-                        <small class="text-muted d-block ms-4">Women's voices and experiences</small>
-                      </a>
-                    </li>
-                  </ul>
+            <!-- Browse Dropdown (Desktop) -->
+            <div class="dropdown">
+              <button
+                class="btn btn-link text-dark text-decoration-none dropdown-toggle"
+                type="button"
+                id="browseDropdownDesktop"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Browse
+              </button>
+
+              <div
+                class="dropdown-menu dropdown-menu-custom p-4"
+                aria-labelledby="browseDropdownDesktop"
+                style="min-width: 600px"
+              >
+                <div class="row">
+                  <!-- Fiction Column -->
+                  <div class="col-md-6">
+                    <h6 class="fw-bold border-bottom pb-2 mb-3">Fiction</h6>
+                    <ul class="list-unstyled">
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Romance"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i class="fas fa-heart text-secondary me-2"></i
+                            >Romance</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Love stories and romantic fiction</small
+                          >
+                        </a>
+                      </li>
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Adventure"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i class="fas fa-compass text-secondary me-2"></i
+                            >Adventure</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Thrilling journeys and epic quests</small
+                          >
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Non-Fiction Column -->
+                  <div class="col-md-6">
+                    <h6 class="fw-bold border-bottom pb-2 mb-3">Non-Fiction</h6>
+                    <ul class="list-unstyled">
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Business"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i class="fas fa-briefcase text-secondary me-2"></i
+                            >Business</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Professional development and
+                            entrepreneurship</small
+                          >
+                        </a>
+                      </li>
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Education"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i
+                              class="fas fa-graduation-cap text-secondary me-2"
+                            ></i
+                            >Education</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Learning resources and academic guides</small
+                          >
+                        </a>
+                      </li>
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Financial"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i
+                              class="fas fa-dollar-sign text-secondary me-2"
+                            ></i
+                            >Financial Literacy</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Money management and investing</small
+                          >
+                        </a>
+                      </li>
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Memoir"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i class="fas fa-file-alt text-secondary me-2"></i
+                            >Memoir</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Personal stories and autobiographies</small
+                          >
+                        </a>
+                      </li>
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Self-Help"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i class="fas fa-users text-secondary me-2"></i
+                            >Self-Help</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Personal development and wellness</small
+                          >
+                        </a>
+                      </li>
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Spiritual"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i
+                              class="fa-solid fa-person-praying text-secondary me-2"
+                            ></i
+                            >Spiritual</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Faith, mindfulness, and spiritual growth</small
+                          >
+                        </a>
+                      </li>
+                      <li class="mb-2">
+                        <a
+                          href="shop.html?genre=Women"
+                          class="text-decoration-none d-block"
+                        >
+                          <span class="text-dark"
+                            ><i
+                              class="fa-solid fa-venus text-secondary me-2"
+                            ></i
+                            >Women</span
+                          >
+                          <small class="text-muted d-block ms-4"
+                            >Women's voices and experiences</small
+                          >
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- Sell Link -->
+            <a
+              href="sell.html"
+              class="btn btn-link text-dark text-decoration-none"
+            >
+              <i class="fas fa-tag me-1"></i>Sell
+            </a>
+
+            <!-- About Link -->
+            <a
+              href="about.html"
+              class="btn btn-link text-dark text-decoration-none"
+            >
+              <i class="fas fa-info-circle me-1"></i>About
+            </a>
+
+            <!-- Cart Link (Desktop) -->
+            <a
+              href="cart.html"
+              class="btn btn-link text-dark text-decoration-none position-relative cart-link cart-link-desktop"
+            >
+              <span class="cart-icon-wrapper">
+                <i class="fas fa-shopping-cart cart-icon"></i>
+                <span class="cart-badge" id="cartBadge" hidden>0</span>
+              </span>
+              <span class="cart-label">Cart</span>
+            </a>
+
+            <!-- Sign In -->
+            <a
+              href="signin.html"
+              class="btn btn-link text-dark text-decoration-none"
+            >
+              <i class="fas fa-user me-1"></i>Sign In
+            </a>
+          </nav>
+
+          <!-- Mobile: Cart and Hamburger (Visible on mobile only) -->
+          <div
+            class="col d-flex d-lg-none justify-content-end align-items-center gap-2"
+          >
+            <!-- Cart Link (Mobile - between Sell/About and Hamburger) -->
+            <a
+              href="cart.html"
+              class="btn btn-link text-dark text-decoration-none position-relative p-2 cart-link cart-link-mobile"
+            >
+              <span class="cart-icon-wrapper">
+                <i class="fas fa-shopping-cart cart-icon"></i>
+                <span class="cart-badge" id="cartBadgeMobile" hidden>0</span>
+              </span>
+            </a>
+
+            <!-- Hamburger Toggle Button -->
+            <button
+              class="btn btn-link text-dark p-2"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#mobileMenu"
+              aria-controls="mobileMenu"
+            >
+              <i class="fas fa-bars fs-4"></i>
+            </button>
           </div>
-
-          <!-- Sell Link -->
-          <a href="sell.html" class="btn btn-link text-dark text-decoration-none">
-            <i class="fas fa-tag me-1"></i>Sell
-          </a>
-
-          <!-- About Link -->
-          <a href="about.html" class="btn btn-link text-dark text-decoration-none">
-            <i class="fas fa-info-circle me-1"></i>About
-          </a>
-
-          <!-- Cart Link (Desktop) -->
-          <a href="cart.html"
-            class="btn btn-link text-dark text-decoration-none position-relative cart-link cart-link-desktop">
-            <span class="cart-icon-wrapper">
-              <i class="fas fa-shopping-cart cart-icon"></i>
-              <span class="cart-badge" id="cartBadge" hidden>0</span>
-            </span>
-            <span class="cart-label">Cart</span>
-          </a>
-
-          <!-- Sign In -->
-          <a href="signin.html" class="btn btn-link text-dark text-decoration-none">
-            <i class="fas fa-user me-1"></i>Sign In
-          </a>
-        </nav>
-
-        <!-- Mobile: Cart and Hamburger (Visible on mobile only) -->
-        <div class="col d-flex d-lg-none justify-content-end align-items-center gap-2">
-          <!-- Cart Link (Mobile - between Sell/About and Hamburger) -->
-          <a href="cart.html"
-            class="btn btn-link text-dark text-decoration-none position-relative p-2 cart-link cart-link-mobile">
-            <span class="cart-icon-wrapper">
-              <i class="fas fa-shopping-cart cart-icon"></i>
-              <span class="cart-badge" id="cartBadgeMobile" hidden>0</span>
-            </span>
-          </a>
-
-          <!-- Hamburger Toggle Button -->
-          <button class="btn btn-link text-dark p-2" type="button" data-bs-toggle="offcanvas"
-            data-bs-target="#mobileMenu" aria-controls="mobileMenu">
-            <i class="fas fa-bars fs-4"></i>
-          </button>
         </div>
       </div>
-    </div>
 
-    <!-- Mobile Offcanvas Menu -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
-      <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title fw-bold" id="mobileMenuLabel">Menu</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
+      <!-- Mobile Offcanvas Menu -->
+      <div
+        class="offcanvas offcanvas-end"
+        tabindex="-1"
+        id="mobileMenu"
+        aria-labelledby="mobileMenuLabel"
+      >
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title fw-bold" id="mobileMenuLabel">Menu</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
 
-      <div class="offcanvas-body p-0">
-        <div class="list-group list-group-flush">
-          <!-- Search Bar (Mobile) -->
-          <div class="list-group-item">
-            <div class="search-bar-mobile d-flex align-items-center bg-light rounded-3 px-3 py-2">
-              <i class="fas fa-search text-secondary me-2"></i>
-              <input type="text" class="border-0 bg-transparent w-100" placeholder="Search books..."
-                style="outline: none" />
+        <div class="offcanvas-body p-0">
+          <div class="list-group list-group-flush">
+            <!-- Search Bar (Mobile) -->
+            <div class="list-group-item">
+              <div
+                class="search-bar-mobile d-flex align-items-center bg-light rounded-3 px-3 py-2"
+              >
+                <i class="fas fa-search text-secondary me-2"></i>
+                <input
+                  type="text"
+                  class="border-0 bg-transparent w-100"
+                  placeholder="Search books..."
+                  style="outline: none"
+                />
+              </div>
             </div>
-          </div>
 
-          <!-- Browse Accordion (Mobile) -->
-          <div class="list-group-item p-0">
-            <div class="accordion accordion-flush" id="browseAccordion">
-              <div class="accordion-item border-0">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#browseCollapse" aria-expanded="false" aria-controls="browseCollapse">
-                    <i class="fas fa-book me-2"></i>Browse
-                  </button>
-                </h2>
-                <div id="browseCollapse" class="accordion-collapse collapse" data-bs-parent="#browseAccordion">
-                  <div class="accordion-body p-0">
-                    <!-- Fiction Sub-Accordion -->
-                    <div class="accordion" id="genreAccordion">
-                      <div class="accordion-item border-0">
-                        <h2 class="accordion-header">
-                          <button class="accordion-button collapsed ps-4" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#fictionCollapse" aria-expanded="false">
-                            Fiction
-                          </button>
-                        </h2>
-                        <div id="fictionCollapse" class="accordion-collapse collapse" data-bs-parent="#genreAccordion">
-                          <div class="accordion-body ps-5">
-                            <ul class="list-unstyled">
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Romance" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fas fa-heart text-secondary me-2"></i>Romance
-                                  </div>
-                                  <small class="text-muted">Love stories and romantic fiction</small>
-                                </a>
-                              </li>
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Adventure" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fas fa-compass text-secondary me-2"></i>Adventure
-                                  </div>
-                                  <small class="text-muted">Thrilling journeys and epic quests</small>
-                                </a>
-                              </li>
-                            </ul>
+            <!-- Browse Accordion (Mobile) -->
+            <div class="list-group-item p-0">
+              <div class="accordion accordion-flush" id="browseAccordion">
+                <div class="accordion-item border-0">
+                  <h2 class="accordion-header">
+                    <button
+                      class="accordion-button collapsed fw-semibold"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#browseCollapse"
+                      aria-expanded="false"
+                      aria-controls="browseCollapse"
+                    >
+                      <i class="fas fa-book me-2"></i>Browse
+                    </button>
+                  </h2>
+                  <div
+                    id="browseCollapse"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#browseAccordion"
+                  >
+                    <div class="accordion-body p-0">
+                      <!-- Fiction Sub-Accordion -->
+                      <div class="accordion" id="genreAccordion">
+                        <div class="accordion-item border-0">
+                          <h2 class="accordion-header">
+                            <button
+                              class="accordion-button collapsed ps-4"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#fictionCollapse"
+                              aria-expanded="false"
+                            >
+                              Fiction
+                            </button>
+                          </h2>
+                          <div
+                            id="fictionCollapse"
+                            class="accordion-collapse collapse"
+                            data-bs-parent="#genreAccordion"
+                          >
+                            <div class="accordion-body ps-5">
+                              <ul class="list-unstyled">
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Romance"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fas fa-heart text-secondary me-2"
+                                      ></i
+                                      >Romance
+                                    </div>
+                                    <small class="text-muted"
+                                      >Love stories and romantic fiction</small
+                                    >
+                                  </a>
+                                </li>
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Adventure"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fas fa-compass text-secondary me-2"
+                                      ></i
+                                      >Adventure
+                                    </div>
+                                    <small class="text-muted"
+                                      >Thrilling journeys and epic quests</small
+                                    >
+                                  </a>
+                                </li>
+                              </ul>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <!-- Non-Fiction Sub-Accordion -->
-                      <div class="accordion-item border-0">
-                        <h2 class="accordion-header">
-                          <button class="accordion-button collapsed ps-4" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#nonFictionCollapse" aria-expanded="false">
-                            Non-Fiction
-                          </button>
-                        </h2>
-                        <div id="nonFictionCollapse" class="accordion-collapse collapse"
-                          data-bs-parent="#genreAccordion">
-                          <div class="accordion-body ps-5">
-                            <ul class="list-unstyled">
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Business" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fas fa-briefcase text-secondary me-2"></i>Business
-                                  </div>
-                                  <small class="text-muted">Professional development and
-                                    entrepreneurship</small>
-                                </a>
-                              </li>
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Education" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fas fa-graduation-cap text-secondary me-2"></i>Education
-                                  </div>
-                                  <small class="text-muted">Learning resources and academic
-                                    guides</small>
-                                </a>
-                              </li>
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Financial" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fas fa-dollar-sign text-secondary me-2"></i>Financial Literacy
-                                  </div>
-                                  <small class="text-muted">Money management and investing</small>
-                                </a>
-                              </li>
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Memoir" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fas fa-file-alt text-secondary me-2"></i>Memoir
-                                  </div>
-                                  <small class="text-muted">Personal stories and
-                                    autobiographies</small>
-                                </a>
-                              </li>
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Self-Help" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fas fa-users text-secondary me-2"></i>Self-Help
-                                  </div>
-                                  <small class="text-muted">Personal development and wellness</small>
-                                </a>
-                              </li>
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Spiritual" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fa-solid fa-person-praying text-secondary me-2"></i>Spiritual
-                                  </div>
-                                  <small class="text-muted">Faith, mindfulness, and spiritual
-                                    growth</small>
-                                </a>
-                              </li>
-                              <li class="mb-3">
-                                <a href="shop.html?genre=Women" class="text-decoration-none d-block">
-                                  <div class="text-dark fw-semibold">
-                                    <i class="fa-solid fa-venus text-secondary me-2"></i>Women
-                                  </div>
-                                  <small class="text-muted">Women's voices and experiences</small>
-                                </a>
-                              </li>
-                            </ul>
+                        <!-- Non-Fiction Sub-Accordion -->
+                        <div class="accordion-item border-0">
+                          <h2 class="accordion-header">
+                            <button
+                              class="accordion-button collapsed ps-4"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#nonFictionCollapse"
+                              aria-expanded="false"
+                            >
+                              Non-Fiction
+                            </button>
+                          </h2>
+                          <div
+                            id="nonFictionCollapse"
+                            class="accordion-collapse collapse"
+                            data-bs-parent="#genreAccordion"
+                          >
+                            <div class="accordion-body ps-5">
+                              <ul class="list-unstyled">
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Business"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fas fa-briefcase text-secondary me-2"
+                                      ></i
+                                      >Business
+                                    </div>
+                                    <small class="text-muted"
+                                      >Professional development and
+                                      entrepreneurship</small
+                                    >
+                                  </a>
+                                </li>
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Education"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fas fa-graduation-cap text-secondary me-2"
+                                      ></i
+                                      >Education
+                                    </div>
+                                    <small class="text-muted"
+                                      >Learning resources and academic
+                                      guides</small
+                                    >
+                                  </a>
+                                </li>
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Financial"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fas fa-dollar-sign text-secondary me-2"
+                                      ></i
+                                      >Financial Literacy
+                                    </div>
+                                    <small class="text-muted"
+                                      >Money management and investing</small
+                                    >
+                                  </a>
+                                </li>
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Memoir"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fas fa-file-alt text-secondary me-2"
+                                      ></i
+                                      >Memoir
+                                    </div>
+                                    <small class="text-muted"
+                                      >Personal stories and
+                                      autobiographies</small
+                                    >
+                                  </a>
+                                </li>
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Self-Help"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fas fa-users text-secondary me-2"
+                                      ></i
+                                      >Self-Help
+                                    </div>
+                                    <small class="text-muted"
+                                      >Personal development and wellness</small
+                                    >
+                                  </a>
+                                </li>
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Spiritual"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fa-solid fa-person-praying text-secondary me-2"
+                                      ></i
+                                      >Spiritual
+                                    </div>
+                                    <small class="text-muted"
+                                      >Faith, mindfulness, and spiritual
+                                      growth</small
+                                    >
+                                  </a>
+                                </li>
+                                <li class="mb-3">
+                                  <a
+                                    href="shop.html?genre=Women"
+                                    class="text-decoration-none d-block"
+                                  >
+                                    <div class="text-dark fw-semibold">
+                                      <i
+                                        class="fa-solid fa-venus text-secondary me-2"
+                                      ></i
+                                      >Women
+                                    </div>
+                                    <small class="text-muted"
+                                      >Women's voices and experiences</small
+                                    >
+                                  </a>
+                                </li>
+                              </ul>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -324,401 +559,454 @@
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Sell Link (Mobile) -->
-          <a href="sell.html" class="list-group-item list-group-item-action border-0">
-            <i class="fas fa-tag me-2"></i>Sell
-          </a>
+            <!-- Sell Link (Mobile) -->
+            <a
+              href="sell.html"
+              class="list-group-item list-group-item-action border-0"
+            >
+              <i class="fas fa-tag me-2"></i>Sell
+            </a>
 
-          <!-- About Link (Mobile) -->
-          <a href="about.html" class="list-group-item list-group-item-action border-0">
-            <i class="fas fa-info-circle me-2"></i>About
-          </a>
+            <!-- About Link (Mobile) -->
+            <a
+              href="about.html"
+              class="list-group-item list-group-item-action border-0"
+            >
+              <i class="fas fa-info-circle me-2"></i>About
+            </a>
 
-          <!-- Sign In (Mobile) -->
-          <a href="signin.html" class="list-group-item list-group-item-action border-0">
-            <i class="fas fa-user me-2"></i>Sign In
-          </a>
-        </div>
-      </div>
-    </div>
-  </header>
-  <!-- End Navbar Section -->
-
-  <!-- About — Hero -->
-  <main class="about-main">
-    <!-- ABOUT US SECTION STARTS HERE -->
-    <section class="about-hero">
-      <div class="container">
-        <header class="about-hero-header">
-          <h2>About Re;Read</h2>
-          <p class="about-hero-description">
-            Empowering students and readers with affordable, sustainable
-            access to quality second-hand books.<br />
-            Building a trusted marketplace where knowledge meets
-            affordability.
-          </p>
-        </header>
-      </div>
-    </section>
-
-    <!-- ABOUT MISSION & VISION -->
-    <section class="about-mission-vision">
-      <div class="container">
-        <div class="mission-vision-grid">
-          <div class="mission-vision-card">
-            <h3>
-              <span class="mission-vision-icon"><i class="fa-solid fa-bullseye"></i></span>
-              Our Mission
-            </h3>
-            <p class="mission-vision-text">
-              To make quality education accessible by providing a trusted
-              platform where students can find, buy, and sell second-hand
-              books at affordable prices, promoting both financial
-              sustainability and environmental responsibility.
-            </p>
-          </div>
-
-          <div class="mission-vision-card">
-            <h3>
-              <span class="mission-vision-icon"><i class="fa-regular fa-heart"></i></span>
-              Our Vision
-            </h3>
-            <p class="mission-vision-text">
-              To become the leading marketplace for second-hand academic and
-              general books, creating a community where knowledge is shared,
-              costs are reduced, and environmental impact is minimized.
-            </p>
+            <!-- Sign In (Mobile) -->
+            <a
+              href="signin.html"
+              class="list-group-item list-group-item-action border-0"
+            >
+              <i class="fas fa-user me-2"></i>Sign In
+            </a>
           </div>
         </div>
       </div>
-    </section>
+    </header>
+    <!-- End Navbar Section -->
 
-    <!--CORE VALUES-->
-    <section class="about-values">
-      <div class="container">
-        <header class="about-section-header">
-          <h2>Our Core Values</h2>
-        </header>
+    <!-- About — Hero -->
+    <main class="about-main">
+      <!-- ABOUT US SECTION STARTS HERE -->
+      <section class="about-hero">
+        <div class="container">
+          <header class="about-hero-header">
+            <h2>About Re;Read</h2>
+            <p class="about-hero-description">
+              Empowering students and readers with affordable, sustainable
+              access to quality second-hand books.<br />
+              Building a trusted marketplace where knowledge meets
+              affordability.
+            </p>
+          </header>
+        </div>
+      </section>
 
-        <div class="values-grid">
-          <div class="value-card">
-            <div class="value-icon">
-              <i class="fa-solid fa-book-open-reader"></i>
+      <!-- ABOUT MISSION & VISION -->
+      <section class="about-mission-vision">
+        <div class="container">
+          <div class="mission-vision-grid">
+            <div class="mission-vision-card">
+              <h3>
+                <span class="mission-vision-icon"
+                  ><i class="fa-solid fa-bullseye"></i
+                ></span>
+                Our Mission
+              </h3>
+              <p class="mission-vision-text">
+                To make quality education accessible by providing a trusted
+                platform where students can find, buy, and sell second-hand
+                books at affordable prices, promoting both financial
+                sustainability and environmental responsibility.
+              </p>
             </div>
-            <h3>Accessibility</h3>
-            <p class="value-description">
-              Making quality books affordable and accessible to all students,
-              regardless of their financial situation.
-            </p>
-          </div>
 
-          <div class="value-card">
-            <div class="value-icon">
-              <i class="fa-solid fa-leaf"></i>
+            <div class="mission-vision-card">
+              <h3>
+                <span class="mission-vision-icon"
+                  ><i class="fa-regular fa-heart"></i
+                ></span>
+                Our Vision
+              </h3>
+              <p class="mission-vision-text">
+                To become the leading marketplace for second-hand academic and
+                general books, creating a community where knowledge is shared,
+                costs are reduced, and environmental impact is minimized.
+              </p>
             </div>
-            <h3>Sustainability</h3>
-            <p class="value-description">
-              Promoting environmental responsibility by extending the
-              lifecycle of books through reuse and sharing.
-            </p>
-          </div>
-
-          <div class="value-card">
-            <div class="value-icon">
-              <i class="fa-solid fa-shield-heart"></i>
-            </div>
-            <h3>Trust</h3>
-            <p class="value-description">
-              Building a reliable platform with quality assurance, secure
-              transactions, and community-driven reviews.
-            </p>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- PROBLEM SECTION -->
-    <section class="about-problem">
-      <div class="container">
-        <header class="about-section-header">
-          <h2>The Problem We Solve</h2>
-        </header>
+      <!--CORE VALUES-->
+      <section class="about-values">
+        <div class="container">
+          <header class="about-section-header">
+            <h2>Our Core Values</h2>
+          </header>
 
-        <div class="problem-solution-grid">
-          <div class="problem-solution-card">
-            <h3>For Students</h3>
-            <ul class="problem-list">
-              <li>High cost of new textbooks and academic materials</li>
-              <li>Limited access to affordable books in local bookstores</li>
-              <li>Environmental impact of producing new books</li>
-              <li>Difficulties in reselling used books at fair prices</li>
-            </ul>
-          </div>
-
-          <div class="problem-solution-card">
-            <h3>For Book Sellers</h3>
-            <ul class="problem-list">
-              <li>Challenges in finding buyers for used books</li>
-              <li>Lack of a trusted platform for secure transactions</li>
-              <li>Time-consuming process of selling books individually</li>
-              <li>Difficulty in determining fair market prices</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SOLUTION SECTION -->
-    <section class="about-solution">
-      <div class="container">
-        <header class="about-section-header">
-          <h2>Our Solution</h2>
-        </header>
-
-        <div class="problem-solution-grid">
-          <div class="problem-solution-card">
-            <h3>For Buyers</h3>
-            <ul class="solution-list">
-              <li>Wide selection of affordable second-hand books</li>
-              <li>
-                Easy-to-use online marketplace with search and filter options
-              </li>
-              <li>Secure payment and delivery options</li>
-              <li>Community reviews and ratings for quality assurance</li>
-            </ul>
-          </div>
-
-          <div class="problem-solution-card">
-            <h3>For Sellers</h3>
-            <ul class="solution-list">
-              <li>Simple listing process with pricing guidance</li>
-              <li>Access to a large audience of potential buyers</li>
-              <li>Secure transaction handling and payment processing</li>
-              <li>Tools for tracking sales and managing inventory</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SERVE SECTION -->
-    <section class="about-serve">
-      <div class="container">
-        <header class="about-section-header">
-          <h2>Who We Serve</h2>
-        </header>
-
-        <div class="serve-grid">
-          <div class="serve-card">
-            <h3>
-              <div class="serve-icon">
-                <i class="fa-solid fa-graduation-cap"></i>
-              </div>
-              Students
-            </h3>
-            <p class="serve-description">
-              Our primary audience seeking affordable textbooks
-            </p>
-          </div>
-
-          <div class="serve-card">
-            <h3>
-              <div class="serve-icon">
+          <div class="values-grid">
+            <div class="value-card">
+              <div class="value-icon">
                 <i class="fa-solid fa-book-open-reader"></i>
               </div>
-              General Readers
-            </h3>
-            <p class="serve-description">
-              Book enthusiasts looking for affordable reads
-            </p>
-          </div>
+              <h3>Accessibility</h3>
+              <p class="value-description">
+                Making quality books affordable and accessible to all students,
+                regardless of their financial situation.
+              </p>
+            </div>
 
-          <div class="serve-card">
-            <h3>
-              <div class="serve-icon">
-                <i class="fa-solid fa-user-tie"></i>
+            <div class="value-card">
+              <div class="value-icon">
+                <i class="fa-solid fa-leaf"></i>
               </div>
-              Book Sellers
-            </h3>
-            <p class="serve-description">
-              Individuals and small businesses wanting to sell used books
-            </p>
-          </div>
+              <h3>Sustainability</h3>
+              <p class="value-description">
+                Promoting environmental responsibility by extending the
+                lifecycle of books through reuse and sharing.
+              </p>
+            </div>
 
-          <div class="serve-card">
-            <h3>
-              <div class="serve-icon"><i class="fa-solid fa-globe"></i></div>
-              Eco-Conscious
-            </h3>
-            <p class="serve-description">
-              Readers prioritizing sustainability and environmental impact
-            </p>
+            <div class="value-card">
+              <div class="value-icon">
+                <i class="fa-solid fa-shield-heart"></i>
+              </div>
+              <h3>Trust</h3>
+              <p class="value-description">
+                Building a reliable platform with quality assurance, secure
+                transactions, and community-driven reviews.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!--COMMITMENT SECTION-->
-    <section class="about-commitment">
+      <!-- PROBLEM SECTION -->
+      <section class="about-problem">
+        <div class="container">
+          <header class="about-section-header">
+            <h2>The Problem We Solve</h2>
+          </header>
+
+          <div class="problem-solution-grid">
+            <div class="problem-solution-card">
+              <h3>For Students</h3>
+              <ul class="problem-list">
+                <li>High cost of new textbooks and academic materials</li>
+                <li>Limited access to affordable books in local bookstores</li>
+                <li>Environmental impact of producing new books</li>
+                <li>Difficulties in reselling used books at fair prices</li>
+              </ul>
+            </div>
+
+            <div class="problem-solution-card">
+              <h3>For Book Sellers</h3>
+              <ul class="problem-list">
+                <li>Challenges in finding buyers for used books</li>
+                <li>Lack of a trusted platform for secure transactions</li>
+                <li>Time-consuming process of selling books individually</li>
+                <li>Difficulty in determining fair market prices</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SOLUTION SECTION -->
+      <section class="about-solution">
+        <div class="container">
+          <header class="about-section-header">
+            <h2>Our Solution</h2>
+          </header>
+
+          <div class="problem-solution-grid">
+            <div class="problem-solution-card">
+              <h3>For Buyers</h3>
+              <ul class="solution-list">
+                <li>Wide selection of affordable second-hand books</li>
+                <li>
+                  Easy-to-use online marketplace with search and filter options
+                </li>
+                <li>Secure payment and delivery options</li>
+                <li>Community reviews and ratings for quality assurance</li>
+              </ul>
+            </div>
+
+            <div class="problem-solution-card">
+              <h3>For Sellers</h3>
+              <ul class="solution-list">
+                <li>Simple listing process with pricing guidance</li>
+                <li>Access to a large audience of potential buyers</li>
+                <li>Secure transaction handling and payment processing</li>
+                <li>Tools for tracking sales and managing inventory</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SERVE SECTION -->
+      <section class="about-serve">
+        <div class="container">
+          <header class="about-section-header">
+            <h2>Who We Serve</h2>
+          </header>
+
+          <div class="serve-grid">
+            <div class="serve-card">
+              <h3>
+                <div class="serve-icon">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                Students
+              </h3>
+              <p class="serve-description">
+                Our primary audience seeking affordable textbooks
+              </p>
+            </div>
+
+            <div class="serve-card">
+              <h3>
+                <div class="serve-icon">
+                  <i class="fa-solid fa-book-open-reader"></i>
+                </div>
+                General Readers
+              </h3>
+              <p class="serve-description">
+                Book enthusiasts looking for affordable reads
+              </p>
+            </div>
+
+            <div class="serve-card">
+              <h3>
+                <div class="serve-icon">
+                  <i class="fa-solid fa-user-tie"></i>
+                </div>
+                Book Sellers
+              </h3>
+              <p class="serve-description">
+                Individuals and small businesses wanting to sell used books
+              </p>
+            </div>
+
+            <div class="serve-card">
+              <h3>
+                <div class="serve-icon"><i class="fa-solid fa-globe"></i></div>
+                Eco-Conscious
+              </h3>
+              <p class="serve-description">
+                Readers prioritizing sustainability and environmental impact
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!--COMMITMENT SECTION-->
+      <section class="about-commitment">
+        <div class="container">
+          <header class="about-section-header">
+            <h2>Our Quality Commitment</h2>
+          </header>
+
+          <div class="commitment-grid">
+            <div class="commitment-card commitment-all">
+              <h3>All Books</h3>
+              <p class="commitment-description">
+                Complete selection including new, second-hand, and vintage
+                books.
+              </p>
+            </div>
+
+            <div class="commitment-card commitment-second">
+              <h3>Second Hand Books</h3>
+              <p class="commitment-description">
+                Gently used books in good condition, thoroughly vetted for
+                quality.
+              </p>
+            </div>
+
+            <div class="commitment-card commitment-old">
+              <h3>Old Books</h3>
+              <p class="commitment-description">
+                Vintage and older editions, perfect for collectors and
+                budget-conscious buyers.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GET IN TOUCH SECTION -->
+      <section class="about-contact">
+        <div class="container">
+          <header class="about-section-header">
+            <h2>Get in Touch</h2>
+            <p class="about-contact-subtitle">
+              Have questions or suggestions? We'd love to hear from you.
+            </p>
+          </header>
+          <div class="about-contact-form">
+            <form action="#">
+              <input type="text" placeholder="Your Name" required />
+              <input type="email" placeholder="Your Email" required />
+              <textarea placeholder="Your Message" rows="5" required></textarea>
+              <button type="submit" class="about-submit-btn">
+                Send Message
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- End About Main -->
+
+    <!-- FOOTER -->
+    <footer class="bg-black text-light pt-5 pb-3">
       <div class="container">
-        <header class="about-section-header">
-          <h2>Our Quality Commitment</h2>
-        </header>
+        <div class="row gy-4 gx-5">
+          <!-- Company Info -->
+          <div class="col-12 col-md-3">
+            <h3 class="mb-3"><i class="fas fa-book me-2"></i>Re;Read</h3>
+            <p class="small">
+              Serving quality and affordable books for readers everywhere
+              through our trusted marketplace for second-hand books.
+            </p>
+            <div class="d-flex gap-3 fs-5 mt-3">
+              <a href="#" class="text-light"><i class="fab fa-facebook"></i></a>
+              <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
+              <a href="#" class="text-light"
+                ><i class="fab fa-instagram"></i
+              ></a>
+            </div>
+          </div>
 
-        <div class="commitment-grid">
-          <div class="commitment-card commitment-all">
-            <h3>All Books</h3>
-            <p class="commitment-description">
-              Complete selection including new, second-hand, and vintage
-              books.
+          <!-- Quick Links -->
+          <div class="col-6 col-md-3">
+            <h5 class="mb-3">Quick Links</h5>
+            <ul class="list-unstyled small">
+              <li>
+                <a
+                  href="../index.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >Home</a
+                >
+              </li>
+              <li>
+                <a
+                  href="shop.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >Shop Books</a
+                >
+              </li>
+              <li>
+                <a
+                  href="sell.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >Sell Your Books</a
+                >
+              </li>
+              <li>
+                <a
+                  href="about.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >About Us</a
+                >
+              </li>
+              <li>
+                <a
+                  href="cart.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >Cart</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- Support -->
+          <div class="col-6 col-md-3">
+            <h5 class="mb-3">Support</h5>
+            <ul class="list-unstyled small">
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Help Center</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Shipping Info</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Returns</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Safety Guidelines</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Contact Us</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- Contact -->
+          <div class="col-12 col-md-3">
+            <h5 class="mb-3">Contact</h5>
+            <p class="small mb-2">
+              <i class="fas fa-envelope me-2"></i>support@reread.com
+            </p>
+            <p class="small mb-2">
+              <i class="fas fa-phone me-2"></i>0408-2328-REREAD
+            </p>
+            <p class="small mb-0">
+              <i class="fas fa-map-marker-alt me-2"></i>Available Nationwide
             </p>
           </div>
-
-          <div class="commitment-card commitment-second">
-            <h3>Second Hand Books</h3>
-            <p class="commitment-description">
-              Gently used books in good condition, thoroughly vetted for
-              quality.
-            </p>
-          </div>
-
-          <div class="commitment-card commitment-old">
-            <h3>Old Books</h3>
-            <p class="commitment-description">
-              Vintage and older editions, perfect for collectors and
-              budget-conscious buyers.
-            </p>
-          </div>
         </div>
-      </div>
-    </section>
 
-    <!-- GET IN TOUCH SECTION -->
-    <section class="about-contact">
-      <div class="container">
-        <header class="about-section-header">
-          <h2>Get in Touch</h2>
-          <p class="about-contact-subtitle">
-            Have questions or suggestions? We'd love to hear from you.
-          </p>
-        </header>
-        <div class="about-contact-form">
-          <form action="#">
-            <input type="text" placeholder="Your Name" required />
-            <input type="email" placeholder="Your Email" required />
-            <textarea placeholder="Your Message" rows="5" required></textarea>
-            <button type="submit" class="about-submit-btn">
-              Send Message
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
-  </main>
-  <!-- End About Main -->
+        <hr class="border-secondary mt-4 mb-3" />
 
-  <!-- FOOTER -->
-  <footer class="bg-black text-light pt-5 pb-3">
-    <div class="container">
-      <div class="row gy-4 gx-5">
-        <!-- Company Info -->
-        <div class="col-12 col-md-3">
-          <h3 class="mb-3"><i class="fas fa-book me-2"></i>Re;Read</h3>
-          <p class="small">
-            Serving quality and affordable books for readers everywhere
-            through our trusted marketplace for second-hand books.
-          </p>
-          <div class="d-flex gap-3 fs-5 mt-3">
-            <a href="#" class="text-light"><i class="fab fa-facebook"></i></a>
-            <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
+        <div
+          class="d-flex flex-column flex-md-row justify-content-between align-items-center"
+        >
+          <p class="mb-2 mb-md-0 small">© 2025 Re;Read. All rights reserved.</p>
+          <div class="d-flex gap-3 small">
+            <a href="#" class="text-light text-decoration-none"
+              >Privacy Policy</a
+            >
+            <a href="#" class="text-light text-decoration-none"
+              >Terms of Service</a
+            >
+            <a href="#" class="text-light text-decoration-none"
+              >Cookie Policy</a
+            >
           </div>
         </div>
-
-        <!-- Quick Links -->
-        <div class="col-6 col-md-3">
-          <h5 class="mb-3">Quick Links</h5>
-          <ul class="list-unstyled small">
-            <li>
-              <a href="../index.html" class="text-light text-decoration-none d-block mb-1">Home</a>
-            </li>
-            <li>
-              <a href="shop.html" class="text-light text-decoration-none d-block mb-1">Shop Books</a>
-            </li>
-            <li>
-              <a href="sell.html" class="text-light text-decoration-none d-block mb-1">Sell Your Books</a>
-            </li>
-            <li>
-              <a href="about.html" class="text-light text-decoration-none d-block mb-1">About Us</a>
-            </li>
-            <li>
-              <a href="cart.html" class="text-light text-decoration-none d-block mb-1">Cart</a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Support -->
-        <div class="col-6 col-md-3">
-          <h5 class="mb-3">Support</h5>
-          <ul class="list-unstyled small">
-            <li>
-              <a href="#" class="text-light text-decoration-none d-block mb-1">Help Center</a>
-            </li>
-            <li>
-              <a href="#" class="text-light text-decoration-none d-block mb-1">Shipping Info</a>
-            </li>
-            <li>
-              <a href="#" class="text-light text-decoration-none d-block mb-1">Returns</a>
-            </li>
-            <li>
-              <a href="#" class="text-light text-decoration-none d-block mb-1">Safety Guidelines</a>
-            </li>
-            <li>
-              <a href="#" class="text-light text-decoration-none d-block mb-1">Contact Us</a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Contact -->
-        <div class="col-12 col-md-3">
-          <h5 class="mb-3">Contact</h5>
-          <p class="small mb-2">
-            <i class="fas fa-envelope me-2"></i>support@reread.com
-          </p>
-          <p class="small mb-2">
-            <i class="fas fa-phone me-2"></i>0408-2328-REREAD
-          </p>
-          <p class="small mb-0">
-            <i class="fas fa-map-marker-alt me-2"></i>Available Nationwide
-          </p>
-        </div>
       </div>
+    </footer>
+    <!-- FOOTER ENDS HERE -->
 
-      <hr class="border-secondary mt-4 mb-3" />
+    <!-- Bootstrap Bundle (includes Popper) - add before custom scripts -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+    ></script>
 
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-        <p class="mb-2 mb-md-0 small">© 2025 Re;Read. All rights reserved.</p>
-        <div class="d-flex gap-3 small">
-          <a href="#" class="text-light text-decoration-none">Privacy Policy</a>
-          <a href="#" class="text-light text-decoration-none">Terms of Service</a>
-          <a href="#" class="text-light text-decoration-none">Cookie Policy</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-  <!-- FOOTER ENDS HERE -->
-
-  <!-- Bootstrap Bundle (includes Popper) - add before custom scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-    crossorigin="anonymous"></script>
-
-  <!-- Custom JS Files -->
-  <script src="../scripts/auth.js"></script>
-  <script src="../scripts/main.js"></script>
-  <script src="../scripts/about.js"></script>
-</body>
-
+    <!-- Custom JS Files -->
+    <script src="../scripts/auth.js"></script>
+    <script src="../scripts/main.js"></script>
+    <script src="../scripts/about.js"></script>
+  </body>
 </html>
