@@ -562,11 +562,14 @@ function renderBooks() {
   const endIndex = startIndex + booksPerPage;
   const booksToShow = filteredBooks.slice(startIndex, endIndex);
 
+  // Store books database in sessionStorage for quick access on details page
+  sessionStorage.setItem("booksDatabase", JSON.stringify(booksDatabase));
+
   booksGrid.innerHTML = booksToShow
     .map((book) => {
       const imageSrc =
         book.image &&
-        (book.image.startsWith("http") || book.image.startsWith("data:"))
+          (book.image.startsWith("http") || book.image.startsWith("data:"))
           ? book.image
           : DEFAULT_PLACEHOLDER;
 
@@ -574,7 +577,7 @@ function renderBooks() {
       const safeAuthor = (book.author || "Unknown").replace(/'/g, "\\'");
 
       return `
-    <article class="book-card" data-id="${book.id}" data-genre="${book.genre}" data-quality="${book.quality}" data-price="${book.price}">
+    <article class="book-card" data-id="${book.id}" data-genre="${book.genre}" data-quality="${book.quality}" data-price="${book.price}" data-book-url="book-details.html?id=${book.id}">
       <div class="badge">${book.quality}</div>
       <figure class="book-image">
         <img src="${imageSrc}" alt="${safeTitle}" loading="lazy" onerror="this.src='${DEFAULT_PLACEHOLDER}'; this.style.opacity='1';">
@@ -587,12 +590,30 @@ function renderBooks() {
         <button class="btn btn-dark add-to-cart" data-book-id="${book.id}" data-book-title="${safeTitle}" data-book-author="${safeAuthor}" data-book-price="${book.price}" data-book-image="${imageSrc}" data-book-quality="${book.quality || ""}">
           <i class="fas fa-shopping-cart"></i> Add to Cart
         </button>
-        <a href="#" class="btn btn-outline-secondary view-book">View</a>
+        <a href="book-details.html?id=${book.id}" class="btn btn-outline-secondary view-book">View</a>
       </div>
     </article>
     `;
     })
     .join("");
+
+  // Add click handler to entire book card
+  document.querySelectorAll(".book-card").forEach((card) => {
+    card.addEventListener("click", function (e) {
+      // Don't navigate if clicking on action buttons
+      if (
+        e.target.closest(".book-actions") ||
+        e.target.closest("button") ||
+        e.target.closest("a")
+      ) {
+        return;
+      }
+      const url = this.dataset.bookUrl;
+      if (url) {
+        window.location.href = url;
+      }
+    });
+  });
 
   updateResultsCount();
   updatePagination();
