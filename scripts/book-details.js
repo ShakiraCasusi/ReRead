@@ -4,7 +4,7 @@ console.log("book-details.js loaded successfully");
 
 const API_BASE_URL = "http://localhost:5000/api";
 
-// Get book ID from URL parameter
+// Get book ID from URL
 function getBookIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     return params.get("id");
@@ -34,7 +34,7 @@ async function loadBookDetails(bookId) {
         // Retrieve books database from shop.js or localStorage
         let allBooks = [];
 
-        // Get from sessionStorage 
+        // Get from session storage 
         const sessionBooks = sessionStorage.getItem("booksDatabase");
         if (sessionBooks) {
             allBooks = JSON.parse(sessionBooks);
