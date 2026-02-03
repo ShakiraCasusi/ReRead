@@ -1,388 +1,456 @@
 // scripts/sell.js - JavaScript for the sell page
 
-document.addEventListener('DOMContentLoaded', function() {
-    initSellPage();
+// Global variable to store uploaded images
+window.uploadedImages = [];
+
+document.addEventListener("DOMContentLoaded", function () {
+  initSellPage();
 });
 
 function initSellPage() {
-    initImageUpload();
-    initFormValidation();
-    initPriceCalculator();
-    initConditionSelector();
+  initImageUpload();
+  initFormValidation();
+  initPriceCalculator();
+  initConditionSelector();
 }
 
 function initImageUpload() {
-    const photoPlaceholder = document.querySelector('.photo-placeholder');
-    const choosePhotosBtn = document.querySelector('.choose-photos-btn');
-    const uploadedImages = [];
+  const photoPlaceholder = document.querySelector(".photo-placeholder");
+  const choosePhotosBtn = document.querySelector(".choose-photos-btn");
 
-    if (photoPlaceholder) {
-        photoPlaceholder.addEventListener('click', function() {
-            // Create hidden file input
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.multiple = true;
-            fileInput.accept = 'image/*';
+  if (photoPlaceholder) {
+    photoPlaceholder.addEventListener("click", function () {
+      // Create hidden file input
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.multiple = true;
+      fileInput.accept = "image/*";
 
-            fileInput.addEventListener('change', function(e) {
-                handleImageSelection(e.target.files);
-            });
+      fileInput.addEventListener("change", function (e) {
+        handleImageSelection(e.target.files);
+      });
 
-            fileInput.click();
-        });
-    }
+      fileInput.click();
+    });
+  }
 
-    if (choosePhotosBtn) {
-        choosePhotosBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            photoPlaceholder.click();
-        });
-    }
+  if (choosePhotosBtn) {
+    choosePhotosBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      photoPlaceholder.click();
+    });
+  }
 
-    function handleImageSelection(files) {
-        Array.from(files).forEach(file => {
-            if (uploadedImages.length >= 5) {
-                alert('Maximum 5 photos allowed');
-                return;
-            }
+  function handleImageSelection(files) {
+    Array.from(files).forEach((file) => {
+      if (window.uploadedImages.length >= 5) {
+        showWarning("Maximum photos reached", "You can upload up to 5 photos");
+        return;
+      }
 
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                alert('File size too large. Maximum 5MB per image.');
-                return;
-            }
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        showError("File too large", `${file.name} exceeds 5MB limit`);
+        return;
+      }
 
-            if (!file.type.startsWith('image/')) {
-                alert('Please select only image files.');
-                return;
-            }
+      if (!file.type.startsWith("image/")) {
+        showWarning("Invalid file type", `${file.name} is not an image`);
+        return;
+      }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imageData = {
-                    file: file,
-                    url: e.target.result,
-                    name: file.name
-                };
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const imageData = {
+          file: file,
+          url: e.target.result,
+          name: file.name,
+        };
 
-                uploadedImages.push(imageData);
-                displayUploadedImage(imageData);
+        window.uploadedImages.push(imageData);
+        displayUploadedImage(imageData);
 
-                // Update placeholder text
-                if (uploadedImages.length >= 1) {
-                    photoPlaceholder.innerHTML = `
+        // Update placeholder text
+        if (window.uploadedImages.length >= 1) {
+          photoPlaceholder.innerHTML = `
                         <i class="fa-solid fa-check-circle"></i>
-                        <p>${uploadedImages.length} photo(s) uploaded</p>
+                        <p>${window.uploadedImages.length} photo(s) uploaded</p>
                         <small>Click to add more photos</small>
                     `;
-                    photoPlaceholder.style.background = '#f0fdf4';
-                    photoPlaceholder.style.border = '2px dashed #10b981';
-                }
-            };
-            reader.readAsDataURL(file);
-        });
-    }
+          photoPlaceholder.style.background = "#f0fdf4";
+          photoPlaceholder.style.border = "2px dashed #10b981";
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 
-    function displayUploadedImage(imageData) {
-        // Create image preview (you could customize this)
-        console.log('Image uploaded:', imageData.name);
-        // In a real implementation, you'd display thumbnails
-    }
+  function displayUploadedImage(imageData) {
+    // Create image preview (you could customize this)
+    console.log("Image uploaded:", imageData.name);
+    // In a real implementation, you'd display thumbnails
+  }
 }
 
 function initFormValidation() {
-    const form = document.querySelector('.panel-form');
+  const form = document.querySelector(".panel-form");
 
-    if (!form) return;
+  if (!form) return;
 
-    // Real-time validation
-    const requiredFields = form.querySelectorAll('[required]');
-    requiredFields.forEach(field => {
-        field.addEventListener('blur', function() {
-            validateField(this);
-        });
-
-        field.addEventListener('input', function() {
-            clearFieldError(this);
-        });
+  // Real-time validation
+  const requiredFields = form.querySelectorAll("[required]");
+  requiredFields.forEach((field) => {
+    field.addEventListener("blur", function () {
+      validateField(this);
     });
 
-    // Form submission
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        if (validateForm()) {
-            submitBookListing();
-        }
+    field.addEventListener("input", function () {
+      clearFieldError(this);
     });
+  });
 
-    // Auto-populate sub-genre based on genre
-    const genreSelect = document.getElementById('genre');
-    const subGenreSelect = document.getElementById('sub-genre');
+  // Form submission
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
 
-    if (genreSelect && subGenreSelect) {
-        genreSelect.addEventListener('change', function() {
-            populateSubGenres(this.value, subGenreSelect);
-        });
+    if (validateForm()) {
+      submitBookListing();
     }
+  });
+
+  // Auto-populate sub-genre based on genre
+  const genreSelect = document.getElementById("genre");
+  const subGenreSelect = document.getElementById("sub-genre");
+
+  if (genreSelect && subGenreSelect) {
+    genreSelect.addEventListener("change", function () {
+      populateSubGenres(this.value, subGenreSelect);
+    });
+  }
 }
 
 function validateField(field) {
-    const value = field.value.trim();
-    const fieldName = field.name;
-    let isValid = true;
-    let errorMessage = '';
+  const value = field.value.trim();
+  const fieldName = field.name;
+  let isValid = true;
+  let errorMessage = "";
 
-    switch(fieldName) {
-        case 'title':
-            if (!value) {
-                isValid = false;
-                errorMessage = 'Book title is required';
-            } else if (value.length < 2) {
-                isValid = false;
-                errorMessage = 'Book title must be at least 2 characters';
-            }
-            break;
+  switch (fieldName) {
+    case "title":
+      if (!value) {
+        isValid = false;
+        errorMessage = "Book title is required";
+      } else if (value.length < 2) {
+        isValid = false;
+        errorMessage = "Book title must be at least 2 characters";
+      }
+      break;
 
-        case 'author':
-            if (!value) {
-                isValid = false;
-                errorMessage = 'Author name is required';
-            } else if (value.length < 2) {
-                isValid = false;
-                errorMessage = 'Author name must be at least 2 characters';
-            }
-            break;
+    case "author":
+      if (!value) {
+        isValid = false;
+        errorMessage = "Author name is required";
+      } else if (value.length < 2) {
+        isValid = false;
+        errorMessage = "Author name must be at least 2 characters";
+      }
+      break;
 
-        case 'genre':
-        case 'sub-genre':
-        case 'condition':
-            if (!value) {
-                isValid = false;
-                errorMessage = `Please select a ${fieldName.replace('-', ' ')}`;
-            }
-            break;
+    case "genre":
+    case "sub-genre":
+    case "condition":
+      if (!value) {
+        isValid = false;
+        errorMessage = `Please select a ${fieldName.replace("-", " ")}`;
+      }
+      break;
 
-        case 'price':
-            const price = parseFloat(value);
-            if (!value) {
-                isValid = false;
-                errorMessage = 'Price is required';
-            } else if (isNaN(price) || price <= 0) {
-                isValid = false;
-                errorMessage = 'Please enter a valid price greater than 0';
-            } else if (price > 50000) {
-                isValid = false;
-                errorMessage = 'Price seems too high. Please verify.';
-            }
-            break;
+    case "price":
+      const price = parseFloat(value);
+      if (!value) {
+        isValid = false;
+        errorMessage = "Price is required";
+      } else if (isNaN(price) || price <= 0) {
+        isValid = false;
+        errorMessage = "Please enter a valid price greater than 0";
+      } else if (price > 50000) {
+        isValid = false;
+        errorMessage = "Price seems too high. Please verify.";
+      }
+      break;
 
-        case 'email':
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!value) {
-                isValid = false;
-                errorMessage = 'Email is required';
-            } else if (!emailRegex.test(value)) {
-                isValid = false;
-                errorMessage = 'Please enter a valid email address';
-            }
-            break;
-    }
+    case "email":
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!value) {
+        isValid = false;
+        errorMessage = "Email is required";
+      } else if (!emailRegex.test(value)) {
+        isValid = false;
+        errorMessage = "Please enter a valid email address";
+      }
+      break;
+  }
 
-    if (!isValid) {
-        showFieldError(field, errorMessage);
-    } else {
-        clearFieldError(field);
-    }
+  if (!isValid) {
+    showFieldError(field, errorMessage);
+  } else {
+    clearFieldError(field);
+  }
 
-    return isValid;
+  return isValid;
 }
 
 function showFieldError(field, message) {
-    clearFieldError(field);
+  clearFieldError(field);
 
-    field.style.borderColor = '#ef4444';
+  field.style.borderColor = "#ef4444";
 
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'field-error';
-    errorDiv.textContent = message;
-    errorDiv.style.cssText = `
+  const errorDiv = document.createElement("div");
+  errorDiv.className = "field-error";
+  errorDiv.textContent = message;
+  errorDiv.style.cssText = `
         color: #ef4444;
         font-size: 14px;
         margin-top: 4px;
         margin-bottom: 8px;
     `;
 
-    field.parentNode.insertBefore(errorDiv, field.nextSibling);
+  field.parentNode.insertBefore(errorDiv, field.nextSibling);
 }
 
 function clearFieldError(field) {
-    field.style.borderColor = '';
-    const errorDiv = field.parentNode.querySelector('.field-error');
-    if (errorDiv) {
-        errorDiv.remove();
-    }
+  field.style.borderColor = "";
+  const errorDiv = field.parentNode.querySelector(".field-error");
+  if (errorDiv) {
+    errorDiv.remove();
+  }
 }
 
 function validateForm() {
-    const form = document.querySelector('.panel-form');
-    const requiredFields = form.querySelectorAll('[required]');
-    let isFormValid = true;
+  const form = document.querySelector(".panel-form");
+  const requiredFields = form.querySelectorAll("[required]");
+  let isFormValid = true;
 
-    requiredFields.forEach(field => {
-        if (!validateField(field)) {
-            isFormValid = false;
-        }
-    });
+  requiredFields.forEach((field) => {
+    if (!validateField(field)) {
+      isFormValid = false;
+    }
+  });
 
-    // Additional validations
-    const price = document.getElementById('price');
-    const condition = document.getElementById('condition');
+  // Additional validations
+  const price = document.getElementById("price");
+  const condition = document.getElementById("condition");
 
-    if (price && condition) {
-        const priceValue = parseFloat(price.value);
-        const conditionValue = condition.value;
+  if (price && condition) {
+    const priceValue = parseFloat(price.value);
+    const conditionValue = condition.value;
 
-        // Price validation based on condition
-        if (conditionValue === 'new' && priceValue < 100) {
-            showFieldError(price, 'New books should be priced higher');
-            isFormValid = false;
-        }
-
-        if (conditionValue === 'fair' && priceValue > 1000) {
-            showFieldError(price, 'Fair condition books should be priced lower');
-            isFormValid = false;
-        }
+    // Price validation based on condition
+    if (conditionValue === "new" && priceValue < 100) {
+      showFieldError(price, "New books should be priced higher");
+      isFormValid = false;
     }
 
-    return isFormValid;
+    if (conditionValue === "fair" && priceValue > 1000) {
+      showFieldError(price, "Fair condition books should be priced lower");
+      isFormValid = false;
+    }
+  }
+
+  return isFormValid;
 }
 
 function populateSubGenres(genre, subGenreSelect) {
-    // Clear existing options (except the first one)
-    while (subGenreSelect.children.length > 1) {
-        subGenreSelect.removeChild(subGenreSelect.lastChild);
-    }
+  // Clear existing options (except the first one)
+  while (subGenreSelect.children.length > 1) {
+    subGenreSelect.removeChild(subGenreSelect.lastChild);
+  }
 
-    const subGenres = {
-        'romance': ['Contemporary Romance', 'Historical Romance'],
-        'adventure': ['Fantasy Adventure', 'Travel Adventure'],
-        'business': ['Entrepreneurship', 'Leadership'],
-        'education': ['Textbooks', 'Study Guides'],
-        'financial-literacy': ['Investing', 'Budgeting'],
-        'memoir': ['Autobiography', 'Biography'],
-        'self-help': ['Personal Development', 'Productivity'],
-        'spiritual': ['Mindfulness', 'Faith'],
-        'women': ['Feminism', "Women's Health"]
-    };
+  const subGenres = {
+    romance: ["Contemporary Romance", "Historical Romance"],
+    adventure: ["Fantasy Adventure", "Travel Adventure"],
+    business: ["Entrepreneurship", "Leadership"],
+    education: ["Textbooks", "Study Guides"],
+    "financial-literacy": ["Investing", "Budgeting"],
+    memoir: ["Autobiography", "Biography"],
+    "self-help": ["Personal Development", "Productivity"],
+    spiritual: ["Mindfulness", "Faith"],
+    women: ["Feminism", "Women's Health"],
+  };
 
-    if (subGenres[genre]) {
-        subGenres[genre].forEach(subGenre => {
-            const option = document.createElement('option');
-            option.value = subGenre.toLowerCase().replace(' ', '-');
-            option.textContent = subGenre;
-            subGenreSelect.appendChild(option);
-        });
-    }
+  if (subGenres[genre]) {
+    subGenres[genre].forEach((subGenre) => {
+      const option = document.createElement("option");
+      option.value = subGenre.toLowerCase().replace(" ", "-");
+      option.textContent = subGenre;
+      subGenreSelect.appendChild(option);
+    });
+  }
 }
 
 function initPriceCalculator() {
-    const conditionSelect = document.getElementById('condition');
-    const priceInput = document.getElementById('price');
+  const conditionSelect = document.getElementById("condition");
+  const priceInput = document.getElementById("price");
 
-    if (conditionSelect && priceInput) {
-        // Show price suggestions when condition changes
-        conditionSelect.addEventListener('change', function() {
-            showPriceSuggestion(this.value);
-        });
-    }
+  if (conditionSelect && priceInput) {
+    // Show price suggestions when condition changes
+    conditionSelect.addEventListener("change", function () {
+      showPriceSuggestion(this.value);
+    });
+  }
 }
 
 function showPriceSuggestion(condition) {
-    const suggestions = {
-        'new': '70-100% of original price',
-        'like-new': '60-80% of original price',
-        'very-good': '50-70% of original price',
-        'good': '30-50% of original price',
-        'fair': '20-30% of original price'
-    };
+  const suggestions = {
+    new: "70-100% of original price",
+    "like-new": "60-80% of original price",
+    "very-good": "50-70% of original price",
+    good: "30-50% of original price",
+    fair: "20-30% of original price",
+  };
 
-    const priceInput = document.getElementById('price');
-    if (priceInput && suggestions[condition]) {
-        // You could show a tooltip or helper text here
-        console.log(`Price suggestion for ${condition}: ${suggestions[condition]}`);
-    }
+  const priceInput = document.getElementById("price");
+  if (priceInput && suggestions[condition]) {
+    // You could show a tooltip or helper text here
+    console.log(`Price suggestion for ${condition}: ${suggestions[condition]}`);
+  }
 }
 
 function initConditionSelector() {
-    const conditionSelect = document.getElementById('condition');
+  const conditionSelect = document.getElementById("condition");
 
-    if (conditionSelect) {
-        conditionSelect.addEventListener('change', function() {
-            // Update price input placeholder based on condition
-            const priceInput = document.getElementById('price');
-            if (priceInput) {
-                const placeholders = {
-                    'new': '800',
-                    'like-new': '600',
-                    'very-good': '400',
-                    'good': '250',
-                    'fair': '150'
-                };
+  if (conditionSelect) {
+    conditionSelect.addEventListener("change", function () {
+      // Update price input placeholder based on condition
+      const priceInput = document.getElementById("price");
+      if (priceInput) {
+        const placeholders = {
+          new: "800",
+          "like-new": "600",
+          "very-good": "400",
+          good: "250",
+          fair: "150",
+        };
 
-                if (placeholders[this.value]) {
-                    priceInput.placeholder = placeholders[this.value];
-                }
-            }
-        });
-    }
+        if (placeholders[this.value]) {
+          priceInput.placeholder = placeholders[this.value];
+        }
+      }
+    });
+  }
 }
 
-function submitBookListing() {
-    // Collect form data
-    const formData = new FormData(document.querySelector('.panel-form'));
+async function submitBookListing() {
+  // Collect form data
+  const form = document.querySelector(".panel-form");
+  const formData = new FormData(form);
 
-    // Add uploaded images if any
-    if (window.uploadedImages && window.uploadedImages.length > 0) {
-        window.uploadedImages.forEach((imageData, index) => {
-            formData.append(`photo_${index}`, imageData.file);
-        });
+  // Show loading state
+  const submitBtn = document.querySelector(".btn-submit");
+  const originalText = submitBtn.textContent;
+
+  submitBtn.textContent = "Listing Book...";
+  submitBtn.disabled = true;
+
+  try {
+    // Check if user is logged in
+    const userData = localStorage.getItem("rereadUser");
+    if (!userData) {
+      showWarning(
+        "Not signed in",
+        "Please sign in to list a book. Redirecting to sign in page...",
+      );
+      setTimeout(() => {
+        window.location.href = "../pages/signin.html";
+      }, 2000);
+      return;
     }
 
-    // Show loading state
-    const submitBtn = document.querySelector('.btn-submit');
-    const originalText = submitBtn.textContent;
+    const user = JSON.parse(userData);
 
-    submitBtn.textContent = 'Listing Book...';
-    submitBtn.disabled = true;
+    // Map condition values to match database enum
+    const conditionMap = {
+      new: "New",
+      "like-new": "Like New",
+      "very-good": "Very Good",
+      good: "Good",
+      fair: "Fair",
+    };
 
-    // Simulate API call
-    setTimeout(() => {
-        // Reset form
-        document.querySelector('.panel-form').reset();
+    const conditionValue = formData.get("condition");
+    const mappedCondition = conditionMap[conditionValue] || "Good";
 
-        // Reset image upload area
-        const photoPlaceholder = document.querySelector('.photo-placeholder');
-        if (photoPlaceholder) {
-            photoPlaceholder.innerHTML = `
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <p>Upload photos of your book</p>
-                <small style="color: #9ca3af; margin-top: 8px">Add up to 5 photos showing the cover, spine, and any damage</small>
-            `;
-            photoPlaceholder.style.background = '';
-            photoPlaceholder.style.border = '';
-        }
+    // Use first uploaded image if available, otherwise no image
+    let bookImage = null;
+    if (window.uploadedImages && window.uploadedImages.length > 0) {
+      bookImage = window.uploadedImages[0].url; // Use base64 data URL
+    }
 
-        // Reset button
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
+    // Prepare book data object
+    const bookData = {
+      title: formData.get("title"),
+      author: formData.get("author"),
+      price: parseFloat(formData.get("price")),
+      quality: mappedCondition,
+      genre: formData.get("genre"),
+      category: formData.get("genre"), // Use genre as category
+      description: formData.get("description") || "",
+      image: bookImage,
+      sellerId: user.id,
+      featured: false,
+      isNewBook: conditionValue === "new",
+      quantity: 1,
+    };
 
-        // Show success message
-        alert('Book listing submitted successfully!');
+    console.log("Submitting book data:", bookData);
 
-        // In a real implementation, redirect to a success page or dashboard
-        // window.location.href = '/sell/success';
+    // Make API call to create book
+    const response = await fetch("http://localhost:5000/api/books", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(bookData),
+    });
 
-    }, 2000);
+    const result = await response.json();
 
-    console.log('Submitting book listing:', Object.fromEntries(formData));
+    if (response.ok && result.success) {
+      // Reset form
+      form.reset();
+
+      // Reset image upload area
+      window.uploadedImages = [];
+      const photoPlaceholder = document.querySelector(".photo-placeholder");
+      if (photoPlaceholder) {
+        photoPlaceholder.innerHTML = `
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p>Upload photos of your book</p>
+                    <small style="color: #9ca3af; margin-top: 8px">Add up to 5 photos showing the cover, spine, and any damage</small>
+                `;
+        photoPlaceholder.style.background = "";
+        photoPlaceholder.style.border = "";
+      }
+
+      // Show success message with notification
+      showSuccess(
+        "Book listed successfully!",
+        "Your book is now available in the shop. Redirecting...",
+      );
+
+      // Redirect to shop page to see the new book
+      setTimeout(() => {
+        window.location.href = "../pages/shop.html";
+      }, 2000);
+    } else {
+      throw new Error(result.message || "Failed to create book listing");
+    }
+  } catch (error) {
+    console.error("Error submitting book:", error);
+    showError("Failed to list book", error.message);
+  } finally {
+    // Reset button
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  }
 }

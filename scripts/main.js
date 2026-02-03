@@ -50,7 +50,7 @@ function initMobileMenu() {
       if (mobileCartLink && mobileCartLink.parentNode) {
         mobileCartLink.parentNode.insertBefore(
           mobileToggle,
-          mobileCartLink.nextSibling
+          mobileCartLink.nextSibling,
         );
       } else if (cartLink && cartLink.parentNode) {
         cartLink.parentNode.insertBefore(mobileToggle, cartLink.nextSibling);
@@ -283,7 +283,7 @@ function initScrollAnimations() {
   const animatedElements = document.querySelectorAll(
     ".animate-down, .animate-up, .fade-in, .slide-in-left, .slide-in-right, " +
       ".new-releases, .featured-section, .stats-section, .filters, " +
-      ".section-header, .books-grid, .stats, article, .book-card"
+      ".section-header, .books-grid, .stats, article, .book-card",
   );
 
   animatedElements.forEach((el) => {
@@ -312,7 +312,7 @@ function initScrollAnimations() {
         }
       });
     },
-    { threshold: 0.3 }
+    { threshold: 0.3 },
   );
 
   document.querySelectorAll(".stats").forEach((stats) => {
@@ -333,7 +333,7 @@ function initSearchFunctionality() {
   const shopSearch = document.querySelector('[data-role="shop-search"]');
 
   const currentSearch = new URL(window.location.href).searchParams.get(
-    "search"
+    "search",
   );
   if (currentSearch) {
     searchInputs.forEach((input) => {
@@ -378,8 +378,8 @@ function performSearch(query) {
   const shopPath = currentUrl.pathname.endsWith("/pages/shop.html")
     ? currentUrl.pathname
     : inPagesDirectory
-    ? "shop.html"
-    : "pages/shop.html";
+      ? "shop.html"
+      : "pages/shop.html";
 
   const shopUrl = new URL(shopPath, window.location.href);
 
@@ -396,7 +396,7 @@ function highlightActiveNavLinks() {
   const currentPath = normalizePath(currentUrl.pathname);
 
   const navLinks = document.querySelectorAll(
-    'a[href]:not([href^="#"]):not([href^="mailto:"]):not([href^="tel:"])'
+    'a[href]:not([href^="#"]):not([href^="mailto:"]):not([href^="tel:"])',
   );
 
   navLinks.forEach((link) => {
@@ -482,7 +482,7 @@ function initDropdownNavigation() {
 // Cart functionality
 function initCartFunctionality() {
   const addToCartBtns = document.querySelectorAll(
-    ".add-to-cart, .btn-add-to-cart"
+    ".add-to-cart, .btn-add-to-cart",
   );
 
   addToCartBtns.forEach((btn) => {
@@ -603,7 +603,7 @@ function updateCartTotal() {
     const priceText = item.querySelector(".current")?.textContent || "₱0";
     const price = parseFloat(priceText.replace("₱", "").replace(",", ""));
     const quantity = parseInt(
-      item.querySelector(".quantity span")?.textContent || "1"
+      item.querySelector(".quantity span")?.textContent || "1",
     );
     subtotal += price * quantity;
   });
@@ -623,7 +623,7 @@ function updateCartTotal() {
   }
 
   const subtotalAmount = document.querySelector(
-    ".summary-row:last-of-type span"
+    ".summary-row:last-of-type span",
   );
   if (
     subtotalAmount &&
@@ -873,3 +873,97 @@ document.addEventListener("DOMContentLoaded", () => {
     // final element keeps active state for caret blink
   })();
 });
+
+// ============================================
+// NOTIFICATION SYSTEM
+// ============================================
+/**
+ * Show a notification to the user
+ * @param {string} type - 'success', 'error', 'warning', or 'info'
+ * @param {string} title - Notification title
+ * @param {string} message - Notification message
+ * @param {number} duration - How long to show (ms), 0 = no auto-close
+ */
+function showNotification(type, title, message = "", duration = 5000) {
+  // Create container if it doesn't exist
+  let container = document.getElementById("notificationContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "notificationContainer";
+    container.className = "notification-container";
+    document.body.appendChild(container);
+  }
+
+  // Create notification element
+  const notification = document.createElement("div");
+  notification.className = `notification ${type}`;
+
+  // Set icons based on type
+  const icons = {
+    success: "fa-check-circle",
+    error: "fa-exclamation-circle",
+    warning: "fa-exclamation-triangle",
+    info: "fa-info-circle",
+  };
+
+  const icon = icons[type] || "fa-info-circle";
+
+  notification.innerHTML = `
+    <div class="notification-icon">
+      <i class="fas ${icon}"></i>
+    </div>
+    <div class="notification-content">
+      <div class="notification-title">${title}</div>
+      ${message ? `<p class="notification-message">${message}</p>` : ""}
+    </div>
+    <button class="notification-close" aria-label="Close notification">
+      <i class="fas fa-times"></i>
+    </button>
+  `;
+
+  // Add close button functionality
+  const closeBtn = notification.querySelector(".notification-close");
+  closeBtn.addEventListener("click", () => {
+    removeNotification(notification);
+  });
+
+  // Add to container
+  container.appendChild(notification);
+
+  // Auto-remove after duration
+  if (duration > 0) {
+    setTimeout(() => {
+      removeNotification(notification);
+    }, duration);
+  }
+
+  return notification;
+}
+
+/**
+ * Remove a notification with animation
+ * @param {Element} notification - The notification element to remove
+ */
+function removeNotification(notification) {
+  notification.classList.add("removing");
+  setTimeout(() => {
+    notification.remove();
+  }, 300);
+}
+
+// Convenience functions
+function showSuccess(title, message = "", duration = 5000) {
+  return showNotification("success", title, message, duration);
+}
+
+function showError(title, message = "", duration = 5000) {
+  return showNotification("error", title, message, duration);
+}
+
+function showWarning(title, message = "", duration = 5000) {
+  return showNotification("warning", title, message, duration);
+}
+
+function showInfo(title, message = "", duration = 5000) {
+  return showNotification("info", title, message, duration);
+}

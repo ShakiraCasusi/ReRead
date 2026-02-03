@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Book Details | Re;Read</title>
@@ -9,326 +8,456 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="../styles/styles.css" />
     <link rel="stylesheet" href="../styles/main.css" />
     <link rel="stylesheet" href="../styles/book-details.css" />
-</head>
+  </head>
 
-<body>
+  <body>
     <!-- Navbar Section -->
     <header class="header sticky-top bg-white border-bottom">
-        <div class="container-fluid">
-            <div class="row align-items-center py-2 px-3">
-                <!-- Logo -->
-                <div class="col-auto">
-                    <h1 class="logo mb-0">
-                        <a href="../index.html" class="text-decoration-none">Re;Read</a>
-                    </h1>
-                </div>
+      <div class="container-fluid">
+        <div class="row align-items-center py-2 px-3">
+          <!-- Logo -->
+          <div class="col-auto">
+            <h1 class="logo mb-0">
+              <a href="../index.html" class="text-decoration-none">Re;Read</a>
+            </h1>
+          </div>
 
-                <!-- Spacer -->
-                <div class="col d-none d-lg-block"></div>
+          <!-- Spacer -->
+          <div class="col d-none d-lg-block"></div>
 
-                <!-- Desktop Navigation -->
-                <nav class="col-auto d-none d-lg-flex align-items-center gap-3">
-                    <!-- Cart Link -->
-                    <a href="cart.html"
-                        class="btn btn-link text-dark text-decoration-none position-relative cart-link cart-link-desktop">
-                        <span class="cart-icon-wrapper">
-                            <i class="fas fa-shopping-cart cart-icon"></i>
-                            <span class="cart-badge" id="cartBadge" aria-live="polite" data-count="0">0</span>
-                        </span>
-                        <span class="cart-label">Cart</span>
-                    </a>
+          <!-- Desktop Navigation -->
+          <nav class="col-auto d-none d-lg-flex align-items-center gap-3">
+            <!-- Cart Link -->
+            <a
+              href="cart.html"
+              class="btn btn-link text-dark text-decoration-none position-relative cart-link cart-link-desktop"
+            >
+              <span class="cart-icon-wrapper">
+                <i class="fas fa-shopping-cart cart-icon"></i>
+                <span
+                  class="cart-badge"
+                  id="cartBadge"
+                  aria-live="polite"
+                  data-count="0"
+                  >0</span
+                >
+              </span>
+              <span class="cart-label">Cart</span>
+            </a>
 
-                    <!-- Sign In -->
-                    <a href="signin.html" class="btn btn-link text-dark text-decoration-none">
-                        <i class="fas fa-user me-1"></i>Sign In
-                    </a>
-                </nav>
+            <!-- Sign In -->
+            <a
+              href="signin.html"
+              class="btn btn-link text-dark text-decoration-none"
+            >
+              <i class="fas fa-user me-1"></i>Sign In
+            </a>
+          </nav>
 
-                <!-- Mobile: Cart and Hamburger -->
-                <div class="col d-flex d-lg-none justify-content-end align-items-center gap-2">
-                    <a href="cart.html"
-                        class="btn btn-link text-dark text-decoration-none position-relative p-2 cart-link cart-link-mobile">
-                        <span class="cart-icon-wrapper">
-                            <i class="fas fa-shopping-cart cart-icon"></i>
-                            <span class="cart-badge" id="cartBadgeMobile" aria-live="polite" data-count="0">0</span>
-                        </span>
-                    </a>
+          <!-- Mobile: Cart and Hamburger -->
+          <div
+            class="col d-flex d-lg-none justify-content-end align-items-center gap-2"
+          >
+            <a
+              href="cart.html"
+              class="btn btn-link text-dark text-decoration-none position-relative p-2 cart-link cart-link-mobile"
+            >
+              <span class="cart-icon-wrapper">
+                <i class="fas fa-shopping-cart cart-icon"></i>
+                <span
+                  class="cart-badge"
+                  id="cartBadgeMobile"
+                  aria-live="polite"
+                  data-count="0"
+                  >0</span
+                >
+              </span>
+            </a>
 
-                    <button class="btn btn-link text-dark p-2" type="button" data-bs-toggle="offcanvas"
-                        data-bs-target="#mobileMenu" aria-controls="mobileMenu">
-                        <i class="fas fa-bars fs-4"></i>
-                    </button>
-                </div>
-            </div>
+            <button
+              class="btn btn-link text-dark p-2"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#mobileMenu"
+              aria-controls="mobileMenu"
+            >
+              <i class="fas fa-bars fs-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Menu Offcanvas -->
+      <div
+        class="offcanvas offcanvas-end"
+        tabindex="-1"
+        id="mobileMenu"
+        aria-labelledby="mobileMenuLabel"
+      >
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title fw-bold" id="mobileMenuLabel">Menu</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
         </div>
 
-        <!-- Mobile Menu Offcanvas -->
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
-            <div class="offcanvas-header border-bottom">
-                <h5 class="offcanvas-title fw-bold" id="mobileMenuLabel">Menu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-
-            <div class="offcanvas-body p-0">
-                <div class="list-group list-group-flush">
-                    <a href="shop.html" class="list-group-item list-group-item-action border-0">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Shop
-                    </a>
-                    <a href="about.html" class="list-group-item list-group-item-action border-0">
-                        <i class="fas fa-info-circle me-2"></i>About
-                    </a>
-                    <a href="signin.html" class="list-group-item list-group-item-action border-0">
-                        <i class="fas fa-user me-2"></i>Sign In
-                    </a>
-                </div>
-            </div>
+        <div class="offcanvas-body p-0">
+          <div class="list-group list-group-flush">
+            <a
+              href="shop.html"
+              class="list-group-item list-group-item-action border-0"
+            >
+              <i class="fas fa-arrow-left me-2"></i>Back to Shop
+            </a>
+            <a
+              href="about.html"
+              class="list-group-item list-group-item-action border-0"
+            >
+              <i class="fas fa-info-circle me-2"></i>About
+            </a>
+            <a
+              href="signin.html"
+              class="list-group-item list-group-item-action border-0"
+            >
+              <i class="fas fa-user me-2"></i>Sign In
+            </a>
+          </div>
         </div>
+      </div>
     </header>
     <!-- End Navbar -->
 
     <!-- MAIN BOOK DETAILS SECTION -->
     <main class="book-details-main">
-        <div class="container">
-            <!-- Back button -->
-            <div class="mb-4">
-                <a href="shop.html" class="btn btn-link text-dark text-decoration-none">
-                    <i class="fas fa-chevron-left"></i> Back to Shop
-                </a>
-            </div>
-
-            <!-- Loading State -->
-            <div id="loadingState" class="text-center py-5">
-                <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #6b7280; margin-bottom: 16px;"></i>
-                <h3 style="color: #6b7280;">Loading book details...</h3>
-            </div>
-
-            <!-- Book Details Container -->
-            <div id="bookDetailsContainer" style="display: none;">
-                <div class="row g-4">
-                    <!-- Book Cover and Quick Info -->
-                    <div class="col-lg-4">
-                        <div class="book-details-cover">
-                            <img id="bookCoverImage" src="" alt="Book cover" class="img-fluid rounded" />
-                            <div class="book-info-quick mt-4">
-                                <div class="badge mb-2" id="qualityBadge"></div>
-                                <p class="rating-display">
-                                    <span id="bookRating">0</span> ★
-                                    <small class="text-muted">(based on reviews)</small>
-                                </p>
-                                <div class="price-section">
-                                    <p class="price-current">
-                                        ₱<span id="bookPrice">0</span>
-                                    </p>
-                                    <p class="price-original">
-                                        Original: ₱<span id="bookOriginalPrice">0</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Book Details -->
-                    <div class="col-lg-8">
-                        <div class="book-details-content">
-                            <!-- Title and Author -->
-                            <h1 id="bookTitle" class="mb-2"></h1>
-                            <p class="author-name" id="bookAuthor"></p>
-
-                            <!-- Genre and Metadata -->
-                            <div class="book-metadata mb-4">
-                                <span class="badge bg-light text-dark" id="bookGenre"></span>
-                                <span class="text-muted ms-2" id="bookYear"></span>
-                            </div>
-
-                            <!-- Description -->
-                            <div class="book-description mb-4">
-                                <h4>About this book</h4>
-                                <p id="bookDescription"></p>
-                            </div>
-
-                            <!-- Book Details Table -->
-                            <div class="book-specs mb-4">
-                                <h4 class="mb-3">Book Details</h4>
-                                <table class="table table-sm">
-                                    <tbody>
-                                        <tr>
-                                            <td class="text-muted">Condition</td>
-                                            <td id="bookCondition" class="fw-semibold"></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Genre</td>
-                                            <td id="bookGenreDetail" class="fw-semibold"></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Seller</td>
-                                            <td class="fw-semibold">Sold by Re;Read</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted">Availability</td>
-                                            <td class="fw-semibold text-success">In Stock</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Add to Cart Section -->
-                            <div class="add-to-cart-section">
-                                <div class="quantity-selector mb-3">
-                                    <label class="form-label">Quantity:</label>
-                                    <div class="input-group" style="width: 120px;">
-                                        <button class="btn btn-outline-secondary btn-sm" id="decreaseQty"
-                                            type="button">-</button>
-                                        <input type="number" class="form-control text-center" id="quantityInput"
-                                            value="1" min="1" readonly />
-                                        <button class="btn btn-outline-secondary btn-sm" id="increaseQty"
-                                            type="button">+</button>
-                                    </div>
-                                </div>
-
-                                <div class="d-grid gap-2">
-                                    <button id="addToCartBtn" class="btn btn-dark btn-lg">
-                                        <i class="fas fa-shopping-cart me-2"></i>Add to Cart
-                                    </button>
-                                    <button class="btn btn-outline-secondary btn-lg">
-                                        <i class="fas fa-heart me-2"></i>Add to Wishlist
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Related Info -->
-                            <div class="related-info mt-4 pt-4 border-top">
-                                <p class="text-muted small mb-0">
-                                    <i class="fas fa-truck me-2"></i>
-                                    Free shipping on orders over ₱500
-                                </p>
-                                <p class="text-muted small mt-2 mb-0">
-                                    <i class="fas fa-shield-alt me-2"></i>
-                                    100% authentic and verified condition
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Error State -->
-            <div id="errorState" style="display: none;" class="text-center py-5">
-                <i class="fas fa-exclamation-triangle"
-                    style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
-                <h3 style="color: #ef4444;">Book not found</h3>
-                <p style="color: #6b7280; margin-top: 8px;">Sorry, we couldn't load this book's details.</p>
-                <a href="shop.html" class="btn btn-primary mt-3">Back to Shop</a>
-            </div>
+      <div class="container">
+        <!-- Back button -->
+        <div class="mb-4">
+          <a
+            href="shop.html"
+            class="btn btn-link text-dark text-decoration-none"
+          >
+            <i class="fas fa-chevron-left"></i> Back to Shop
+          </a>
         </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-5">
+          <i
+            class="fas fa-spinner fa-spin"
+            style="font-size: 48px; color: #6b7280; margin-bottom: 16px"
+          ></i>
+          <h3 style="color: #6b7280">Loading book details...</h3>
+        </div>
+
+        <!-- Book Details Container -->
+        <div id="bookDetailsContainer" style="display: none">
+          <div class="row g-4">
+            <!-- Book Cover and Quick Info -->
+            <div class="col-lg-4">
+              <div class="book-details-cover">
+                <img
+                  id="bookCoverImage"
+                  src=""
+                  alt="Book cover"
+                  class="img-fluid rounded"
+                />
+                <div class="book-info-quick mt-4">
+                  <div class="badge mb-2" id="qualityBadge"></div>
+                  <p class="rating-display">
+                    <span id="bookRating">0</span> ★
+                    <small class="text-muted">(based on reviews)</small>
+                  </p>
+                  <div class="price-section">
+                    <p class="price-current">₱<span id="bookPrice">0</span></p>
+                    <p class="price-original">
+                      Original: ₱<span id="bookOriginalPrice">0</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Book Details -->
+            <div class="col-lg-8">
+              <div class="book-details-content">
+                <!-- Title and Author -->
+                <h1 id="bookTitle" class="mb-2"></h1>
+                <p class="author-name" id="bookAuthor"></p>
+
+                <!-- Genre and Metadata -->
+                <div class="book-metadata mb-4">
+                  <span class="badge bg-light text-dark" id="bookGenre"></span>
+                  <span class="text-muted ms-2" id="bookYear"></span>
+                </div>
+
+                <!-- Description -->
+                <div class="book-description mb-4">
+                  <h4>About this book</h4>
+                  <p id="bookDescription"></p>
+                </div>
+
+                <!-- Book Details Table -->
+                <div class="book-specs mb-4">
+                  <h4 class="mb-3">Book Details</h4>
+                  <table class="table table-sm">
+                    <tbody>
+                      <tr>
+                        <td class="text-muted">Condition</td>
+                        <td id="bookCondition" class="fw-semibold"></td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted">Genre</td>
+                        <td id="bookGenreDetail" class="fw-semibold"></td>
+                      </tr>
+                      <tr id="courseRow" style="display: none">
+                        <td class="text-muted">Course/Subject</td>
+                        <td id="bookCourse" class="fw-semibold"></td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted">Seller</td>
+                        <td id="bookSeller" class="fw-semibold">
+                          Sold by Re;Read
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted">Availability</td>
+                        <td class="fw-semibold text-success">In Stock</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Add to Cart Section -->
+                <div class="add-to-cart-section">
+                  <div class="quantity-selector mb-3">
+                    <label class="form-label">Quantity:</label>
+                    <div class="input-group" style="width: 120px">
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        id="decreaseQty"
+                        type="button"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        class="form-control text-center"
+                        id="quantityInput"
+                        value="1"
+                        min="1"
+                        readonly
+                      />
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        id="increaseQty"
+                        type="button"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="d-grid gap-2">
+                    <button id="addToCartBtn" class="btn btn-dark btn-lg">
+                      <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg">
+                      <i class="fas fa-heart me-2"></i>Add to Wishlist
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Related Info -->
+                <div class="related-info mt-4 pt-4 border-top">
+                  <p class="text-muted small mb-0">
+                    <i class="fas fa-truck me-2"></i>
+                    Free shipping on orders over ₱500
+                  </p>
+                  <p class="text-muted small mt-2 mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    100% authentic and verified condition
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" style="display: none" class="text-center py-5">
+          <i
+            class="fas fa-exclamation-triangle"
+            style="font-size: 48px; color: #ef4444; margin-bottom: 16px"
+          ></i>
+          <h3 style="color: #ef4444">Book not found</h3>
+          <p style="color: #6b7280; margin-top: 8px">
+            Sorry, we couldn't load this book's details.
+          </p>
+          <a href="shop.html" class="btn btn-primary mt-3">Back to Shop</a>
+        </div>
+      </div>
     </main>
 
     <!-- FOOTER -->
     <footer class="bg-black text-light pt-5 pb-3 mt-5">
-        <div class="container">
-            <div class="row gy-4 gx-5">
-                <div class="col-12 col-md-3">
-                    <h3 class="mb-3"><i class="fas fa-book me-2"></i>Re;Read</h3>
-                    <p class="small">
-                        Serving quality and affordable books for readers everywhere
-                        through our trusted marketplace for second-hand books.
-                    </p>
-                    <div class="d-flex gap-3 fs-5 mt-3">
-                        <a href="#" class="text-light"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <h5 class="mb-3">Quick Links</h5>
-                    <ul class="list-unstyled small">
-                        <li>
-                            <a href="../index.html" class="text-light text-decoration-none d-block mb-1">Home</a>
-                        </li>
-                        <li>
-                            <a href="shop.html" class="text-light text-decoration-none d-block mb-1">Shop Books</a>
-                        </li>
-                        <li>
-                            <a href="sell.html" class="text-light text-decoration-none d-block mb-1">Sell Your Books</a>
-                        </li>
-                        <li>
-                            <a href="about.html" class="text-light text-decoration-none d-block mb-1">About Us</a>
-                        </li>
-                        <li>
-                            <a href="cart.html" class="text-light text-decoration-none d-block mb-1">Cart</a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <h5 class="mb-3">Support</h5>
-                    <ul class="list-unstyled small">
-                        <li>
-                            <a href="#" class="text-light text-decoration-none d-block mb-1">Help Center</a>
-                        </li>
-                        <li>
-                            <a href="#" class="text-light text-decoration-none d-block mb-1">Shipping Info</a>
-                        </li>
-                        <li>
-                            <a href="#" class="text-light text-decoration-none d-block mb-1">Returns</a>
-                        </li>
-                        <li>
-                            <a href="#" class="text-light text-decoration-none d-block mb-1">Safety Guidelines</a>
-                        </li>
-                        <li>
-                            <a href="#" class="text-light text-decoration-none d-block mb-1">Contact Us</a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="col-12 col-md-3">
-                    <h5 class="mb-3">Contact</h5>
-                    <p class="small mb-2">
-                        <i class="fas fa-envelope me-2"></i>support@reread.com
-                    </p>
-                    <p class="small mb-2">
-                        <i class="fas fa-phone me-2"></i>0408-2328-REREAD
-                    </p>
-                    <p class="small mb-0">
-                        <i class="fas fa-map-marker-alt me-2"></i>Available Nationwide
-                    </p>
-                </div>
+      <div class="container">
+        <div class="row gy-4 gx-5">
+          <div class="col-12 col-md-3">
+            <h3 class="mb-3"><i class="fas fa-book me-2"></i>Re;Read</h3>
+            <p class="small">
+              Serving quality and affordable books for readers everywhere
+              through our trusted marketplace for second-hand books.
+            </p>
+            <div class="d-flex gap-3 fs-5 mt-3">
+              <a href="#" class="text-light"><i class="fab fa-facebook"></i></a>
+              <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
+              <a href="#" class="text-light"
+                ><i class="fab fa-instagram"></i
+              ></a>
             </div>
+          </div>
 
-            <hr class="border-secondary mt-4 mb-3" />
+          <div class="col-6 col-md-3">
+            <h5 class="mb-3">Quick Links</h5>
+            <ul class="list-unstyled small">
+              <li>
+                <a
+                  href="../index.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >Home</a
+                >
+              </li>
+              <li>
+                <a
+                  href="shop.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >Shop Books</a
+                >
+              </li>
+              <li>
+                <a
+                  href="sell.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >Sell Your Books</a
+                >
+              </li>
+              <li>
+                <a
+                  href="about.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >About Us</a
+                >
+              </li>
+              <li>
+                <a
+                  href="cart.html"
+                  class="text-light text-decoration-none d-block mb-1"
+                  >Cart</a
+                >
+              </li>
+            </ul>
+          </div>
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <p class="mb-2 mb-md-0 small">© 2025 Re;Read. All rights reserved.</p>
-                <div class="d-flex gap-3 small">
-                    <a href="#" class="text-light text-decoration-none">Privacy Policy</a>
-                    <a href="#" class="text-light text-decoration-none">Terms of Service</a>
-                    <a href="#" class="text-light text-decoration-none">Cookie Policy</a>
-                </div>
-            </div>
+          <div class="col-6 col-md-3">
+            <h5 class="mb-3">Support</h5>
+            <ul class="list-unstyled small">
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Help Center</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Shipping Info</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Returns</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Safety Guidelines</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-light text-decoration-none d-block mb-1"
+                  >Contact Us</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <h5 class="mb-3">Contact</h5>
+            <p class="small mb-2">
+              <i class="fas fa-envelope me-2"></i>support@reread.com
+            </p>
+            <p class="small mb-2">
+              <i class="fas fa-phone me-2"></i>0408-2328-REREAD
+            </p>
+            <p class="small mb-0">
+              <i class="fas fa-map-marker-alt me-2"></i>Available Nationwide
+            </p>
+          </div>
         </div>
+
+        <hr class="border-secondary mt-4 mb-3" />
+
+        <div
+          class="d-flex flex-column flex-md-row justify-content-between align-items-center"
+        >
+          <p class="mb-2 mb-md-0 small">© 2025 Re;Read. All rights reserved.</p>
+          <div class="d-flex gap-3 small">
+            <a href="#" class="text-light text-decoration-none"
+              >Privacy Policy</a
+            >
+            <a href="#" class="text-light text-decoration-none"
+              >Terms of Service</a
+            >
+            <a href="#" class="text-light text-decoration-none"
+              >Cookie Policy</a
+            >
+          </div>
+        </div>
+      </div>
     </footer>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+    ></script>
     <script src="../scripts/auth.js"></script>
     <script src="../scripts/main.js"></script>
     <script src="../scripts/book-details.js"></script>
-</body>
-
+  </body>
 </html>

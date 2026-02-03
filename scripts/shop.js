@@ -296,6 +296,9 @@ function parseLocalBook(book, index) {
     image: validateImageUrl(book.image),
     featured: Boolean(book.featured),
     isNewBook: Boolean(book.isNewBook),
+    description: book.description || "",
+    course: book.course || "",
+    sellerId: book.sellerId || null,
   };
 }
 
@@ -569,7 +572,7 @@ function renderBooks() {
     .map((book) => {
       const imageSrc =
         book.image &&
-          (book.image.startsWith("http") || book.image.startsWith("data:"))
+        (book.image.startsWith("http") || book.image.startsWith("data:"))
           ? book.image
           : DEFAULT_PLACEHOLDER;
 
