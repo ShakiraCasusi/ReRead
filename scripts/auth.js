@@ -142,3 +142,53 @@ class AuthManager {
 document.addEventListener('DOMContentLoaded', () => {
     window.authManager = new AuthManager();
 });
+
+// Initialize navbar with user info on page load
+function initializeNavbar() {
+    const user = sessionStorage.getItem("user");
+
+    if (user) {
+        try {
+            const userData = JSON.parse(user);
+            if (userData.username) {
+                updateNavbarUser(userData.username);
+            }
+        } catch (error) {
+            console.error("Error parsing user data:", error);
+        }
+    }
+}
+
+// Update navbar to show username
+function updateNavbarUser(username) {
+    try {
+        // Desktop navigation
+        const desktopNav = document.querySelector('nav.d-none.d-lg-flex');
+        if (desktopNav) {
+            const signInLink = desktopNav.querySelector('a[href="signin.html"]');
+            if (signInLink) {
+                signInLink.innerHTML = `<i class="fas fa-user me-1"></i>${username}`;
+                signInLink.href = "profile.html";
+                signInLink.classList.add("active");
+            }
+        }
+
+        // Mobile navigation
+        const mobileMenu = document.getElementById("mobileMenu");
+        if (mobileMenu) {
+            const signInLink = mobileMenu.querySelector('a[href="signin.html"]');
+            if (signInLink) {
+                signInLink.innerHTML = `<i class="fas fa-user me-2"></i>${username}`;
+                signInLink.href = "profile.html";
+                signInLink.classList.add("active");
+            }
+        }
+    } catch (error) {
+        console.error("Error updating navbar user:", error);
+    }
+}
+
+// Initialize navbar when DOM is ready
+document.addEventListener("DOMContentLoaded", function () {
+    initializeNavbar();
+});

@@ -158,6 +158,9 @@ function displayProfile() {
       }
     }
 
+    // Update navbar with username
+    updateNavbarWithUsername(currentUser.username);
+
     console.log("Profile displayed successfully");
   } catch (error) {
     console.error("Error displaying profile:", error);
@@ -213,18 +216,12 @@ async function handleProfileUpdate(e) {
     const firstName = document.getElementById("editFirstName").value.trim();
     const lastName = document.getElementById("editLastName").value.trim();
     const username = document.getElementById("editUsername").value.trim();
-    const email = document.getElementById("editEmail").value.trim();
+    // Email is read-only and not sent in update
+    const currentEmail = currentUser.email;
 
     // Basic validation
-    if (!firstName || !lastName || !username || !email) {
+    if (!firstName || !lastName || !username) {
       showNotification("All fields are required", "error");
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showNotification("Please enter a valid email address", "error");
       return;
     }
 
@@ -237,7 +234,7 @@ async function handleProfileUpdate(e) {
         '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
     }
 
-    // Send update request
+    // Send update request (email excluded)
     const response = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: "PUT",
       headers: {
@@ -248,7 +245,7 @@ async function handleProfileUpdate(e) {
         firstName,
         lastName,
         username,
-        email,
+        // Email intentionally excluded
       }),
     });
 
@@ -269,9 +266,12 @@ async function handleProfileUpdate(e) {
         userData.firstName = result.data.firstName;
         userData.lastName = result.data.lastName;
         userData.username = result.data.username;
-        userData.email = result.data.email;
+        // Keep email unchanged
         sessionStorage.setItem("user", JSON.stringify(userData));
       }
+
+      // Update navbar with new username
+      updateNavbarWithUsername(result.data.username);
 
       // Refresh display
       displayProfile();
@@ -293,6 +293,42 @@ async function handleProfileUpdate(e) {
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Save Changes';
     }
+  }
+}
+
+// Update navbar to display username instead of email
+function updateNavbarWithUsername(username) {
+  try {
+    if (!username) {
+      console.warn("No username provided to update navbar");
+      return;
+    }
+
+    // Desktop navigation - Find and update Sign In link
+    const desktopNav = document.querySelector('nav.d-none.d-lg-flex');
+    if (desktopNav) {
+      const signInLink = desktopNav.querySelector('a[href="signin.html"]');
+      if (signInLink) {
+        signInLink.innerHTML = `<i class="fas fa-user me-1"></i>${username}`;
+        signInLink.href = "profile.html";
+        signInLink.classList.add("active");
+      }
+    }
+
+    // Mobile navigation - Find and update Sign In link
+    const mobileMenu = document.getElementById("mobileMenu");
+    if (mobileMenu) {
+      const signInLink = mobileMenu.querySelector('a[href="signin.html"]');
+      if (signInLink) {
+        signInLink.innerHTML = `<i class="fas fa-user me-2"></i>${username}`;
+        signInLink.href = "profile.html";
+        signInLink.classList.add("active");
+      }
+    }
+
+    console.log("Navbar updated with username:", username);
+  } catch (error) {
+    console.error("Error updating navbar:", error);
   }
 }
 
