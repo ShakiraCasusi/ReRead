@@ -54,8 +54,9 @@ class AuthManager {
                 btn.style.display = 'none';
             });
 
-            // Added a user menu/logout button if not already present
+            // Added a user menu/logout button 
             this.createUserMenu();
+            this.createMobileUserMenu();
         } else {
             // User is not logged in = show signin
             signinButtons.forEach(btn => {
@@ -64,6 +65,7 @@ class AuthManager {
 
             // Remove user menu
             this.removeUserMenu();
+            this.removeMobileUserMenu();
         }
 
         // Update header visibility for authentication state
@@ -92,6 +94,8 @@ class AuthManager {
       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuBtn">
         <li><a class="dropdown-item" href="../pages/profile.html"><i class="fas fa-user me-2"></i>Profile</a></li>
         <li><a class="dropdown-item" href="../pages/orders.html"><i class="fas fa-history me-2"></i>Orders</a></li>
+        <li><a class="dropdown-item" href="../pages/shop.html#likes"><i class="fas fa-heart me-2"></i>My Likes</a></li>
+        <li><a class="dropdown-item" href="../pages/sell.html"><i class="fas fa-list me-2"></i>Manage Listings</a></li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
       </ul>
@@ -117,6 +121,81 @@ class AuthManager {
         const menu = document.getElementById('userProfileMenu');
         if (menu) {
             menu.remove();
+        }
+    }
+
+    // Create mobile user profile menu
+    createMobileUserMenu() {
+        // Check if mobile menu already exists
+        if (document.getElementById('mobileUserProfileMenu')) {
+            return;
+        }
+
+        // Find the mobile menu offcanvas body
+        const mobileMenuBody = document.querySelector('#mobileMenu .offcanvas-body .list-group');
+        if (!mobileMenuBody) return;
+
+        // Create mobile profile menu item
+        const mobileMenuItem = document.createElement('div');
+        mobileMenuItem.id = 'mobileUserProfileMenu';
+        mobileMenuItem.className = 'list-group-item p-0';
+        mobileMenuItem.innerHTML = `
+      <div class="accordion accordion-flush" id="profileAccordion">
+        <div class="accordion-item border-0">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse"
+              data-bs-target="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
+              <i class="fas fa-user-circle me-2"></i>${this.user.username}
+            </button>
+          </h2>
+          <div id="profileCollapse" class="accordion-collapse collapse" data-bs-parent="#profileAccordion">
+            <div class="accordion-body p-0">
+              <ul class="list-unstyled">
+                <li><a href="profile.html" class="list-group-item list-group-item-action border-0"><i class="fas fa-user me-2"></i>Profile</a></li>
+                <li><a href="orders.html" class="list-group-item list-group-item-action border-0"><i class="fas fa-history me-2"></i>Orders</a></li>
+                <li><a href="shop.html#likes" class="list-group-item list-group-item-action border-0"><i class="fas fa-heart me-2"></i>My Likes</a></li>
+                <li><a href="sell.html" class="list-group-item list-group-item-action border-0"><i class="fas fa-list me-2"></i>Manage Listings</a></li>
+                <li><a href="#" id="mobileLogoutBtn" class="list-group-item list-group-item-action border-0 text-danger"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+        // Find the sign in link in mobile menu
+        const signInLink = mobileMenuBody.querySelector('a[href="signin.html"]');
+        if (signInLink && signInLink.parentElement) {
+            signInLink.parentElement.replaceWith(mobileMenuItem);
+        } else {
+            mobileMenuBody.appendChild(mobileMenuItem);
+        }
+
+        // Add logout handler
+        const logoutBtn = document.getElementById('mobileLogoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.logout();
+            });
+        }
+    }
+
+    // Remove mobile user profile menu
+    removeMobileUserMenu() {
+        const menu = document.getElementById('mobileUserProfileMenu');
+        if (menu) {
+            menu.remove();
+        }
+
+        // Restore Sign In link if needed
+        const mobileMenuBody = document.querySelector('#mobileMenu .offcanvas-body .list-group');
+        if (mobileMenuBody && !document.querySelector('#mobileMenu a[href="signin.html"]')) {
+            const signInItem = document.createElement('a');
+            signInItem.href = 'signin.html';
+            signInItem.className = 'list-group-item list-group-item-action border-0';
+            signInItem.innerHTML = '<i class="fas fa-user me-2"></i>Sign In';
+            mobileMenuBody.appendChild(signInItem);
         }
     }
 
