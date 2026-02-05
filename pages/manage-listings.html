@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Listings | Re;Read</title>
+
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+
+  <!-- Custom CSS files -->
+  <link rel="stylesheet" href="../styles/styles.css" />
+  <link rel="stylesheet" href="../styles/main.css" />
+  <link rel="stylesheet" href="../styles/manage-listings.css" />
+</head>
+
+<body>
+  <!-- Navbar Section -->
+  <header class="header sticky-top bg-white border-bottom">
+    <div class="container-fluid">
+      <div class="row align-items-center py-2 px-3">
+        <!-- Logo (Always visible) -->
+        <div class="col-auto">
+          <h1 class="logo mb-0">
+            <a href="../index.html" class="text-decoration-none">Re;Read</a>
+          </h1>
+        </div>
+
+        <!-- Spacer for desktop -->
+        <div class="col d-none d-lg-block"></div>
+
+        <!-- Desktop Navigation (Hidden on mobile) -->
+        <nav class="col-auto d-none d-lg-flex align-items-center gap-3">
+          <!-- Search Bar (Desktop only) -->
+          <div class="search-bar d-flex align-items-center bg-light rounded-3 px-3 py-2">
+            <i class="fas fa-search text-secondary me-2"></i>
+            <input type="text" class="border-0 bg-transparent" placeholder="Search books, authors, subjects..."
+              style="width: 400px; outline: none" />
+          </div>
+
+          <!-- Browse Dropdown (Desktop) -->
+          <div class="dropdown">
+            <button class="btn btn-link text-dark text-decoration-none dropdown-toggle" type="button"
+              id="browseDropdownDesktop" data-bs-toggle="dropdown" aria-expanded="false">
+              Browse
+            </button>
+
+            <div class="dropdown-menu dropdown-menu-custom p-4" aria-labelledby="browseDropdownDesktop"
+              style="min-width: 600px">
+              <div class="row">
+                <!-- Fiction Column -->
+                <div class="col-md-6">
+                  <h6 class="fw-bold border-bottom pb-2 mb-3">Fiction</h6>
+                  <ul class="list-unstyled">
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Romance" class="text-decoration-none d-block">
+                        <span class="text-dark"><i class="fas fa-heart text-secondary me-2"></i>Romance</span>
+                        <small class="text-muted d-block ms-4">Love stories and romantic fiction</small>
+                      </a>
+                    </li>
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Adventure" class="text-decoration-none d-block">
+                        <span class="text-dark"><i class="fas fa-compass text-secondary me-2"></i>Adventure</span>
+                        <small class="text-muted d-block ms-4">Thrilling journeys and epic quests</small>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Non-Fiction Column -->
+                <div class="col-md-6">
+                  <h6 class="fw-bold border-bottom pb-2 mb-3">Non-Fiction</h6>
+                  <ul class="list-unstyled">
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Business" class="text-decoration-none d-block">
+                        <span class="text-dark"><i class="fas fa-briefcase text-secondary me-2"></i>Business</span>
+                        <small class="text-muted d-block ms-4">Professional development and entrepreneurship</small>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sell Link -->
+          <a href="sell.html" class="btn btn-link text-dark text-decoration-none">
+            <i class="fas fa-tag me-1"></i>Sell
+          </a>
+
+          <!-- About Link -->
+          <a href="about.html" class="btn btn-link text-dark text-decoration-none">
+            <i class="fas fa-info-circle me-1"></i>About
+          </a>
+
+          <!-- Cart Link (Desktop) -->
+          <a href="cart.html"
+            class="btn btn-link text-dark text-decoration-none position-relative cart-link cart-link-desktop">
+            <span class="cart-icon-wrapper">
+              <i class="fas fa-shopping-cart cart-icon"></i>
+              <span class="cart-badge" id="cartBadge" aria-live="polite" data-count="0">0</span>
+            </span>
+            <span class="cart-label">Cart</span>
+          </a>
+
+          <!-- Sign In -->
+          <a href="signin.html" class="btn btn-link text-dark text-decoration-none">
+            <i class="fas fa-user me-1"></i>Sign In
+          </a>
+        </nav>
+
+        <!-- Mobile: Cart and Hamburger (Visible on mobile only) -->
+        <div class="col d-flex d-lg-none justify-content-end align-items-center gap-2">
+          <!-- Cart Link (Mobile) -->
+          <a href="cart.html"
+            class="btn btn-link text-dark text-decoration-none position-relative p-2 cart-link cart-link-mobile">
+            <span class="cart-icon-wrapper">
+              <i class="fas fa-shopping-cart cart-icon"></i>
+              <span class="cart-badge" id="cartBadgeMobile" aria-live="polite" data-count="0">0</span>
+            </span>
+          </a>
+
+          <!-- Hamburger Toggle Button -->
+          <button class="btn btn-link text-dark p-2" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#mobileMenu" aria-controls="mobileMenu">
+            <i class="fas fa-bars fs-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Offcanvas Menu -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+      <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="mobileMenuLabel">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+
+      <div class="offcanvas-body p-0">
+        <div class="list-group list-group-flush">
+          <!-- Sign In (Mobile) -->
+          <a href="signin.html" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-user me-2"></i>Sign In
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+  <!-- End Navbar Section -->
+
+  <!-- Main Content -->
+  <main class="manage-listings-main">
+    <div class="container">
+      <!-- Page Header -->
+      <div class="page-header mb-5" style="margin-top: 2rem; padding-top: 1rem">
+        <h1 class="display-5 fw-bold mb-2">Manage Listings</h1>
+        <p class="text-muted">View, edit, and manage your book listings</p>
+      </div>
+
+      <!-- Statistics Header -->
+      <div class="statistics-header row mb-4 g-3">
+        <div class="col-md-3 col-sm-6">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Total Listings</p>
+              <p class="stat-value" id="totalListings">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-peso-sign"></i>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Total Revenue</p>
+              <p class="stat-value" id="totalRevenue">₱0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Average Price</p>
+              <p class="stat-value" id="averagePrice">₱0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Featured Books</p>
+              <p class="stat-value" id="featuredCount">0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk Actions Bar (shown when items selected) -->
+      <div class="bulk-actions-bar mb-3" id="bulkActionsBar" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <input type="checkbox" id="selectAllCheckbox" class="form-check-input me-2">
+            <span id="selectedCount">0 items selected</span>
+          </div>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">Deselect All</button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="openBulkDeleteModal()">Delete Selected</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-section mb-4">
+        <div class="filter-header">
+          <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
+            data-bs-target="#filterCollapse" aria-expanded="true" aria-controls="filterCollapse">
+            <i class="fas fa-filter me-2"></i>Filters
+          </button>
+        </div>
+
+        <div class="collapse show" id="filterCollapse">
+          <div class="filter-content mt-3">
+            <div class="row g-3">
+              <!-- Date Filter -->
+              <div class="col-md-3">
+                <label class="form-label">Date Created</label>
+                <select class="form-select" id="dateFilter" onchange="applyFilters()">
+                  <option value="all">All Time</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="90days">Last 90 Days</option>
+                </select>
+              </div>
+
+              <!-- Price Filter -->
+              <div class="col-md-3">
+                <label class="form-label">Price Range</label>
+                <select class="form-select" id="priceFilter" onchange="applyFilters()">
+                  <option value="all">All Prices</option>
+                  <option value="0-500">Under ₱500</option>
+                  <option value="500-1000">₱500 - ₱1000</option>
+                  <option value="1000+">₱1000+</option>
+                </select>
+              </div>
+
+              <!-- Condition Filter -->
+              <div class="col-md-3">
+                <label class="form-label">Condition</label>
+                <select class="form-select" id="conditionFilter" onchange="applyFilters()">
+                  <option value="all">All Conditions</option>
+                  <option value="New">New</option>
+                  <option value="Like New">Like New</option>
+                  <option value="Very Good">Very Good</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                </select>
+              </div>
+
+              <!-- Sort -->
+              <div class="col-md-3">
+                <label class="form-label">Sort By</label>
+                <select class="form-select" id="sortFilter" onchange="applyFilters()">
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="price-low">Price (Low to High)</option>
+                  <option value="price-high">Price (High to Low)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-dark" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted mt-2">Loading your listings...</p>
+      </div>
+
+      <!-- Listings Table/Grid -->
+      <div id="listingsContainer" style="display: none;">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th width="40" style="text-align: center;">
+                  <input type="checkbox" id="selectAllCheckboxTable" class="form-check-input"
+                    onchange="toggleSelectAll(this.checked)">
+                </th>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Price</th>
+                <th>Condition</th>
+                <th>Date Created</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="listingsTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" style="display: none;">
+        <div class="alert alert-info rounded-3 border-0 p-5 text-center">
+          <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+          <h4 class="mb-2">No listings yet</h4>
+          <p class="text-muted mb-3">You haven't listed any books yet. Start selling by adding your first book.</p>
+          <a href="sell.html" class="btn btn-dark">
+            <i class="fas fa-plus me-2"></i>Add Book Listing
+          </a>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" style="display: none;">
+        <div class="alert alert-danger rounded-3 border-0">
+          <h5 class="alert-heading">
+            <i class="fas fa-exclamation-circle me-2"></i>Error Loading Listings
+          </h5>
+          <p id="errorMessage" class="mb-0">An error occurred while loading your listings. Please try again.</p>
+          <hr class="my-3" style="border-color: rgba(255, 255, 255, 0.2)" />
+          <button class="btn btn-danger btn-sm" onclick="loadSellerBooks()">
+            <i class="fas fa-redo me-2"></i>Retry
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Book Listing</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <!-- Image Upload -->
+            <div class="mb-4">
+              <label class="form-label">Book Image</label>
+              <div class="edit-image-preview mb-3" id="editImagePreview"
+                style="height: 200px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <i class="fas fa-image fa-3x text-muted"></i>
+              </div>
+              <input type="file" class="form-control" id="editImageInput" accept="image/*"
+                onchange="handleEditImageSelect(event)">
+              <small class="text-muted">Max file size: 5MB. Supported formats: JPG, PNG, GIF</small>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-3">
+              <label for="editTitle" class="form-label">Title <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="editTitle" required>
+            </div>
+
+            <!-- Author -->
+            <div class="mb-3">
+              <label for="editAuthor" class="form-label">Author <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="editAuthor" required>
+            </div>
+
+            <!-- Price -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="editPrice" class="form-label">Price (₱) <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="editPrice" min="0" step="0.01" required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="editCondition" class="form-label">Condition <span class="text-danger">*</span></label>
+                <select class="form-select" id="editCondition" required>
+                  <option value="">Select condition</option>
+                  <option value="New">New</option>
+                  <option value="Like New">Like New</option>
+                  <option value="Very Good">Very Good</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Genre -->
+            <div class="mb-3">
+              <label for="editGenre" class="form-label">Genre</label>
+              <select class="form-select" id="editGenre">
+                <option value="">Select genre</option>
+                <option value="Romance">Romance</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Business">Business</option>
+                <option value="Education">Education</option>
+                <option value="Financial">Financial Literacy</option>
+                <option value="Memoir">Memoir</option>
+                <option value="Self-Help">Self-Help</option>
+                <option value="Spiritual">Spiritual</option>
+                <option value="Women">Women</option>
+              </select>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="editDescription" class="form-label">Description</label>
+              <textarea class="form-control" id="editDescription" rows="4" maxlength="1000"></textarea>
+              <small class="text-muted" id="descriptionCharCount">0/1000 characters</small>
+            </div>
+
+            <!-- Featured -->
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="editFeatured">
+                <label class="form-check-label" for="editFeatured">
+                  Mark as Featured
+                </label>
+              </div>
+            </div>
+
+            <input type="hidden" id="editBookId">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-dark" onclick="saveBookChanges()">
+            <i class="fas fa-save me-2"></i>Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-danger" style="border-width: 2px">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="deleteModalLabel">
+            <i class="fas fa-trash-alt me-2"></i>Delete Book Listing
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger" role="alert">
+            <strong>Warning!</strong> This action cannot be undone.
+          </div>
+          <p>Are you sure you want to delete <strong id="deleteBookTitle">this book</strong>?</p>
+          <p class="text-muted small">This will remove the listing from the shop and it will no longer be available for
+            purchase.</p>
+          <input type="hidden" id="deleteBookId">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" onclick="confirmDeleteBook()">
+            <i class="fas fa-trash-alt me-2"></i>Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Delete Confirmation Modal -->
+  <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-labelledby="bulkDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-danger" style="border-width: 2px">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="bulkDeleteModalLabel">
+            <i class="fas fa-trash-alt me-2"></i>Delete Selected Listings
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger" role="alert">
+            <strong>Warning!</strong> This action cannot be undone.
+          </div>
+          <p>Are you sure you want to delete <strong id="bulkDeleteCount">the selected books</strong>?</p>
+          <p class="text-muted small">These listings will be removed from the shop and will no longer be available for
+            purchase.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" onclick="confirmBulkDelete()">
+            <i class="fas fa-trash-alt me-2"></i>Delete All
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-black text-light pt-5 pb-3">
+    <div class="container">
+      <div class="row gy-4 gx-5">
+        <!-- Company Info -->
+        <div class="col-12 col-md-3">
+          <h3 class="mb-3"><i class="fas fa-book me-2"></i>Re;Read</h3>
+          <p class="small">
+            Serving quality and affordable books for readers everywhere
+            through our trusted marketplace for second-hand books.
+          </p>
+          <div class="d-flex gap-3 fs-5 mt-3">
+            <a href="#" class="text-light"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="text-light"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="col-6 col-md-3">
+          <h5 class="mb-3">Quick Links</h5>
+          <ul class="list-unstyled small">
+            <li>
+              <a href="index.html" class="text-light text-decoration-none d-block mb-1">Home</a>
+            </li>
+            <li>
+              <a href="pages/shop.html" class="text-light text-decoration-none d-block mb-1">Shop Books</a>
+            </li>
+            <li>
+              <a href="pages/sell.html" class="text-light text-decoration-none d-block mb-1">Sell Your Books</a>
+            </li>
+            <li>
+              <a href="pages/about.html" class="text-light text-decoration-none d-block mb-1">About Us</a>
+            </li>
+            <li>
+              <a href="pages/cart.html" class="text-light text-decoration-none d-block mb-1">Cart</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Support -->
+        <div class="col-6 col-md-3">
+          <h5 class="mb-3">Support</h5>
+          <ul class="list-unstyled small">
+            <li>
+              <a href="#" class="text-light text-decoration-none d-block mb-1">Help Center</a>
+            </li>
+            <li>
+              <a href="#" class="text-light text-decoration-none d-block mb-1">Shipping Info</a>
+            </li>
+            <li>
+              <a href="#" class="text-light text-decoration-none d-block mb-1">Returns</a>
+            </li>
+            <li>
+              <a href="#" class="text-light text-decoration-none d-block mb-1">Safety Guidelines</a>
+            </li>
+            <li>
+              <a href="#" class="text-light text-decoration-none d-block mb-1">Contact Us</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Contact -->
+        <div class="col-12 col-md-3">
+          <h5 class="mb-3">Contact</h5>
+          <p class="small mb-2">
+            <i class="fas fa-envelope me-2"></i>support@reread.com
+          </p>
+          <p class="small mb-2">
+            <i class="fas fa-phone me-2"></i>0408-2328-REREAD
+          </p>
+          <p class="small mb-0">
+            <i class="fas fa-map-marker-alt me-2"></i>Available Nationwide
+          </p>
+        </div>
+      </div>
+
+      <hr class="border-secondary mt-4 mb-3" />
+
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+        <p class="mb-2 mb-md-0 small">© 2025 Re;Read. All rights reserved.</p>
+        <div class="d-flex gap-3 small">
+          <a href="#" class="text-light text-decoration-none">Privacy Policy</a>
+          <a href="#" class="text-light text-decoration-none">Terms of Service</a>
+          <a href="#" class="text-light text-decoration-none">Cookie Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!-- FOOTER ENDS HERE -->
+
+  <!-- Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"></script>
+
+  <!-- Custom Scripts -->
+  <script src="../scripts/auth.js"></script>
+  <script src="../scripts/main.js"></script>
+  <script src="../scripts/manage-listings.js"></script>
+</body>
+
+</html>

@@ -95,7 +95,7 @@ class AuthManager {
         <li><a class="dropdown-item" href="../pages/profile.html"><i class="fas fa-user me-2"></i>Profile</a></li>
         <li><a class="dropdown-item" href="../pages/orders.html"><i class="fas fa-history me-2"></i>Orders</a></li>
         <li><a class="dropdown-item" href="../pages/shop.html#likes"><i class="fas fa-heart me-2"></i>My Likes</a></li>
-        <li><a class="dropdown-item" href="../pages/sell.html"><i class="fas fa-list me-2"></i>Manage Listings</a></li>
+        <li><a class="dropdown-item" href="../pages/manage-listings.html"><i class="fas fa-list me-2"></i>Manage Listings</a></li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
       </ul>
@@ -154,7 +154,7 @@ class AuthManager {
                 <li><a href="profile.html" class="list-group-item list-group-item-action border-0"><i class="fas fa-user me-2"></i>Profile</a></li>
                 <li><a href="orders.html" class="list-group-item list-group-item-action border-0"><i class="fas fa-history me-2"></i>Orders</a></li>
                 <li><a href="shop.html#likes" class="list-group-item list-group-item-action border-0"><i class="fas fa-heart me-2"></i>My Likes</a></li>
-                <li><a href="sell.html" class="list-group-item list-group-item-action border-0"><i class="fas fa-list me-2"></i>Manage Listings</a></li>
+                <li><a href="manage-listings.html" class="list-group-item list-group-item-action border-0"><i class="fas fa-list me-2"></i>Manage Listings</a></li>
                 <li><a href="#" id="mobileLogoutBtn" class="list-group-item list-group-item-action border-0 text-danger"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
               </ul>
             </div>

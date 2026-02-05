@@ -1,0 +1,431 @@
+/* Manage Listings Page Styles */
+
+.manage-listings-main {
+  min-height: 60vh;
+  padding: 2rem 0;
+}
+
+/* Statistics Header */
+.statistics-header {
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #374151;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  font-weight: 600;
+  margin: 0;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0.5rem 0 0 0;
+}
+
+/* Bulk Actions Bar */
+.bulk-actions-bar {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#selectedCount {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Filter Section */
+.filter-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-content {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.filter-content .form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.filter-content .form-select {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 14px;
+}
+
+/* Listings Table */
+.table {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.table thead th {
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+  padding: 12px 8px;
+}
+
+.table tbody td {
+  padding: 12px 8px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Book Image in Table */
+.book-thumbnail {
+  width: 50px;
+  height: 65px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f3f4f6;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-featured {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-listed {
+  background: #dbeafe;
+  color: #23527b;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 0.4rem 0.8rem;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-edit:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.btn-delete {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.btn-delete:hover {
+  background: #fecaca;
+}
+
+/* Empty State */
+#emptyState {
+  padding: 3rem 0;
+}
+
+/* Loading State */
+#loadingState {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Edit Modal Image Preview */
+.edit-image-preview {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  position: relative;
+}
+
+.edit-image-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.edit-image-preview.has-image {
+  border-style: solid;
+  border-color: #d1d5db;
+}
+
+/* Character Counter */
+#descriptionCharCount {
+  display: block;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .statistics-header {
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+
+  .filter-content {
+    padding: 1rem;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table thead th {
+    padding: 8px 4px;
+  }
+
+  .table tbody td {
+    padding: 8px 4px;
+  }
+
+  .book-thumbnail {
+    width: 40px;
+    height: 50px;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    padding: 0.3rem 0.6rem;
+    font-size: 11px;
+  }
+
+  /* Hide less important columns on mobile */
+  .table .col-hide-mobile {
+    display: none;
+  }
+
+  .bulk-actions-bar {
+    padding: 0.75rem;
+    font-size: 13px;
+  }
+
+  .bulk-actions-bar .btn-group {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-header h1 {
+    font-size: 28px;
+  }
+
+  .statistics-header {
+    row-gap: 1rem !important;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .stat-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .filter-content .row>div {
+    margin-bottom: 1rem;
+  }
+
+  .filter-content .form-select {
+    font-size: 13px;
+  }
+
+  .table {
+    font-size: 11px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+  }
+
+  /* Stack bulk actions vertically on very small screens */
+  .bulk-actions-bar {
+    padding: 0.5rem;
+  }
+
+  .bulk-actions-bar .btn-group {
+    width: 100%;
+  }
+
+  .bulk-actions-bar .btn-group .btn {
+    flex: 1;
+  }
+}
+
+/* Modal Adjustments for Mobile */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 1rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  #editImagePreview {
+    height: 150px !important;
+  }
+
+  .edit-image-preview {
+    height: 150px;
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .stat-card:hover {
+    border-color: #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .table tbody tr:hover {
+    background-color: transparent;
+  }
+
+  .btn-edit:hover,
+  .btn-delete:hover {
+    background: none;
+    border-color: inherit;
+  }
+}
+
+/* Print Styles */
+@media print {
+
+  .filter-section,
+  .bulk-actions-bar,
+  .action-buttons,
+  .modal {
+    display: none !important;
+  }
+
+  .stat-card {
+    page-break-inside: avoid;
+  }
+}
