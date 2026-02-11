@@ -5,6 +5,7 @@ console.log("profile.js loaded");
 const API_BASE_URL = "http://localhost:5000/api";
 let currentUser = null;
 let isEditMode = false;
+let uploadedProfilePicture = null;
 
 // Initialize profile page
 document.addEventListener("DOMContentLoaded", async function () {
@@ -20,11 +21,164 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Load profile data
   await loadProfile();
 
+  // Setup profile picture upload
+  setupProfilePictureUpload();
+
   // Update cart badge
   if (typeof updateCartBadge === "function") {
     updateCartBadge();
   }
 });
+
+// Setup profile picture upload
+function setupProfilePictureUpload() {
+  const uploadPhotoBtn = document.querySelector('.profile-avatar-placeholder').parentElement.querySelector('button');
+
+  if (uploadPhotoBtn) {
+    uploadPhotoBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      // Create hidden file input
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.addEventListener('change', async function (e) {
+        const file = e.target.files[0];
+        if (file) {
+          await handleProfilePictureUpload(file);
+        }
+      });
+      fileInput.click();
+    });
+  }
+}
+
+// Handle profile picture upload
+async function handleProfilePictureUpload(file) {
+  try {
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      showNotification('Please select a valid image file', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification('Image must be less than 5MB', 'error');
+      return;
+    }
+
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) {
+      showNotification('You must be logged in to upload a profile picture', 'error');
+      return;
+    }
+
+    // Show loading state
+    showNotification('Uploading profile picture...', 'info');
+
+    // Upload to S3
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+
+    const response = await fetch(`${API_BASE_URL}/upload/profile-picture`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to upload profile picture');
+    }
+
+    const result = await response.json();
+    if (result.success && result.data) {
+      uploadedProfilePicture = result.data.url;
+
+      // Update user profile with new picture URL
+      await updateProfilePicture(uploadedProfilePicture);
+
+      showNotification('Profile picture uploaded successfully!', 'success');
+    } else {
+      throw new Error('Upload returned invalid response');
+    }
+  } catch (error) {
+    console.error('Profile picture upload error:', error);
+    showNotification(
+      error.message || 'Failed to upload profile picture',
+      'error'
+    );
+  }
+}
+
+// Update user profile with picture URL
+async function updateProfilePicture(pictureUrl) {
+  try {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    // Update profile with picture URL
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        profilePicture: pictureUrl
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save profile picture');
+    }
+
+    const result = await response.json();
+    if (result.success && result.data) {
+      currentUser = result.data;
+      displayProfilePicture(pictureUrl);
+    }
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    showNotification(
+      error.message || 'Failed to save profile picture',
+      'error'
+    );
+  }
+}
+
+// Display profile picture
+function displayProfilePicture(pictureUrl) {
+  const avatarContainer = document.querySelector('.profile-avatar-placeholder');
+  if (avatarContainer) {
+    // Handle both string URLs and object format
+    let imageUrl = pictureUrl;
+    if (typeof pictureUrl === 'object' && pictureUrl.url) {
+      imageUrl = pictureUrl.url;
+    }
+
+    if (imageUrl) {
+      // Clear existing content
+      avatarContainer.innerHTML = '';
+
+      // Create and display image
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = 'Profile Picture';
+      img.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+      `;
+
+      avatarContainer.appendChild(img);
+    }
+  }
+}
 
 // Load user profile from API
 async function loadProfile() {
@@ -81,6 +235,11 @@ function displayProfile() {
   }
 
   try {
+    // Display profile picture if it exists
+    if (currentUser.profilePicture) {
+      displayProfilePicture(currentUser.profilePicture);
+    }
+
     // Profile Header
     const displayName = document.getElementById("displayName");
     const displayUsername = document.getElementById("displayUsername");

@@ -35,8 +35,23 @@ const bookSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
-        image: {
-            type: String,
+        image: mongoose.Schema.Types.Mixed,
+        bookFile: {
+            url: {
+                type: String,
+                description: 'S3 URL to downloadable book file (PDF, EPUB, MOBI)'
+            },
+            key: {
+                type: String,
+                description: 'S3 object key for file management'
+            },
+            fileType: {
+                type: String,
+                enum: ['pdf', 'epub', 'mobi']
+            },
+            uploadedAt: {
+                type: Date
+            }
         },
         rating: {
             type: Number,
@@ -84,5 +99,40 @@ const bookSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+// Post hook to normalize image field for backwards compatibility
+bookSchema.post('find', function (docs) {
+    if (Array.isArray(docs)) {
+        docs.forEach(doc => {
+            if (doc && doc.image && typeof doc.image === 'string') {
+                const imageUrl = doc.image;
+                doc.image = {
+                    url: imageUrl,
+                    uploadedAt: doc.createdAt || new Date()
+                };
+            }
+        });
+    }
+});
+
+bookSchema.post('findOne', function (doc) {
+    if (doc && doc.image && typeof doc.image === 'string') {
+        const imageUrl = doc.image;
+        doc.image = {
+            url: imageUrl,
+            uploadedAt: doc.createdAt || new Date()
+        };
+    }
+});
+
+bookSchema.post('findOneAndUpdate', function (doc) {
+    if (doc && doc.image && typeof doc.image === 'string') {
+        const imageUrl = doc.image;
+        doc.image = {
+            url: imageUrl,
+            uploadedAt: doc.createdAt || new Date()
+        };
+    }
+});
 
 module.exports = mongoose.model('Book', bookSchema);

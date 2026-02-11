@@ -288,10 +288,10 @@ exports.refreshToken = async (req, res) => {
   }
 };
 
-// Get current user profile (Phase 3 - JWT protected)
+// Get current user profile (JWT protected)
 exports.getCurrentProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select("-password");
+    let user = await User.findById(req.user.userId).select("-password");
 
     if (!user) {
       return res.status(404).json({
@@ -301,9 +301,30 @@ exports.getCurrentProfile = async (req, res) => {
       });
     }
 
+    // Generate signed URL for profile picture if it's an S3 image
+    const userObj = user.toObject();
+    if (userObj.profilePicture && userObj.profilePicture.url && typeof userObj.profilePicture.url === 'string') {
+      const pictureUrl = userObj.profilePicture.url;
+      if (pictureUrl.includes('.s3.') && !pictureUrl.includes('?X-Amz-Signature')) {
+        try {
+          const { getSignedDownloadUrl } = require('../services/s3Service');
+          const urlParts = pictureUrl.split('.amazonaws.com/');
+          if (urlParts.length === 2) {
+            const s3Key = decodeURIComponent(urlParts[1]);
+            const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600);
+            if (signedUrlResult.success) {
+              userObj.profilePicture.url = signedUrlResult.url;
+            }
+          }
+        } catch (err) {
+          console.warn('Could not generate signed URL for profile picture:', err.message);
+        }
+      }
+    }
+
     res.status(200).json({
       success: true,
-      data: user,
+      data: userObj,
     });
   } catch (error) {
     res.status(500).json({
@@ -314,7 +335,7 @@ exports.getCurrentProfile = async (req, res) => {
   }
 };
 
-// Update user profile (Phase 3 - JWT protected)
+// Update user profile (JWT protected)
 exports.updateProfile = async (req, res) => {
   try {
     const {
@@ -387,21 +408,52 @@ exports.updateProfile = async (req, res) => {
     if (email !== undefined) updateData.email = email.toLowerCase();
     if (address !== undefined) updateData.address = address;
     if (phone !== undefined) updateData.phone = phone;
-    if (profilePicture !== undefined)
-      updateData.profilePicture = profilePicture;
+    if (profilePicture !== undefined) {
+      // Handle S3 file uploads (object with url and key)
+      if (typeof profilePicture === 'object' && profilePicture.url) {
+        updateData.profilePicture = profilePicture;
+      } else if (typeof profilePicture === 'string' && profilePicture) {
+        // Handle legacy URL strings
+        updateData.profilePicture = {
+          url: profilePicture,
+          uploadedAt: new Date()
+        };
+      }
+    }
     updateData.updatedAt = new Date();
 
     // Update user
-    const user = await User.findByIdAndUpdate(userId, updateData, {
+    let user = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
       runValidators: true,
     }).select("-password");
+
+    // Generate signed URL for profile picture if it's an S3 image
+    const userObj = user.toObject();
+    if (userObj.profilePicture && userObj.profilePicture.url && typeof userObj.profilePicture.url === 'string') {
+      const pictureUrl = userObj.profilePicture.url;
+      if (pictureUrl.includes('.s3.') && !pictureUrl.includes('?X-Amz-Signature')) {
+        try {
+          const { getSignedDownloadUrl } = require('../services/s3Service');
+          const urlParts = pictureUrl.split('.amazonaws.com/');
+          if (urlParts.length === 2) {
+            const s3Key = decodeURIComponent(urlParts[1]);
+            const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600);
+            if (signedUrlResult.success) {
+              userObj.profilePicture.url = signedUrlResult.url;
+            }
+          }
+        } catch (err) {
+          console.warn('Could not generate signed URL for profile picture:', err.message);
+        }
+      }
+    }
 
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
       notificationType: "SUCCESS_PROFILE_UPDATE",
-      data: user,
+      data: userObj,
     });
   } catch (error) {
     console.error("Update profile error:", error);
@@ -413,11 +465,10 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// Logout (Phase 3 - New)
+// Logout (New)
 exports.logout = async (req, res) => {
   try {
     // Token is simply discarded on client side
-    // In production, you could blacklist tokens in Redis
 
     res.status(200).json({
       success: true,
@@ -432,7 +483,7 @@ exports.logout = async (req, res) => {
   }
 };
 
-// Become a seller (Phase 3 - New)
+// Become a seller (New)
 exports.becomeSeller = async (req, res) => {
   try {
     const { storeName, description, bankAccount } = req.body;

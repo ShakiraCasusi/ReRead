@@ -3,11 +3,44 @@ const router = express.Router();
 const User = require('../models/User');
 const Book = require('../models/Book');
 const tokenManager = require('../utils/tokenManager');
+const { getSignedDownloadUrl } = require('../services/s3Service');
 
 // Middleware to authenticate requests
 const authenticateToken = tokenManager.authenticateToken;
 
-// Become a seller (Phase 3 - Already in auth controller, but can also be here)
+// Helper to generate signed URLs for S3 book images
+async function normalizeBookImages(book) {
+    try {
+        const bookObj = book.toObject ? book.toObject() : book;
+
+        if (bookObj.image && bookObj.image.url && typeof bookObj.image.url === 'string') {
+            const imageUrl = bookObj.image.url;
+
+            // Check if this is an S3 URL that needs a signed version
+            if (imageUrl.includes('.s3.') && !imageUrl.includes('?X-Amz-Signature')) {
+                try {
+                    const urlParts = imageUrl.split('.amazonaws.com/');
+                    if (urlParts.length === 2) {
+                        const s3Key = decodeURIComponent(urlParts[1]);
+                        const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600);
+                        if (signedUrlResult.success) {
+                            bookObj.image.url = signedUrlResult.url;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Could not generate signed URL:', err.message);
+                }
+            }
+        }
+
+        return bookObj;
+    } catch (error) {
+        console.error('Error normalizing book:', error);
+        return book;
+    }
+}
+
+// Become a seller (Already in auth controller)
 router.post('/register', authenticateToken, async (req, res) => {
     try {
         const { storeName, description, bankAccount } = req.body;
@@ -53,7 +86,7 @@ router.post('/register', authenticateToken, async (req, res) => {
 // Upload/create new book listing (seller only)
 router.post('/books', authenticateToken, async (req, res) => {
     try {
-        const { title, author, isbn, description, genre, condition, price, coverImage } = req.body;
+        const { title, author, isbn, description, genre, condition, price, coverImage, image } = req.body;
 
         // Verify seller
         const user = await User.findById(req.user.userId);
@@ -94,6 +127,22 @@ router.post('/books', authenticateToken, async (req, res) => {
             }
         }
 
+        // Handle image - support both old coverImage and new image formats
+        let bookImage;
+        const imageUrl = image || coverImage;
+        if (imageUrl) {
+            if (typeof imageUrl === 'object' && imageUrl.url) {
+                // S3 upload format: { url, key, uploadedAt }
+                bookImage = imageUrl;
+            } else if (typeof imageUrl === 'string') {
+                // Legacy URL string
+                bookImage = {
+                    url: imageUrl,
+                    uploadedAt: new Date()
+                };
+            }
+        }
+
         // Create new book
         const book = await Book.create({
             title,
@@ -103,12 +152,14 @@ router.post('/books', authenticateToken, async (req, res) => {
             genre: genre || 'Other',
             quality: condition,
             price,
-            coverImage: coverImage || 'https://via.placeholder.com/150x220?text=' + encodeURIComponent(title.substring(0, 20)),
+            image: bookImage || {
+                url: 'https://via.placeholder.com/150x220?text=' + encodeURIComponent(title.substring(0, 20)),
+                uploadedAt: new Date()
+            },
             sellerId: req.user.userId,
             sellerName: user.username,
             averageRating: 0,
             reviewCount: 0,
-            inStock: true,
             createdAt: new Date()
         });
 
@@ -129,8 +180,28 @@ router.post('/books', authenticateToken, async (req, res) => {
 // Get seller's books
 router.get('/books', authenticateToken, async (req, res) => {
     try {
-        const books = await Book.find({ sellerId: req.user.userId })
+        console.log('Fetching books for user:', req.user.userId);
+
+        let books = await Book.find({ sellerId: req.user.userId })
             .sort({ createdAt: -1 });
+
+        // Normalize image field and generate signed URLs
+        books = await Promise.all(books.map(async (book) => {
+            const bookObj = book.toObject();
+
+            // If image is a string (old format), convert to new object format
+            if (typeof bookObj.image === 'string') {
+                bookObj.image = {
+                    url: bookObj.image,
+                    uploadedAt: book.createdAt || new Date()
+                };
+            }
+
+            // Generate signed URL if S3 image
+            return await normalizeBookImages(bookObj);
+        }));
+
+        console.log('Found', books.length, 'books');
 
         const stats = {
             totalListings: books.length,
@@ -146,9 +217,12 @@ router.get('/books', authenticateToken, async (req, res) => {
             stats
         });
     } catch (error) {
+        console.error('Error fetching seller books:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({
             success: false,
-            message: error.message
+            message: error.message,
+            error: error.toString()
         });
     }
 });
@@ -156,7 +230,7 @@ router.get('/books', authenticateToken, async (req, res) => {
 // Get specific book listing (seller can edit their own)
 router.get('/books/:bookId', authenticateToken, async (req, res) => {
     try {
-        const book = await Book.findById(req.params.bookId);
+        let book = await Book.findById(req.params.bookId);
 
         if (!book) {
             return res.status(404).json({
@@ -173,9 +247,19 @@ router.get('/books/:bookId', authenticateToken, async (req, res) => {
             });
         }
 
+        // Normalize image field and generate signed URLs
+        let bookObj = book.toObject();
+        if (typeof bookObj.image === 'string') {
+            bookObj.image = {
+                url: bookObj.image,
+                uploadedAt: book.createdAt || new Date()
+            };
+        }
+        bookObj = await normalizeBookImages(bookObj);
+
         res.status(200).json({
             success: true,
-            data: book
+            data: bookObj
         });
     } catch (error) {
         res.status(500).json({
@@ -188,7 +272,7 @@ router.get('/books/:bookId', authenticateToken, async (req, res) => {
 // Update book listing (seller only)
 router.put('/books/:bookId', authenticateToken, async (req, res) => {
     try {
-        const { title, author, description, genre, condition, price, coverImage, inStock } = req.body;
+        const { title, author, description, genre, condition, price, coverImage, image } = req.body;
 
         const book = await Book.findById(req.params.bookId);
 
@@ -222,8 +306,23 @@ router.put('/books/:bookId', authenticateToken, async (req, res) => {
             }
             book.price = price;
         }
-        if (coverImage) book.coverImage = coverImage;
-        if (inStock !== undefined) book.inStock = inStock;
+
+        // Handle image update - support both old coverImage and new image formats
+        if (coverImage !== undefined || image !== undefined) {
+            const imageUrl = image || coverImage;
+            if (imageUrl) {
+                if (typeof imageUrl === 'object' && imageUrl.url) {
+                    // S3 upload format: { url, key, uploadedAt }
+                    book.image = imageUrl;
+                } else if (typeof imageUrl === 'string') {
+                    // Legacy URL string
+                    book.image = {
+                        url: imageUrl,
+                        uploadedAt: new Date()
+                    };
+                }
+            }
+        }
 
         await book.save();
 

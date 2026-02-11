@@ -4,8 +4,66 @@
 window.uploadedImages = [];
 
 document.addEventListener("DOMContentLoaded", function () {
+  ensureUserIsSeller();
   initSellPage();
 });
+
+// Ensure user is registered as a seller
+async function ensureUserIsSeller() {
+  try {
+    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    if (!token) {
+      window.location.href = 'signin.html';
+      return;
+    }
+
+    // Get current user profile
+    const profileResponse = await fetch('http://localhost:5000/api/auth/profile', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!profileResponse.ok) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('accessToken');
+      window.location.href = 'signin.html';
+      return;
+    }
+
+    const profileData = await profileResponse.json();
+    const user = profileData.data;
+
+    // If user is not a seller, make them one
+    if (!user.isSeller) {
+      console.log('User is not a seller, registering...');
+
+      // Register as seller with default values
+      const sellerResponse = await fetch('http://localhost:5000/api/auth/become-seller', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          storeName: user.firstName ? `${user.firstName}'s Store` : `${user.username}'s Store`,
+          description: 'Welcome to my bookstore!'
+        })
+      });
+
+      if (!sellerResponse.ok) {
+        console.error('Failed to register as seller');
+        showError('Error', 'Failed to register as seller. Please try again.');
+      } else {
+        console.log('Successfully registered as seller');
+      }
+    }
+  } catch (error) {
+    console.error('Error ensuring seller status:', error);
+  }
+}
 
 function initSellPage() {
   initImageUpload();
@@ -340,6 +398,42 @@ function initConditionSelector() {
   }
 }
 
+// Upload book cover to S3
+async function uploadBookCoverToS3(file) {
+  try {
+    const uploadFormData = new FormData();
+    uploadFormData.append('image', file);
+
+    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error('You must be logged in to upload');
+    }
+
+    const response = await fetch('http://localhost:5000/api/upload/book-cover', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: uploadFormData
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to upload book cover');
+    }
+
+    const result = await response.json();
+    if (result.success && result.data) {
+      return result.data.url; // Return the S3 URL
+    } else {
+      throw new Error('Upload returned invalid response');
+    }
+  } catch (error) {
+    console.error('Book cover upload error:', error);
+    throw error;
+  }
+}
+
 async function submitBookListing() {
   // Collect form data
   const form = document.querySelector(".panel-form");
@@ -380,40 +474,62 @@ async function submitBookListing() {
     const conditionValue = formData.get("condition");
     const mappedCondition = conditionMap[conditionValue] || "Good";
 
-    // Use first uploaded image if available, otherwise no image
+    // Upload book cover to S3 if available
     let bookImage = null;
     if (window.uploadedImages && window.uploadedImages.length > 0) {
-      bookImage = window.uploadedImages[0].url; // Use base64 data URL
+      submitBtn.textContent = "Uploading cover...";
+      const imageFile = window.uploadedImages[0].file;
+      bookImage = await uploadBookCoverToS3(imageFile);
+      submitBtn.textContent = "Listing Book...";
     }
 
-    // Prepare book data object
+    // Prepare book data object (for seller endpoint)
     const bookData = {
       title: formData.get("title"),
       author: formData.get("author"),
       price: parseFloat(formData.get("price")),
-      quality: mappedCondition,
+      condition: mappedCondition,  // seller endpoint expects "condition"
       genre: formData.get("genre"),
-      category: formData.get("genre"), // Use genre as category
       description: formData.get("description") || "",
-      image: bookImage,
-      sellerId: user.id,
-      featured: false,
-      isNewBook: conditionValue === "new",
-      quantity: 1,
+      image: bookImage,  // Can be base64 URL or S3 object
     };
+
+    // Optional fields
+    const isbn = formData.get("isbn");
+    if (isbn) {
+      bookData.isbn = isbn;
+    }
 
     console.log("Submitting book data:", bookData);
 
-    // Make API call to create book
-    const response = await fetch("http://localhost:5000/api/books", {
+    // Get auth token from sessionStorage or localStorage
+    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error('You must be logged in to list a book');
+    }
+
+    // Make API call to create book using seller endpoint (authenticated)
+    const response = await fetch("http://localhost:5000/api/seller/books", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify(bookData),
     });
 
-    const result = await response.json();
+    // Check content type before parsing
+    const contentType = response.headers.get("content-type");
+    let result;
+
+    if (contentType && contentType.includes("application/json")) {
+      result = await response.json();
+    } else {
+      // Server returned non-JSON (likely error HTML page)
+      const responseText = await response.text();
+      console.error("Server returned non-JSON response:", responseText);
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+    }
 
     if (response.ok && result.success) {
       // Reset form

@@ -26,9 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("Re;Read website initialized successfully");
 });
 
-// ============================================
 // MOBILE MENU FUNCTIONALITY
-// ============================================
 function initMobileMenu() {
   const navbar = document.querySelector(".navbar");
   const headerContainer = document.querySelector(".header-container");
@@ -504,7 +502,7 @@ function initCartFunctionality() {
         const priceElement = bookCard.querySelector(".price");
         const image = bookCard.querySelector("img")?.src || "";
 
-        // Get only the current price (first part before any span)
+        // Get only the current price (first part)
         let price = "₱0";
         if (priceElement) {
           const priceText =
@@ -880,9 +878,8 @@ document.addEventListener("DOMContentLoaded", () => {
   })();
 });
 
-// ============================================
+
 // NOTIFICATION SYSTEM
-// ============================================
 /**
  * Show a notification to the user
  * @param {string} type - 'success', 'error', 'warning', or 'info'
@@ -974,9 +971,9 @@ function showInfo(title, message = "", duration = 5000) {
   return showNotification("info", title, message, duration);
 }
 
-// ============================================
+
 // HOMEPAGE API-INTEGRATED BOOKS
-// ============================================
+
 
 /**
  * Initialize books on homepage by fetching from Open Library API
@@ -1078,7 +1075,7 @@ function showErrorState(selector) {
 
 /**
  * Fetch books from random genres with popular, well-covered books
- * Mixes popular authors and titles to ensure good cover images
+ * Mixes popular authors and titles to ensure good cover images. :P
  * @param {number} totalBooks - Total number of books to fetch
  * @returns {Promise<Array>} Array of parsed book objects
  */
@@ -1142,7 +1139,7 @@ async function fetchRandomGenreBooks(totalBooks = 4) {
       await new Promise((resolve) => setTimeout(resolve, 150));
     }
 
-    // If we don't have enough books, try fallback with more popular authors
+    // If we don't have enough books, fallback with more popular authors
     if (allBooks.length < totalBooks) {
       const topAuthors = [
         "Stephen King",
@@ -1518,7 +1515,7 @@ function renderHeroBooks(books) {
           .map(
             (book) => `
           <div class="book-card" data-book-id="${book.id}" style="cursor: pointer;">
-            <img src="${book.image}" alt="${book.title}" class="hero-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
+            <img src="${typeof book.image === 'object' ? book.image?.url : book.image}" alt="${book.title}" class="hero-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
             <h4>${book.title}</h4>
             <p class="author">by ${book.author}</p>
             <p class="new-price">₱${book.price.toLocaleString("en-PH")}</p>
@@ -1563,7 +1560,7 @@ function renderNewReleases(books) {
         <i class="fas fa-tag"></i> ${daysAgo} day${dayText} ago
       </div>
       <figure class="book-image book-clickable">
-        <img src="${book.image}" alt="${book.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
+        <img src="${typeof book.image === 'object' ? book.image?.url : book.image}" alt="${book.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
       </figure>
       <h3>${book.title}</h3>
       <p class="author">${book.author}</p>
@@ -1619,7 +1616,7 @@ function renderFeaturedBooks(books) {
     <article class="book-card" data-book-id="${book.id}" style="cursor: pointer;">
       <div class="badge featured-books">Featured</div>
       <figure class="book-image book-clickable">
-        <img src="${book.image}" alt="${book.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
+        <img src="${typeof book.image === 'object' ? book.image?.url : book.image}" alt="${book.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
       </figure>
       <h3>${book.title}</h3>
       <p class="author">${book.author}</p>

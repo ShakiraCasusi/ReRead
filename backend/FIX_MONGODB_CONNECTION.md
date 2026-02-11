@@ -1,6 +1,6 @@
 # Fix MongoDB Connection String
 
-Your current connection string format is incorrect. Here's how to fix it:
+If your current connection string format is incorrect. Here's how to fix it:
 
 ## Current (WRONG):
 ```

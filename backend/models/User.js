@@ -34,8 +34,17 @@ const userSchema = new mongoose.Schema(
         },
         phone: String,
         profilePicture: {
-            type: String,
-            default: null,
+            url: {
+                type: String,
+                default: null,
+            },
+            key: {
+                type: String,
+                description: 'S3 object key for file management'
+            },
+            uploadedAt: {
+                type: Date
+            }
         },
         role: {
             type: [String],

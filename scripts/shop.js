@@ -99,15 +99,21 @@ function validateImageUrl(imageUrl) {
     return DEFAULT_PLACEHOLDER;
   }
 
-  const url = String(imageUrl).trim();
+  // Handle object format with .url property (from database)
+  let urlString;
+  if (typeof imageUrl === 'object' && imageUrl.url) {
+    urlString = String(imageUrl.url).trim();
+  } else {
+    urlString = String(imageUrl).trim();
+  }
 
   // Only allow http/https/data URIs
   if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("data:")
+    urlString.startsWith("http://") ||
+    urlString.startsWith("https://") ||
+    urlString.startsWith("data:")
   ) {
-    return url;
+    return urlString;
   }
 
   return DEFAULT_PLACEHOLDER;
@@ -570,11 +576,7 @@ function renderBooks() {
 
   booksGrid.innerHTML = booksToShow
     .map((book) => {
-      const imageSrc =
-        book.image &&
-        (book.image.startsWith("http") || book.image.startsWith("data:"))
-          ? book.image
-          : DEFAULT_PLACEHOLDER;
+      const imageSrc = validateImageUrl(book.image);
 
       const safeTitle = (book.title || "Unknown").replace(/'/g, "\\'");
       const safeAuthor = (book.author || "Unknown").replace(/'/g, "\\'");

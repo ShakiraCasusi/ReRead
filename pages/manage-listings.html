@@ -85,7 +85,47 @@
                     <li class="mb-2">
                       <a href="shop.html?genre=Business" class="text-decoration-none d-block">
                         <span class="text-dark"><i class="fas fa-briefcase text-secondary me-2"></i>Business</span>
-                        <small class="text-muted d-block ms-4">Professional development and entrepreneurship</small>
+                        <small class="text-muted d-block ms-4">Professional development and
+                          entrepreneurship</small>
+                      </a>
+                    </li>
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Education" class="text-decoration-none d-block">
+                        <span class="text-dark"><i
+                            class="fas fa-graduation-cap text-secondary me-2"></i>Education</span>
+                        <small class="text-muted d-block ms-4">Learning resources and academic guides</small>
+                      </a>
+                    </li>
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Financial" class="text-decoration-none d-block">
+                        <span class="text-dark"><i class="fas fa-dollar-sign text-secondary me-2"></i>Financial
+                          Literacy</span>
+                        <small class="text-muted d-block ms-4">Money management and investing</small>
+                      </a>
+                    </li>
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Memoir" class="text-decoration-none d-block">
+                        <span class="text-dark"><i class="fas fa-file-alt text-secondary me-2"></i>Memoir</span>
+                        <small class="text-muted d-block ms-4">Personal stories and autobiographies</small>
+                      </a>
+                    </li>
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Self-Help" class="text-decoration-none d-block">
+                        <span class="text-dark"><i class="fas fa-users text-secondary me-2"></i>Self-Help</span>
+                        <small class="text-muted d-block ms-4">Personal development and wellness</small>
+                      </a>
+                    </li>
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Spiritual" class="text-decoration-none d-block">
+                        <span class="text-dark"><i
+                            class="fa-solid fa-person-praying text-secondary me-2"></i>Spiritual</span>
+                        <small class="text-muted d-block ms-4">Faith, mindfulness, and spiritual growth</small>
+                      </a>
+                    </li>
+                    <li class="mb-2">
+                      <a href="shop.html?genre=Women" class="text-decoration-none d-block">
+                        <span class="text-dark"><i class="fa-solid fa-venus text-secondary me-2"></i>Women</span>
+                        <small class="text-muted d-block ms-4">Women's voices and experiences</small>
                       </a>
                     </li>
                   </ul>
@@ -109,12 +149,12 @@
             class="btn btn-link text-dark text-decoration-none position-relative cart-link cart-link-desktop">
             <span class="cart-icon-wrapper">
               <i class="fas fa-shopping-cart cart-icon"></i>
-              <span class="cart-badge" id="cartBadge" aria-live="polite" data-count="0">0</span>
+              <span class="cart-badge" id="cartBadge" hidden>0</span>
             </span>
-            <span class="cart-label">Cart</span>
+            <span class="cart-label ms-1">Cart</span>
           </a>
 
-          <!-- Sign In -->
+          <!-- Sign In / Username -->
           <a href="signin.html" class="btn btn-link text-dark text-decoration-none">
             <i class="fas fa-user me-1"></i>Sign In
           </a>
@@ -122,12 +162,12 @@
 
         <!-- Mobile: Cart and Hamburger (Visible on mobile only) -->
         <div class="col d-flex d-lg-none justify-content-end align-items-center gap-2">
-          <!-- Cart Link (Mobile) -->
+          <!-- Cart Link (Mobile - between Sell/About and Hamburger) -->
           <a href="cart.html"
             class="btn btn-link text-dark text-decoration-none position-relative p-2 cart-link cart-link-mobile">
             <span class="cart-icon-wrapper">
               <i class="fas fa-shopping-cart cart-icon"></i>
-              <span class="cart-badge" id="cartBadgeMobile" aria-live="polite" data-count="0">0</span>
+              <span class="cart-badge" id="cartBadgeMobile" hidden>0</span>
             </span>
           </a>
 
@@ -149,13 +189,159 @@
 
       <div class="offcanvas-body p-0">
         <div class="list-group list-group-flush">
-          <!-- Sign In (Mobile) -->
-          <a href="signin.html" class="list-group-item list-group-item-action border-0">
-            <i class="fas fa-user me-2"></i>Sign In
-          </a>
+          <!-- Search Bar (Mobile) -->
+          <div class="list-group-item">
+            <div class="search-bar-mobile d-flex align-items-center bg-light rounded-3 px-3 py-2">
+              <i class="fas fa-search text-secondary me-2"></i>
+              <input type="text" class="border-0 bg-transparent w-100" placeholder="Search books..."
+                style="outline: none" />
+            </div>
+          </div>
+
+          <!-- Browse Accordion (Mobile) -->
+          <div class="list-group-item p-0">
+            <div class="accordion accordion-flush" id="browseAccordion">
+              <div class="accordion-item border-0">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#browseCollapse" aria-expanded="false" aria-controls="browseCollapse">
+                    <i class="fas fa-book me-2"></i>Browse
+                  </button>
+                </h2>
+                <div id="browseCollapse" class="accordion-collapse collapse" data-bs-parent="#browseAccordion">
+                  <div class="accordion-body p-0">
+                    <!-- Fiction Sub-Accordion -->
+                    <div class="accordion" id="genreAccordion">
+                      <div class="accordion-item border-0">
+                        <h2 class="accordion-header">
+                          <button class="accordion-button collapsed ps-4" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#fictionCollapse" aria-expanded="false">
+                            Fiction
+                          </button>
+                        </h2>
+                        <div id="fictionCollapse" class="accordion-collapse collapse" data-bs-parent="#genreAccordion">
+                          <div class="accordion-body ps-5">
+                            <ul class="list-unstyled">
+                              <li class="mb-3">
+                                <a href="shop.html?genre=Romance" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fas fa-heart text-secondary me-2"></i>Romance
+                                  </div>
+                                  <small class="text-muted">Love stories and romantic fiction</small>
+                                </a>
+                              </li>
+                              <li class="mb-3">
+                                <a href="shop.html?genre=Adventure" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fas fa-compass text-secondary me-2"></i>Adventure
+                                  </div>
+                                  <small class="text-muted">Thrilling journeys and epic quests</small>
+                                </a>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Non-Fiction Sub-Accordion -->
+                      <div class="accordion-item border-0">
+                        <h2 class="accordion-header">
+                          <button class="accordion-button collapsed ps-4" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#nonFictionCollapse" aria-expanded="false">
+                            Non-Fiction
+                          </button>
+                        </h2>
+                        <div id="nonFictionCollapse" class="accordion-collapse collapse"
+                          data-bs-parent="#genreAccordion">
+                          <div class="accordion-body ps-5">
+                            <ul class="list-unstyled">
+                              <li class="mb-3">
+                                <a href="shop.html?genre=Business" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fas fa-briefcase text-secondary me-2"></i>Business
+                                  </div>
+                                  <small class="text-muted">Professional development and
+                                    entrepreneurship</small>
+                                </a>
+                              </li>
+                              <li class="mb-3">
+                                <a href="../shop.html?genre=Education" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fas fa-graduation-cap text-secondary me-2"></i>Education
+                                  </div>
+                                  <small class="text-muted">Learning resources and academic
+                                    guides</small>
+                                </a>
+                              </li>
+                              <li class="mb-3">
+                                <a href="../shop.html?genre=Financial" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fas fa-dollar-sign text-secondary me-2"></i>Financial Literacy
+                                  </div>
+                                  <small class="text-muted">Money management and investing</small>
+                                </a>
+                              </li>
+                              <li class="mb-3">
+                                <a href="../shop.html?genre=Memoir" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fas fa-file-alt text-secondary me-2"></i>Memoir
+                                  </div>
+                                  <small class="text-muted">Personal stories and
+                                    autobiographies</small>
+                                </a>
+                              </li>
+                              <li class="mb-3">
+                                <a href="../shop.html?genre=Self-Help" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fas fa-users text-secondary me-2"></i>Self-Help
+                                  </div>
+                                  <small class="text-muted">Personal development and wellness</small>
+                                </a>
+                              </li>
+                              <li class="mb-3">
+                                <a href="../shop.html?genre=Spiritual" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fa-solid fa-person-praying text-secondary me-2"></i>Spiritual
+                                  </div>
+                                  <small class="text-muted">Faith, mindfulness, and spiritual
+                                    growth</small>
+                                </a>
+                              </li>
+                              <li class="mb-3">
+                                <a href="../shop.html?genre=Women" class="text-decoration-none d-block">
+                                  <div class="text-dark fw-semibold">
+                                    <i class="fa-solid fa-venus text-secondary me-2"></i>Women
+                                  </div>
+                                  <small class="text-muted">Women's voices and experiences</small>
+                                </a>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sell Link (Mobile) -->
+            <a href="sell.html" class="list-group-item list-group-item-action border-0">
+              <i class="fas fa-tag me-2"></i>Sell
+            </a>
+
+            <!-- About Link (Mobile) -->
+            <a href="about.html" class="list-group-item list-group-item-action border-0">
+              <i class="fas fa-info-circle me-2"></i>About
+            </a>
+
+            <!-- Sign In (Mobile) -->
+            <a href="signin.html" class="list-group-item list-group-item-action border-0">
+              <i class="fas fa-user me-2"></i>Sign In
+            </a>
+          </div>
         </div>
       </div>
-    </div>
   </header>
   <!-- End Navbar Section -->
 

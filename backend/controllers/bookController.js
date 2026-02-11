@@ -1,5 +1,51 @@
 const Book = require('../models/Book');
 const axios = require('axios');
+const { getSignedDownloadUrl } = require('../services/s3Service');
+
+// Helper function to normalize book image field and generate signed URLs if needed
+async function normalizeBook(book) {
+    try {
+        const bookObj = book.toObject ? book.toObject() : book;
+
+        // If image is a string, convert to new object format
+        if (typeof bookObj.image === 'string') {
+            bookObj.image = {
+                url: bookObj.image,
+                uploadedAt: book.createdAt || new Date()
+            };
+        }
+
+        // Generate signed URL for S3 images if needed
+        if (bookObj.image && bookObj.image.url && typeof bookObj.image.url === 'string') {
+            const imageUrl = bookObj.image.url;
+
+            // Check if this is an S3 URL that needs a signed version
+            if (imageUrl.includes('.s3.') && !imageUrl.includes('?X-Amz-Signature')) {
+                try {
+                    // Extract the S3 key from the URL
+                    // URL format: https://bucket.s3.region.amazonaws.com/key
+                    const urlParts = imageUrl.split('.amazonaws.com/');
+                    if (urlParts.length === 2) {
+                        const s3Key = decodeURIComponent(urlParts[1]);
+                        const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600); // 1 hour
+                        if (signedUrlResult.success) {
+                            bookObj.image.url = signedUrlResult.url;
+                            bookObj.image.signedUntil = signedUrlResult.expiresAt;
+                        }
+                    }
+                } catch (signedUrlError) {
+                    console.warn('Could not generate signed URL for image:', signedUrlError.message);
+                    // Fall back to original URL
+                }
+            }
+        }
+
+        return bookObj;
+    } catch (error) {
+        console.error('Error normalizing book:', error);
+        return book;
+    }
+}
 
 const bookController = {
     // Get all books
@@ -28,7 +74,11 @@ const bookController = {
                 query.isNewBook = true;
             }
 
-            const books = await Book.find(query).populate('sellerId', 'username email').sort({ createdAt: -1 });
+            let books = await Book.find(query).populate('sellerId', 'username email').sort({ createdAt: -1 });
+
+            // Normalize all books (with signed URLs for S3 images)
+            books = await Promise.all(books.map(normalizeBook));
+
             res.status(200).json({
                 success: true,
                 count: books.length,
@@ -45,13 +95,17 @@ const bookController = {
     // Get single book
     getBook: async (req, res) => {
         try {
-            const book = await Book.findById(req.params.id).populate('sellerId', 'username email');
+            let book = await Book.findById(req.params.id).populate('sellerId', 'username email');
             if (!book) {
                 return res.status(404).json({
                     success: false,
                     message: 'Book not found',
                 });
             }
+
+            // Normalize the book
+            book = await normalizeBook(book);
+
             res.status(200).json({
                 success: true,
                 data: book,
@@ -100,7 +154,10 @@ const bookController = {
                 category,
                 description,
                 isbn,
-                image: image || imageUrl,
+                image: (image || imageUrl) ? {
+                    url: image || imageUrl,
+                    uploadedAt: new Date()
+                } : undefined,
                 rating,
                 featured,
                 isNewBook,
@@ -139,10 +196,13 @@ const bookController = {
                 });
             }
 
+            // Normalize the book
+            const normalizedBook = normalizeBook(book);
+
             res.status(200).json({
                 success: true,
                 message: 'Book updated successfully',
-                data: book,
+                data: normalizedBook,
             });
         } catch (error) {
             res.status(400).json({
@@ -188,13 +248,16 @@ const bookController = {
                 });
             }
 
-            const books = await Book.find({
+            let books = await Book.find({
                 $or: [
                     { title: { $regex: query, $options: 'i' } },
                     { author: { $regex: query, $options: 'i' } },
                     { genre: { $regex: query, $options: 'i' } },
                 ],
             }).populate('sellerId', 'username email').sort({ createdAt: -1 });
+
+            // Normalize all books
+            books = books.map(normalizeBook);
 
             res.status(200).json({
                 success: true,

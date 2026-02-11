@@ -10,6 +10,9 @@ let uploadedEditImage = null;
 document.addEventListener('DOMContentLoaded', async function () {
   console.log('Manage Listings page loaded');
 
+  // Ensure user is a seller first
+  await ensureUserIsSeller();
+
   // Setup description character counter
   const descriptionInput = document.getElementById('editDescription');
   if (descriptionInput) {
@@ -22,6 +25,74 @@ document.addEventListener('DOMContentLoaded', async function () {
   // Setup filter event listeners
   setupFilterListeners();
 });
+
+// Ensure user is registered as a seller
+async function ensureUserIsSeller() {
+  try {
+    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    if (!token) {
+      console.error('No token found');
+      window.location.href = 'signin.html';
+      return;
+    }
+
+    // Get current user profile
+    console.log('Fetching user profile...');
+    const profileResponse = await fetch('http://localhost:5000/api/auth/profile', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Profile response status:', profileResponse.status);
+
+    if (!profileResponse.ok) {
+      console.error('Profile fetch failed:', profileResponse.status);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('accessToken');
+      window.location.href = 'signin.html';
+      return;
+    }
+
+    const profileData = await profileResponse.json();
+    console.log('User profile isSeller:', profileData.data?.isSeller);
+    const user = profileData.data;
+
+    // If user is not a seller, make them one
+    if (!user.isSeller) {
+      console.log('User is not a seller, registering...');
+
+      // Register as seller with default values
+      const sellerResponse = await fetch('http://localhost:5000/api/auth/become-seller', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          storeName: user.firstName ? `${user.firstName}'s Store` : `${user.username}'s Store`,
+          description: 'Welcome to my bookstore!'
+        })
+      });
+
+      console.log('Seller registration response status:', sellerResponse.status);
+
+      if (!sellerResponse.ok) {
+        const errorData = await sellerResponse.text();
+        console.error('Failed to register as seller:', errorData);
+      } else {
+        const sellerData = await sellerResponse.json();
+        console.log('Successfully registered as seller');
+      }
+    } else {
+      console.log('User is already a seller');
+    }
+  } catch (error) {
+    console.error('Error ensuring seller status:', error);
+  }
+}
 
 
 // AUTHENTICATION & LOADING
@@ -79,6 +150,12 @@ async function loadSellerBooks() {
 
     if (response.status === 403) {
       throw new Error('Access denied. You may not have seller privileges.');
+    }
+
+    if (response.status === 500) {
+      const errorText = await response.text();
+      console.error('Server Error (500):', errorText);
+      throw new Error(`Server error: ${errorText.substring(0, 200)}`);
     }
 
     if (!response.ok) {
@@ -165,7 +242,7 @@ function displayListings(books) {
         <input type="checkbox" class="form-check-input book-checkbox" value="${book._id}" onchange="updateBulkActionsBar()">
       </td>
       <td>
-        <img src="${book.image || 'https://via.placeholder.com/50x65?text=No+Image'}" alt="${book.title}" class="book-thumbnail">
+        <img src="${typeof book.image === 'object' ? book.image?.url : book.image || 'https://via.placeholder.com/50x65?text=No+Image'}" alt="${book.title}" class="book-thumbnail">
       </td>
       <td>
         <strong>${book.title || 'N/A'}</strong>
@@ -311,7 +388,8 @@ async function openEditModal(bookId) {
     // Set image preview
     if (book.image) {
       const imagePreview = document.getElementById('editImagePreview');
-      imagePreview.innerHTML = `<img src="${book.image}" alt="Current book image">`;
+      const imageUrl = typeof book.image === 'object' ? book.image?.url : book.image;
+      imagePreview.innerHTML = `<img src="${imageUrl}" alt="Current book image">`;
       imagePreview.classList.add('has-image');
     } else {
       const imagePreview = document.getElementById('editImagePreview');
@@ -347,12 +425,14 @@ function handleEditImageSelect(event) {
     return;
   }
 
-  // Read file as data URL
+  // Store the file object, not the base64
+  uploadedEditImage = file;
+
+  // Read file as data URL for preview only
   const reader = new FileReader();
   reader.onload = function (e) {
-    uploadedEditImage = e.target.result;
     const imagePreview = document.getElementById('editImagePreview');
-    imagePreview.innerHTML = `<img src="${uploadedEditImage}" alt="Preview">`;
+    imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
     imagePreview.classList.add('has-image');
   };
   reader.readAsDataURL(file);
@@ -392,9 +472,33 @@ async function saveBookChanges() {
       featured
     };
 
-    // Include image if new one was uploaded
-    if (uploadedEditImage) {
-      updateData.image = uploadedEditImage;
+    // Upload image to S3 if a new file was selected
+    if (uploadedEditImage && uploadedEditImage instanceof File) {
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append('image', uploadedEditImage);
+
+        const uploadResponse = await fetch('http://localhost:5000/api/upload/book-cover', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: uploadFormData
+        });
+
+        if (!uploadResponse.ok) {
+          const error = await uploadResponse.json();
+          throw new Error(error.error || 'Failed to upload book cover');
+        }
+
+        const uploadResult = await uploadResponse.json();
+        if (uploadResult.success && uploadResult.data) {
+          updateData.image = uploadResult.data.url; // Use the S3 URL
+        }
+      } catch (uploadError) {
+        console.error('Image upload error:', uploadError);
+        throw new Error(`Failed to upload image: ${uploadError.message}`);
+      }
     }
 
     const response = await fetch(`http://localhost:5000/api/seller/books/${bookId}`, {
