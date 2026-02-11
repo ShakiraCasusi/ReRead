@@ -91,6 +91,7 @@ router.get('/buyer', authenticateToken, async (req, res) => {
     try {
         const orders = await Order.find({ buyerId: req.user.userId })
             .populate('sellerId', 'username email')
+            .populate('items.bookId', 'title author bookFile')
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -257,6 +258,81 @@ router.put('/:orderId/payment', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message
+        });
+    }
+});
+
+// Download purchased book file
+router.get('/download/:bookId', authenticateToken, async (req, res) => {
+    try {
+        const { bookId } = req.params;
+
+        // Verify buyer has purchased this book
+        const order = await Order.findOne({
+            buyerId: req.user.userId,
+            'items.bookId': bookId,
+            paymentStatus: 'completed'
+        }).populate('items.bookId', 'bookFile title');
+
+        if (!order) {
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have access to download this book. Make sure you have purchased it and payment is completed.'
+            });
+        }
+
+        // Find the book in the order items
+        const bookItem = order.items.find(item => item.bookId._id.toString() === bookId);
+        if (!bookItem || !bookItem.bookId.bookFile || !bookItem.bookId.bookFile.url) {
+            return res.status(404).json({
+                success: false,
+                message: 'This book does not have a downloadable file available'
+            });
+        }
+
+        const bookFile = bookItem.bookId.bookFile;
+        const { getSignedDownloadUrl } = require('../services/s3Service');
+
+        // Extract S3 key from URL
+        if (bookFile.url.includes('.s3.')) {
+            try {
+                const urlParts = bookFile.url.split('.amazonaws.com/');
+                if (urlParts.length === 2) {
+                    const s3Key = decodeURIComponent(urlParts[1]);
+                    // Generate signed URL with 24 hour expiry for files
+                    const result = await getSignedDownloadUrl(s3Key, 86400);
+
+                    if (result.success) {
+                        return res.status(200).json({
+                            success: true,
+                            message: 'Download link generated',
+                            data: {
+                                downloadUrl: result.url,
+                                fileName: bookItem.bookId.title + '.pdf',
+                                expiresInHours: 24
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error generating signed URL:', error);
+            }
+        }
+
+        // Fallback: return the S3 URL directly if it's already accessible
+        res.status(200).json({
+            success: true,
+            message: 'Download link retrieved',
+            data: {
+                downloadUrl: bookFile.url,
+                fileName: bookItem.bookId.title + '.pdf'
+            }
+        });
+    } catch (error) {
+        console.error('Book download error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to process download'
         });
     }
 });

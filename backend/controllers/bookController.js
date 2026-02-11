@@ -40,6 +40,42 @@ async function normalizeBook(book) {
             }
         }
 
+        // Handle multiple images array - generate signed URLs for each image
+        if (bookObj.images && Array.isArray(bookObj.images)) {
+            bookObj.images = await Promise.all(bookObj.images.map(async (imageObj) => {
+                if (!imageObj) return imageObj;
+
+                let imageUrl = null;
+                if (typeof imageObj === 'object' && imageObj.url) {
+                    imageUrl = imageObj.url;
+                } else if (typeof imageObj === 'string') {
+                    imageUrl = imageObj;
+                }
+
+                // Generate signed URL if S3 image
+                if (imageUrl && imageUrl.includes('.s3.') && !imageUrl.includes('?X-Amz-Signature')) {
+                    try {
+                        const urlParts = imageUrl.split('.amazonaws.com/');
+                        if (urlParts.length === 2) {
+                            const s3Key = decodeURIComponent(urlParts[1]);
+                            const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600); // 1 hour
+                            if (signedUrlResult.success) {
+                                if (typeof imageObj === 'object') {
+                                    return { ...imageObj, url: signedUrlResult.url, signedUntil: signedUrlResult.expiresAt };
+                                } else {
+                                    return { url: signedUrlResult.url, signedUntil: signedUrlResult.expiresAt };
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('Could not generate signed URL for images array:', err.message);
+                    }
+                }
+
+                return imageObj;
+            }));
+        }
+
         return bookObj;
     } catch (error) {
         console.error('Error normalizing book:', error);
@@ -145,7 +181,8 @@ const bookController = {
                 }
             }
 
-            const book = await Book.create({
+            // Build book object - only include ISBN if provided
+            const bookData = {
                 title,
                 author,
                 price,
@@ -153,7 +190,6 @@ const bookController = {
                 genre,
                 category,
                 description,
-                isbn,
                 image: (image || imageUrl) ? {
                     url: image || imageUrl,
                     uploadedAt: new Date()
@@ -164,7 +200,14 @@ const bookController = {
                 originalPrice,
                 openLibraryId,
                 sellerId,
-            });
+            };
+
+            // Only add ISBN if it's provided and not empty
+            if (isbn && isbn.trim()) {
+                bookData.isbn = isbn.trim();
+            }
+
+            const book = await Book.create(bookData);
 
             await book.populate('sellerId', 'username email');
 

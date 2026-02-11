@@ -4,15 +4,13 @@ console.log("book-details.js loaded successfully");
 
 const API_BASE_URL = "http://localhost:5000/api";
 
-// Get book ID from URL
-function getBookIdFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("id");
-}
-
 // Store book data in session for quick access
 let currentBook = null;
 let quantity = 1;
+let currentImageIndex = 0;
+let bookImages = [];
+let touchStartX = 0;
+let touchStartY = 0;
 
 // Load book details on page load
 document.addEventListener("DOMContentLoaded", async function () {
@@ -25,8 +23,107 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   await loadBookDetails(bookId);
   initializeEventListeners();
+  initializeCarousel();
   updateCartBadge();
 });
+
+// Get book ID from URL
+function getBookIdFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("id");
+}
+
+// Initialize carousel controls
+function initializeCarousel() {
+  const prevBtn = document.getElementById("prevImageBtn");
+  const nextBtn = document.getElementById("nextImageBtn");
+  const carousel = document.getElementById("bookImageCarousel");
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => showPreviousImage());
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => showNextImage());
+  }
+
+  // Touch swipe support
+  if (carousel) {
+    carousel.addEventListener("touchstart", (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    });
+
+    carousel.addEventListener("touchend", (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+
+      // Only trigger swipe if horizontal movement is greater than vertical
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+        if (deltaX > 0) {
+          showPreviousImage();
+        } else {
+          showNextImage();
+        }
+      }
+    });
+  }
+}
+
+// Show previous image
+function showPreviousImage() {
+  if (bookImages.length === 0) return;
+  currentImageIndex = (currentImageIndex - 1 + bookImages.length) % bookImages.length;
+  updateImageDisplay();
+}
+
+// Show next image
+function showNextImage() {
+  if (bookImages.length === 0) return;
+  currentImageIndex = (currentImageIndex + 1) % bookImages.length;
+  updateImageDisplay();
+}
+
+// Update image display
+function updateImageDisplay() {
+  const coverImg = document.getElementById("bookCoverImage");
+  const counter = document.getElementById("imageCounter");
+
+  if (bookImages.length === 0) return;
+
+  const currentImage = bookImages[currentImageIndex];
+  let imageSrc = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+";
+
+  if (currentImage) {
+    let imageUrl = null;
+
+    // Handle different image formats
+    if (typeof currentImage === 'string') {
+      // Image is a plain string URL
+      imageUrl = currentImage;
+    } else if (typeof currentImage === 'object' && currentImage.url) {
+      // Image is an object with a url property
+      imageUrl = currentImage.url;
+    }
+
+    // Validate and use the URL
+    if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("data:"))) {
+      imageSrc = imageUrl;
+      console.log(`Displaying image ${currentImageIndex + 1}/${bookImages.length}:`, imageUrl.substring(0, 100));
+    } else {
+      console.warn(`Invalid image URL at index ${currentImageIndex}:`, imageUrl);
+    }
+  }
+
+  coverImg.src = imageSrc;
+
+  // Update counter
+  if (counter && bookImages.length > 1) {
+    counter.textContent = `${currentImageIndex + 1}/${bookImages.length}`;
+  }
+}
 
 // Load book details from localStorage (books database)
 async function loadBookDetails(bookId) {
@@ -70,30 +167,57 @@ async function loadBookDetails(bookId) {
 
 // Display book details on the page
 function displayBookDetails(book) {
-  // Image
-  const coverImg = document.getElementById("bookCoverImage");
+  // Initialize images array
+  currentImageIndex = 0;
+  bookImages = [];
 
-  // Handle both string and object image formats
-  let imageSrc;
-  if (book.image) {
-    let imageUrl;
+  // Handle multiple images or single image
+  if (book.images && Array.isArray(book.images) && book.images.length > 0) {
+    // Filter out invalid images and extract URLs
+    bookImages = book.images
+      .filter(img => {
+        if (typeof img === 'string') return img.length > 0;
+        if (typeof img === 'object' && img.url) return img.url.length > 0;
+        return false;
+      })
+      .map(img => {
+        if (typeof img === 'string') return { url: img };
+        return img;
+      });
+
+    console.log(`Loaded ${bookImages.length} images for carousel`);
+  } else if (book.image) {
+    // Fallback to single image
+    let imageObj;
     if (typeof book.image === 'object' && book.image.url) {
-      imageUrl = book.image.url;
+      imageObj = book.image;
     } else if (typeof book.image === 'string') {
-      imageUrl = book.image;
+      imageObj = { url: book.image };
     }
-
-    if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("data:"))) {
-      imageSrc = imageUrl;
-    } else {
-      imageSrc = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+";
+    if (imageObj && imageObj.url) {
+      bookImages = [imageObj];
+      console.log('Loaded single image as fallback');
     }
-  } else {
-    imageSrc = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+";
   }
 
-  coverImg.src = imageSrc;
-  coverImg.alt = book.title;
+  // Setup carousel controls visibility
+  const prevBtn = document.getElementById("prevImageBtn");
+  const nextBtn = document.getElementById("nextImageBtn");
+  const counter = document.getElementById("imageCounter");
+
+  if (bookImages.length > 1) {
+    if (prevBtn) prevBtn.style.display = "block";
+    if (nextBtn) nextBtn.style.display = "block";
+    if (counter) counter.style.display = "block";
+    console.log(`Carousel initialized with ${bookImages.length} images`);
+  } else {
+    if (prevBtn) prevBtn.style.display = "none";
+    if (nextBtn) nextBtn.style.display = "none";
+    if (counter) counter.style.display = "none";
+  }
+
+  // Display first image
+  updateImageDisplay();
 
   // Title and Author
   document.getElementById("bookTitle").textContent = book.title;

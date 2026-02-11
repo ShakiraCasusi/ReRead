@@ -36,6 +36,20 @@ const bookSchema = new mongoose.Schema(
             trim: true,
         },
         image: mongoose.Schema.Types.Mixed,
+        images: [{
+            url: {
+                type: String,
+                description: 'S3 URL to book image'
+            },
+            key: {
+                type: String,
+                description: 'S3 object key'
+            },
+            uploadedAt: {
+                type: Date,
+                default: Date.now
+            }
+        }],
         bookFile: {
             url: {
                 type: String,

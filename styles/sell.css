@@ -200,6 +200,59 @@
   font-size: 16px;
 }
 
+/* File Placeholder Styles */
+.file-placeholder {
+  background: #fff;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+  margin-bottom: 16px;
+}
+
+.file-placeholder:hover {
+  border-color: #030213;
+  background: #f9fafb;
+}
+
+.file-placeholder i {
+  font-size: 48px;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+.file-placeholder p {
+  font-size: 16px;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0;
+}
+
+.choose-file-btn {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.choose-file-btn:hover {
+  background: #e5e7eb;
+}
+
+.choose-file-btn i {
+  font-size: 16px;
+}
+
 /* ==================== Form Styles ==================== */
 .panel-form {
   display: grid;
@@ -242,10 +295,41 @@
   transition: border-color 0.2s ease;
 }
 
+/* Remove default blue highlight from select dropdowns */
+.form-group select {
+  accent-color: #030213;
+  color-scheme: light;
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
+  border-color: #030213;
+}
+
+.form-group select option {
+  background-color: #fff;
+  color: #374151;
+  border: none;
+  padding: 8px;
+}
+
+.form-group select option:checked {
+  background: #030213;
+  background-color: #030213 !important;
+  color: #fff;
+}
+
+.form-group select option:hover {
+  background: #030213;
+  background-color: #030213 !important;
+  color: #fff;
+}
+
+/* Override browser default select dropdown styling for hover */
+.form-group select:hover,
+.form-group select:focus {
   border-color: #030213;
 }
 

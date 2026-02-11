@@ -300,6 +300,7 @@ function parseLocalBook(book, index) {
           : (Math.random() * (5 - 2.5) + 2.5).toFixed(1),
 
     image: validateImageUrl(book.image),
+    images: book.images || [], // Include images array for carousel
     featured: Boolean(book.featured),
     isNewBook: Boolean(book.isNewBook),
     description: book.description || "",

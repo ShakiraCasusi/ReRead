@@ -115,6 +115,7 @@ exports.register = async (req, res) => {
         user.email,
         user.username,
         user.role,
+        user.isSeller,
       );
 
     res.status(201).json({
@@ -196,6 +197,7 @@ exports.login = async (req, res) => {
         user.email,
         user.username,
         user.role,
+        user.isSeller,
       );
 
     res.status(200).json({
@@ -267,6 +269,7 @@ exports.refreshToken = async (req, res) => {
       user.email,
       user.username,
       user.role,
+      user.isSeller,
     );
 
     res.status(200).json({
@@ -511,11 +514,26 @@ exports.becomeSeller = async (req, res) => {
       { new: true },
     ).select("-password");
 
+    // Generate new tokens with updated seller status
+    const { accessToken, refreshToken, expiresIn } =
+      tokenManager.generateTokens(
+        user._id,
+        user.email,
+        user.username,
+        user.role,
+        user.isSeller,
+      );
+
     res.status(200).json({
       success: true,
       message: "Welcome to ReRead Seller Program!",
       notificationType: "SUCCESS_SELLER_SIGNUP",
-      data: user,
+      data: {
+        ...user.toObject(),
+        accessToken,
+        refreshToken,
+        expiresIn,
+      },
     });
   } catch (error) {
     res.status(400).json({

@@ -7,9 +7,9 @@ const JWT_EXPIRY = '15m'; // Access token expiry
 const REFRESH_EXPIRY = '7d'; // Refresh token expiry
 
 // Generate Access Token (short-lived)
-exports.generateAccessToken = (userId, email, username, role) => {
+exports.generateAccessToken = (userId, email, username, role, isSeller = false) => {
     return jwt.sign(
-        { userId, email, username, role },
+        { userId, email, username, role, isSeller },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRY }
     );
@@ -25,8 +25,8 @@ exports.generateRefreshToken = (userId) => {
 };
 
 // Generate both tokens
-exports.generateTokens = (userId, email, username, role) => {
-    const accessToken = exports.generateAccessToken(userId, email, username, role);
+exports.generateTokens = (userId, email, username, role, isSeller = false) => {
+    const accessToken = exports.generateAccessToken(userId, email, username, role, isSeller);
     const refreshToken = exports.generateRefreshToken(userId);
 
     return {

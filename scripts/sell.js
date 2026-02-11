@@ -2,9 +2,11 @@
 
 // Global variable to store uploaded images
 window.uploadedImages = [];
+// Global variable to store uploaded document file
+window.uploadedFile = null;
 
-document.addEventListener("DOMContentLoaded", function () {
-  ensureUserIsSeller();
+document.addEventListener("DOMContentLoaded", async function () {
+  await ensureUserIsSeller();
   initSellPage();
 });
 
@@ -57,7 +59,18 @@ async function ensureUserIsSeller() {
         console.error('Failed to register as seller');
         showError('Error', 'Failed to register as seller. Please try again.');
       } else {
+        const sellerData = await sellerResponse.json();
         console.log('Successfully registered as seller');
+
+        // Update stored tokens with new ones that include seller status
+        if (sellerData.data && sellerData.data.accessToken) {
+          sessionStorage.setItem('accessToken', sellerData.data.accessToken);
+          localStorage.setItem('accessToken', sellerData.data.accessToken);
+        }
+        if (sellerData.data && sellerData.data.refreshToken) {
+          sessionStorage.setItem('refreshToken', sellerData.data.refreshToken);
+          localStorage.setItem('refreshToken', sellerData.data.refreshToken);
+        }
       }
     }
   } catch (error) {
@@ -67,6 +80,7 @@ async function ensureUserIsSeller() {
 
 function initSellPage() {
   initImageUpload();
+  initFileUpload();
   initFormValidation();
   initPriceCalculator();
   initConditionSelector();
@@ -147,6 +161,82 @@ function initImageUpload() {
     // Create image preview (you could customize this)
     console.log("Image uploaded:", imageData.name);
     // In a real implementation, you'd display thumbnails
+  }
+}
+
+function initFileUpload() {
+  const filePlaceholder = document.querySelector(".file-placeholder");
+  const chooseFileBtn = document.querySelector(".choose-file-btn");
+
+  if (filePlaceholder) {
+    filePlaceholder.addEventListener("click", function () {
+      // Create hidden file input
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = ".pdf,.epub,.mobi";
+
+      fileInput.addEventListener("change", function (e) {
+        handleFileSelection(e.target.files);
+      });
+
+      fileInput.click();
+    });
+  }
+
+  if (chooseFileBtn) {
+    chooseFileBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      filePlaceholder.click();
+    });
+  }
+
+  function handleFileSelection(files) {
+    if (files.length === 0) return;
+
+    const file = files[0];
+
+    // Max 50MB limit
+    if (file.size > 50 * 1024 * 1024) {
+      showError("File too large", `${file.name} exceeds 50MB limit`);
+      return;
+    }
+
+    // Check file type
+    const allowedTypes = ["application/pdf", "application/epub+zip", "application/x-mobipocket-ebook"];
+    const allowedExtensions = [".pdf", ".epub", ".mobi"];
+    const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
+
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExt)) {
+      showError("Invalid file type", "Please upload a PDF, EPUB, or MOBI file");
+      return;
+    }
+
+    // Store the file
+    window.uploadedFile = {
+      file: file,
+      name: file.name,
+      type: file.type,
+    };
+
+    // Display file info
+    const fileInfo = document.getElementById("file-info");
+    if (fileInfo) {
+      fileInfo.innerHTML = `
+        <i class="fa-solid fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>
+        <strong>${file.name}</strong> (${(file.size / 1024 / 1024).toFixed(2)} MB)
+      `;
+    }
+
+    // Update placeholder
+    filePlaceholder.innerHTML = `
+      <i class="fa-solid fa-check-circle"></i>
+      <p>${file.name}</p>
+      <small>Click to replace file</small>
+    `;
+    filePlaceholder.style.background = "#f0fdf4";
+    filePlaceholder.style.border = "2px dashed #10b981";
+
+    showSuccess("File ready", `${file.name} is ready to upload`);
   }
 }
 
@@ -327,19 +417,22 @@ function populateSubGenres(genre, subGenreSelect) {
   const subGenres = {
     romance: ["Contemporary Romance", "Historical Romance"],
     adventure: ["Fantasy Adventure", "Travel Adventure"],
-    business: ["Entrepreneurship", "Leadership"],
-    education: ["Textbooks", "Study Guides"],
-    "financial-literacy": ["Investing", "Budgeting"],
-    memoir: ["Autobiography", "Biography"],
-    "self-help": ["Personal Development", "Productivity"],
-    spiritual: ["Mindfulness", "Faith"],
-    women: ["Feminism", "Women's Health"],
+    business: ["Entrepreneurship", "Marketing", "Leadership"],
+    education: ["Textbooks", "Study Guides", "Learning Materials", "Reference Books"],
+    "financial-literacy": ["Investing", "Budgeting", "Money Management"],
+    memoir: ["Autobiography", "Biography", "Biography & History"],
+    "self-help": ["Personal Development", "Productivity", "Wellness"],
+    spiritual: ["Mindfulness", "Meditation", "Faith", "Spirituality"],
+    women: ["Feminism", "Women's Health", "Women Empowerment"],
+    mystery: ["Mystery", "Thriller"],
+    "science-fiction": ["Science Fiction", "Fantasy", "Horror"],
+    history: ["History", "Biography & History"],
   };
 
   if (subGenres[genre]) {
     subGenres[genre].forEach((subGenre) => {
       const option = document.createElement("option");
-      option.value = subGenre.toLowerCase().replace(" ", "-");
+      option.value = subGenre.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-");
       option.textContent = subGenre;
       subGenreSelect.appendChild(option);
     });
@@ -434,6 +527,42 @@ async function uploadBookCoverToS3(file) {
   }
 }
 
+// Upload document file to S3
+async function uploadDocumentToS3(file) {
+  try {
+    const uploadFormData = new FormData();
+    uploadFormData.append('bookFile', file);
+
+    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error('You must be logged in to upload');
+    }
+
+    const response = await fetch('http://localhost:5000/api/upload/book-file', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: uploadFormData
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to upload document');
+    }
+
+    const result = await response.json();
+    if (result.success && result.data) {
+      return result.data.url; // Return the S3 URL
+    } else {
+      throw new Error('Upload returned invalid response');
+    }
+  } catch (error) {
+    console.error('Document upload error:', error);
+    throw error;
+  }
+}
+
 async function submitBookListing() {
   // Collect form data
   const form = document.querySelector(".panel-form");
@@ -474,12 +603,26 @@ async function submitBookListing() {
     const conditionValue = formData.get("condition");
     const mappedCondition = conditionMap[conditionValue] || "Good";
 
-    // Upload book cover to S3 if available
-    let bookImage = null;
+    // Upload all book images and document file to S3
+    let bookImages = [];
+    let documentUrl = null;
+
+    // Upload all images in parallel
     if (window.uploadedImages && window.uploadedImages.length > 0) {
-      submitBtn.textContent = "Uploading cover...";
-      const imageFile = window.uploadedImages[0].file;
-      bookImage = await uploadBookCoverToS3(imageFile);
+      submitBtn.textContent = `Uploading ${window.uploadedImages.length} image(s)...`;
+
+      const uploadPromises = window.uploadedImages.map(imageData =>
+        uploadBookCoverToS3(imageData.file)
+      );
+
+      bookImages = await Promise.all(uploadPromises);
+      submitBtn.textContent = "Listing Book...";
+    }
+
+    // Upload document file to S3
+    if (window.uploadedFile) {
+      submitBtn.textContent = "Uploading document file...";
+      documentUrl = await uploadDocumentToS3(window.uploadedFile.file);
       submitBtn.textContent = "Listing Book...";
     }
 
@@ -491,7 +634,9 @@ async function submitBookListing() {
       condition: mappedCondition,  // seller endpoint expects "condition"
       genre: formData.get("genre"),
       description: formData.get("description") || "",
-      image: bookImage,  // Can be base64 URL or S3 object
+      image: bookImages.length > 0 ? { url: bookImages[0] } : null,  // Primary cover image
+      images: bookImages.map(url => ({ url })),  // All book cover images
+      documentUrl: documentUrl,  // Ebook/document file for buyer download
     };
 
     // Optional fields
@@ -546,6 +691,23 @@ async function submitBookListing() {
                 `;
         photoPlaceholder.style.background = "";
         photoPlaceholder.style.border = "";
+      }
+
+      // Reset document file upload area
+      window.uploadedFile = null;
+      const filePlaceholder = document.querySelector(".file-placeholder");
+      const fileInfo = document.getElementById("file-info");
+      if (filePlaceholder) {
+        filePlaceholder.innerHTML = `
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    <p>Upload your ebook or document</p>
+                    <small style="color: #9ca3af; margin-top: 8px">Buyers can download this file after purchase</small>
+                `;
+        filePlaceholder.style.background = "";
+        filePlaceholder.style.border = "";
+      }
+      if (fileInfo) {
+        fileInfo.innerHTML = "";
       }
 
       // Show success message with notification
