@@ -4,6 +4,39 @@ console.log('checkout.js loaded (JSON-based)');
 
 const LOCATION_DATA_PATH = '../delivery%20form/ph-locations.json';
 
+// Toast Notification Function
+function showNotification(message, type = 'success', duration = 5000) {
+  const container = document.getElementById('notificationContainer');
+  if (!container) return;
+
+  const toastId = `toast-${Date.now()}-${Math.random()}`;
+  const backgroundColor = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+
+  const toastHTML = `
+    <div id="${toastId}" class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header ${backgroundColor} text-white">
+        <span class="me-auto fw-bold">${icon} ${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        ${message}
+      </div>
+    </div>
+  `;
+
+  const toastElement = document.createElement('div');
+  toastElement.innerHTML = toastHTML;
+  container.appendChild(toastElement);
+
+  const toast = new bootstrap.Toast(toastElement.querySelector('.toast'));
+  toast.show();
+
+  setTimeout(() => {
+    toastElement.remove();
+  }, duration);
+}
+
 // Shipping configuration
 const SHIPPING_RATES = {
   'NCR': 65,
@@ -76,6 +109,9 @@ let shippingFee = 0;
 let discount = 0;
 let total = 0;
 let selectedPaymentMethod = null;
+let isAllDigital = false;
+let physicalItems = [];
+let digitalItems = [];
 
 const PAYMENT_INSTRUCTIONS = {
   gcash: {
@@ -204,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await philippineLocations.init();
     initCheckout();
   } catch (error) {
-    alert('Error loading location data. Please refresh the page.');
+    showNotification('Error loading location data. Please refresh the page.', 'error');
   }
 });
 
@@ -212,6 +248,7 @@ async function initCheckout() {
   console.log('Initializing checkout with JSON data...');
   try {
     loadCart();
+    classifyItems(); // Separate digital and physical items
     loadUserData();
     await populateRegions();
     displayOrderSummary();
@@ -221,7 +258,7 @@ async function initCheckout() {
     console.log('Checkout initialization complete');
   } catch (error) {
     console.error('Error initializing checkout:', error);
-    alert('Error loading location data. Please refresh the page.');
+    showNotification('Error loading location data. Please refresh the page.', 'error');
   }
 }
 
@@ -243,6 +280,45 @@ async function populateRegions() {
   });
 
   console.log('✅ Regions populated successfully:', regionsData.length);
+}
+
+// Classify items into digital and physical
+function classifyItems() {
+  physicalItems = [];
+  digitalItems = [];
+
+  cart.forEach(item => {
+    console.log(`🔍 Checking item: "${item.title}"`);
+    console.log(`   - bookFile: ${item.bookFile ? '✓ Present' : '✗ Missing'}`);
+    console.log(`   - isDigital: ${item.isDigital ? '✓ True' : '✗ False'}`);
+
+    if (item.bookFile || item.isDigital) {
+      digitalItems.push(item);
+      console.log(`   ➜ Classified as: DIGITAL`);
+    } else {
+      physicalItems.push(item);
+      console.log(`   ➜ Classified as: PHYSICAL`);
+    }
+  });
+
+  isAllDigital = physicalItems.length === 0 && digitalItems.length > 0;
+
+  console.log(`\n📊 Cart Classification Summary:`);
+  console.log(`   - Digital items: ${digitalItems.length}`);
+  console.log(`   - Physical items: ${physicalItems.length}`);
+  console.log(`   - isAllDigital: ${isAllDigital ? '✓ TRUE' : '✗ FALSE'}\n`);
+
+  // Hide shipping section if all items are digital
+  const shippingSection = document.getElementById('step1');
+  if (shippingSection) {
+    shippingSection.style.display = isAllDigital ? 'none' : 'block';
+  }
+
+  // Hide region select requirement for digital-only purchases
+  const regionSelect = document.getElementById('region');
+  if (regionSelect) {
+    regionSelect.required = !isAllDigital;
+  }
 }
 
 function loadCart() {
@@ -310,15 +386,15 @@ function displayOrderSummary() {
 }
 
 function updateOrderTotals() {
-  total = subtotal + shippingFee - discount;
+  total = subtotal + (isAllDigital ? 0 : shippingFee) - discount;
 
   const displays = [
     { id: 'itemCount', value: cart.reduce((sum, item) => sum + item.quantity, 0) },
     { id: 'itemCount2', value: cart.reduce((sum, item) => sum + item.quantity, 0) },
     { id: 'subtotal', value: `₱${subtotal.toFixed(2)}` },
     { id: 'subtotal2', value: `₱${subtotal.toFixed(2)}` },
-    { id: 'shippingFee', value: shippingFee > 0 ? `₱${shippingFee.toFixed(2)}` : '₱0' },
-    { id: 'shippingFee2', value: shippingFee > 0 ? `₱${shippingFee.toFixed(2)}` : '₱0' },
+    { id: 'shippingFee', value: isAllDigital ? 'Free (Digital)' : (shippingFee > 0 ? `₱${shippingFee.toFixed(2)}` : '₱0') },
+    { id: 'shippingFee2', value: isAllDigital ? 'Free (Digital)' : (shippingFee > 0 ? `₱${shippingFee.toFixed(2)}` : '₱0') },
     { id: 'discountAmount', value: `-₱${discount.toFixed(2)}` },
     { id: 'discountAmount2', value: `-₱${discount.toFixed(2)}` },
     { id: 'totalAmount', value: `₱${total.toFixed(2)}` },
@@ -573,7 +649,7 @@ function handleShippingSubmit(e) {
   };
 
   if (shippingFee === 0) {
-    alert('Please select a region to calculate shipping fee.');
+    showNotification('Please select a region to calculate shipping fee.', 'error');
     return;
   }
 
@@ -585,18 +661,34 @@ function handleShippingSubmit(e) {
 }
 
 function goToStep(step) {
+  // For digital-only orders, adjust step numbers
+  let adjustedStep = step;
+  if (isAllDigital && step === 2) {
+    adjustedStep = 2; // Step 2 for digital is payment review
+  } else if (isAllDigital && step === 3) {
+    adjustedStep = 3; // Step 3 for digital is payment method
+  }
+
   document.querySelectorAll('.checkout-step').forEach(el => el.classList.remove('active'));
 
-  const targetStep = document.querySelector(`.step-${step}`);
+  const targetStep = document.querySelector(`.step-${adjustedStep}`);
   if (targetStep) targetStep.classList.add('active');
 
   document.querySelectorAll('.progress-step').forEach((el, index) => {
+    // Skip step 1 for digital-only
+    let stepNum = index + 1;
+
     el.classList.remove('active', 'completed');
-    if (index + 1 < step) el.classList.add('completed');
-    else if (index + 1 === step) el.classList.add('active');
+    if (isAllDigital && stepNum === 1) {
+      el.style.display = 'none';
+    } else {
+      el.style.display = 'flex';
+      if (stepNum < adjustedStep) el.classList.add('completed');
+      else if (stepNum === adjustedStep) el.classList.add('active');
+    }
   });
 
-  currentStep = step;
+  currentStep = adjustedStep;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -707,8 +799,8 @@ function showVoucherMessage(message, type) {
 }
 
 function proceedToPayment() {
-  if (!shippingData.firstName) {
-    alert('Please complete shipping information first.');
+  if (!isAllDigital && !shippingData.firstName) {
+    showNotification('Please complete shipping information first.', 'error');
     goToStep(1);
     return;
   }
@@ -718,8 +810,8 @@ function proceedToPayment() {
 }
 
 function selectPayment(method) {
-  if (!shippingData.firstName) {
-    alert('Please complete shipping information first.');
+  if (!isAllDigital && !shippingData.firstName) {
+    showNotification('Please complete shipping information first.', 'error');
     goToStep(1);
     return;
   }
@@ -747,14 +839,14 @@ function selectPayment(method) {
 }
 
 function confirmPayment() {
-  if (!shippingData.firstName) {
-    alert('Please complete shipping information first.');
+  if (!isAllDigital && !shippingData.firstName) {
+    showNotification('Please complete shipping information first.', 'error');
     goToStep(1);
     return;
   }
 
   if (!selectedPaymentMethod) {
-    alert('Please select a payment method first.');
+    showNotification('Please select a payment method first.', 'error');
     return;
   }
 
@@ -762,26 +854,56 @@ function confirmPayment() {
 }
 
 function finalizeOrder(method) {
+  // Recalculate item classification before finalizing
+  classifyItems();
+
+  console.log(`🛒 Final cart check: ${digitalItems.length} digital, ${physicalItems.length} physical items`);
+  console.log(`📦 isAllDigital flag: ${isAllDigital}`);
+  console.log(`📋 Cart items:`, cart);
+  console.log(`📥 Digital items:`, digitalItems);
+
   const orderData = {
     orderNumber: 'ORD-' + Date.now(),
     orderDate: new Date().toISOString(),
-    customer: shippingData,
+    customer: isAllDigital ? { email: 'digital-order' } : shippingData,
     items: cart,
     subtotal,
-    shippingFee,
+    shippingFee: isAllDigital ? 0 : shippingFee,
     discount,
-    total,
+    total: isAllDigital ? (subtotal - discount) : total,
     voucher: appliedVoucher,
     paymentMethod: method,
-    status: 'pending'
+    status: 'pending',
+    isDigitalOnly: isAllDigital,
+    digitalItems: digitalItems
   };
 
   localStorage.setItem('rereadLastOrder', JSON.stringify(orderData));
   localStorage.removeItem('rereadCart');
 
-  alert(`Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\nPayment Method: ${method.toUpperCase()}\n\nYou will receive a confirmation email shortly.`);
+  if (isAllDigital) {
+    // For digital-only orders, show download page
+    console.log(`✅ Redirecting to digital downloads page...`);
+    localStorage.setItem('rereadDigitalDownloads', JSON.stringify(digitalItems));
+    showNotification(`Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\n\nPreparing your downloads...`, 'success', 3000);
 
-  window.location.href = '../index.html';
+    setTimeout(() => {
+      const redirectUrl = './digital-downloads.html?order=' + orderData.orderNumber;
+      console.log(`🔗 Redirect URL: ${redirectUrl}`);
+      window.location.href = redirectUrl;
+    }, 1000);
+  } else {
+    // For mixed or physical-only orders
+    console.log(`📮 Redirecting to home page...`);
+    if (digitalItems.length > 0) {
+      localStorage.setItem('rereadDigitalDownloads', JSON.stringify(digitalItems));
+    }
+    showNotification(`Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\nPayment Method: ${method.toUpperCase()}\n\nYou will receive a confirmation email shortly.`, 'success', 4000);
+
+    setTimeout(() => {
+      window.location.href = '../index.html';
+    }, 1000);
+  }
 }
 
 function updatePaymentInstructions(method) {

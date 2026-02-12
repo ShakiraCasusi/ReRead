@@ -400,7 +400,7 @@ function addCurrentBookToCart() {
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
-      cart.push({
+      const cartItem = {
         title: currentBook.title,
         author: currentBook.author,
         price: `₱${currentBook.price}`,
@@ -408,7 +408,15 @@ function addCurrentBookToCart() {
         quantity: 1,
         condition: currentBook.quality || "Good",
         seller: "Sold by Re;Read",
-      });
+      };
+
+      // Include bookFile if it exists (for digital books)
+      if (currentBook.bookFile) {
+        cartItem.bookFile = currentBook.bookFile;
+        cartItem.isDigital = true;
+      }
+
+      cart.push(cartItem);
     }
   }
 

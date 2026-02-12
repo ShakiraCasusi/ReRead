@@ -256,4 +256,56 @@ router.get(
   }
 );
 
+/**
+ * GET /api/upload/public-download/:fileKey
+ * Get a signed URL for downloading a private file (PUBLIC - no auth required)
+ * Used for digital downloads after purchase
+ */
+router.get(
+  '/public-download/:fileKey',
+  async (req, res) => {
+    try {
+      const { fileKey } = req.params;
+
+      if (!fileKey) {
+        return res.status(400).json({
+          success: false,
+          error: 'File key is required'
+        });
+      }
+
+      // Decode the file key if it's URL encoded
+      const decodedKey = decodeURIComponent(fileKey);
+
+      console.log(`📥 Public download request for: ${decodedKey}`);
+
+      // Validate that the S3 service is available
+      if (!s3Service || !s3Service.getSignedDownloadUrl) {
+        console.error('S3 Service not available');
+        return res.status(500).json({
+          success: false,
+          error: 'S3 service not configured'
+        });
+      }
+
+      // Get signed URL (valid for 24 hours for public downloads)
+      const result = await s3Service.getSignedDownloadUrl(decodedKey, 86400); // 24 hours
+
+      console.log(`✅ Generated signed URL for: ${decodedKey}`);
+
+      res.status(200).json({
+        success: true,
+        message: 'Signed download URL generated',
+        data: result
+      });
+    } catch (error) {
+      console.error('❌ Public signed URL generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to generate download URL'
+      });
+    }
+  }
+);
+
 module.exports = router;

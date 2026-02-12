@@ -269,6 +269,7 @@ function parseBook(book, index, fallbackGenre) {
     image: validateImageUrl(coverUrl),
     featured: Math.random() < 0.15,
     isNewBook: book.first_publish_year && book.first_publish_year > 2020,
+    bookFile: null, // Open Library books don't have digital files
   };
 }
 
@@ -306,6 +307,7 @@ function parseLocalBook(book, index) {
     description: book.description || "",
     course: book.course || "",
     sellerId: book.sellerId || null,
+    bookFile: book.bookFile || null, // Include digital book file info for checkout
   };
 }
 
@@ -593,7 +595,7 @@ function renderBooks() {
       <p class="price">₱${book.price} <span class="original-price">₱${book.originalPrice}</span></p>
       <p class="rating">${book.rating} ★</p>
       <div class="book-actions">
-        <button class="btn btn-dark add-to-cart" data-book-id="${book.id}" data-book-title="${safeTitle}" data-book-author="${safeAuthor}" data-book-price="${book.price}" data-book-image="${imageSrc}" data-book-quality="${book.quality || ""}">
+        <button class="btn btn-dark add-to-cart" data-book-id="${book.id}" data-book-title="${safeTitle}" data-book-author="${safeAuthor}" data-book-price="${book.price}" data-book-image="${imageSrc}" data-book-quality="${book.quality || ""}" data-has-file="${book.bookFile ? 'true' : 'false'}">
           <i class="fas fa-shopping-cart"></i> Add to Cart
         </button>
         <a href="book-details.html?id=${book.id}" class="btn btn-outline-secondary view-book">View</a>
@@ -641,6 +643,11 @@ function initAddToCartButtons() {
     const bookPrice = addToCartBtn.dataset.bookPrice;
     const bookImage = addToCartBtn.dataset.bookImage;
     const bookQuality = addToCartBtn.dataset.bookQuality;
+    const hasFile = addToCartBtn.dataset.hasFile === 'true';
+
+    // Get the full book object to access bookFile
+    const fullBook = booksDatabase.find(b => String(b.id) === bookId);
+    const bookFile = fullBook && fullBook.bookFile ? fullBook.bookFile : null;
 
     if (!bookId) {
       console.error("Book ID not found in data attributes");
@@ -655,6 +662,7 @@ function initAddToCartButtons() {
       price: bookPrice,
       image: bookImage,
       quality: bookQuality,
+      bookFile: bookFile,
     });
   });
 }
@@ -675,7 +683,7 @@ function addBookToCart(bookData) {
     // Ensure image is always valid
     const cartImage = validateImageUrl(bookData.image);
 
-    cart.push({
+    const cartItem = {
       title: bookData.title,
       author: bookData.author,
       price: bookData.price.toString().startsWith("₱")
@@ -685,7 +693,15 @@ function addBookToCart(bookData) {
       quantity: 1,
       condition: bookData.quality || "Good",
       seller: "Sold by Re;Read",
-    });
+    };
+
+    // Include bookFile if it exists (for digital books)
+    if (bookData.bookFile) {
+      cartItem.bookFile = bookData.bookFile;
+      cartItem.isDigital = true;
+    }
+
+    cart.push(cartItem);
   }
 
   localStorage.setItem("rereadCart", JSON.stringify(cart));
@@ -711,7 +727,7 @@ function addToCartFromShop(bookId) {
   } else {
     const cartImage = validateImageUrl(book.image);
 
-    cart.push({
+    const cartItem = {
       title: book.title,
       author: book.author,
       price: `₱${book.price}`,
@@ -719,7 +735,15 @@ function addToCartFromShop(bookId) {
       quantity: 1,
       condition: book.quality || "Good",
       seller: "Sold by Re;Read",
-    });
+    };
+
+    // Include bookFile if it exists (for digital books)
+    if (book.bookFile) {
+      cartItem.bookFile = book.bookFile;
+      cartItem.isDigital = true;
+    }
+
+    cart.push(cartItem);
   }
 
   localStorage.setItem("rereadCart", JSON.stringify(cart));
