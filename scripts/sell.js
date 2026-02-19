@@ -13,25 +13,30 @@ document.addEventListener("DOMContentLoaded", async function () {
 // Ensure user is registered as a seller
 async function ensureUserIsSeller() {
   try {
-    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    const token =
+      sessionStorage.getItem("accessToken") ||
+      localStorage.getItem("accessToken");
     if (!token) {
-      window.location.href = 'signin.html';
+      window.location.href = "signin.html";
       return;
     }
 
     // Get current user profile
-    const profileResponse = await fetch('http://localhost:5000/api/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const profileResponse = await fetch(
+      "http://localhost:5000/api/auth/profile",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
     if (!profileResponse.ok) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      sessionStorage.removeItem('accessToken');
-      window.location.href = 'signin.html';
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      window.location.href = "signin.html";
       return;
     }
 
@@ -40,41 +45,67 @@ async function ensureUserIsSeller() {
 
     // If user is not a seller, make them one
     if (!user.isSeller) {
-      console.log('User is not a seller, registering...');
+      console.log("User is not a seller, registering...");
 
       // Register as seller with default values
-      const sellerResponse = await fetch('http://localhost:5000/api/auth/become-seller', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const sellerResponse = await fetch(
+        "http://localhost:5000/api/auth/become-seller",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            storeName: user.firstName
+              ? `${user.firstName}'s Store`
+              : `${user.username}'s Store`,
+            description: "Welcome to my bookstore!",
+          }),
         },
-        body: JSON.stringify({
-          storeName: user.firstName ? `${user.firstName}'s Store` : `${user.username}'s Store`,
-          description: 'Welcome to my bookstore!'
-        })
-      });
+      );
 
       if (!sellerResponse.ok) {
-        console.error('Failed to register as seller');
-        showError('Error', 'Failed to register as seller. Please try again.');
+        console.error("Failed to register as seller");
+        showError("Error", "Failed to register as seller. Please try again.");
       } else {
         const sellerData = await sellerResponse.json();
-        console.log('Successfully registered as seller');
+        console.log("Successfully registered as seller", sellerData);
 
         // Update stored tokens with new ones that include seller status
         if (sellerData.data && sellerData.data.accessToken) {
-          sessionStorage.setItem('accessToken', sellerData.data.accessToken);
-          localStorage.setItem('accessToken', sellerData.data.accessToken);
+          sessionStorage.setItem("accessToken", sellerData.data.accessToken);
+          localStorage.setItem("accessToken", sellerData.data.accessToken);
         }
         if (sellerData.data && sellerData.data.refreshToken) {
-          sessionStorage.setItem('refreshToken', sellerData.data.refreshToken);
-          localStorage.setItem('refreshToken', sellerData.data.refreshToken);
+          sessionStorage.setItem("refreshToken", sellerData.data.refreshToken);
+          localStorage.setItem("refreshToken", sellerData.data.refreshToken);
+        }
+
+        // Store updated user data with seller role (becomeSeller returns user object directly in data)
+        if (sellerData.data) {
+          const userData = {
+            id: sellerData.data._id || sellerData.data.id,
+            email: sellerData.data.email,
+            username: sellerData.data.username,
+            firstName: sellerData.data.firstName,
+            lastName: sellerData.data.lastName,
+            role: sellerData.data.role,
+            isSeller: sellerData.data.isSeller,
+          };
+          sessionStorage.setItem("user", JSON.stringify(userData));
+          localStorage.setItem("rereadUser", JSON.stringify(userData));
+        }
+
+        // Refresh auth UI to update navbar with seller role
+        if (typeof authManager !== "undefined" && authManager) {
+          authManager.user = sellerData.data;
+          authManager.initAuthUI();
         }
       }
     }
   } catch (error) {
-    console.error('Error ensuring seller status:', error);
+    console.error("Error ensuring seller status:", error);
   }
 }
 
@@ -202,11 +233,20 @@ function initFileUpload() {
     }
 
     // Check file type
-    const allowedTypes = ["application/pdf", "application/epub+zip", "application/x-mobipocket-ebook"];
+    const allowedTypes = [
+      "application/pdf",
+      "application/epub+zip",
+      "application/x-mobipocket-ebook",
+    ];
     const allowedExtensions = [".pdf", ".epub", ".mobi"];
-    const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
+    const fileExt = file.name
+      .toLowerCase()
+      .substring(file.name.lastIndexOf("."));
 
-    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExt)) {
+    if (
+      !allowedTypes.includes(file.type) &&
+      !allowedExtensions.includes(fileExt)
+    ) {
       showError("Invalid file type", "Please upload a PDF, EPUB, or MOBI file");
       return;
     }
@@ -418,7 +458,12 @@ function populateSubGenres(genre, subGenreSelect) {
     romance: ["Contemporary Romance", "Historical Romance"],
     adventure: ["Fantasy Adventure", "Travel Adventure"],
     business: ["Entrepreneurship", "Marketing", "Leadership"],
-    education: ["Textbooks", "Study Guides", "Learning Materials", "Reference Books"],
+    education: [
+      "Textbooks",
+      "Study Guides",
+      "Learning Materials",
+      "Reference Books",
+    ],
     "financial-literacy": ["Investing", "Budgeting", "Money Management"],
     memoir: ["Autobiography", "Biography", "Biography & History"],
     "self-help": ["Personal Development", "Productivity", "Wellness"],
@@ -432,7 +477,10 @@ function populateSubGenres(genre, subGenreSelect) {
   if (subGenres[genre]) {
     subGenres[genre].forEach((subGenre) => {
       const option = document.createElement("option");
-      option.value = subGenre.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-");
+      option.value = subGenre
+        .toLowerCase()
+        .replace(/ & /g, "-")
+        .replace(/\s+/g, "-");
       option.textContent = subGenre;
       subGenreSelect.appendChild(option);
     });
@@ -495,34 +543,39 @@ function initConditionSelector() {
 async function uploadBookCoverToS3(file) {
   try {
     const uploadFormData = new FormData();
-    uploadFormData.append('image', file);
+    uploadFormData.append("image", file);
 
-    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    const token =
+      sessionStorage.getItem("accessToken") ||
+      localStorage.getItem("accessToken");
     if (!token) {
-      throw new Error('You must be logged in to upload');
+      throw new Error("You must be logged in to upload");
     }
 
-    const response = await fetch('http://localhost:5000/api/upload/book-cover', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
+    const response = await fetch(
+      "http://localhost:5000/api/upload/book-cover",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadFormData,
       },
-      body: uploadFormData
-    });
+    );
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to upload book cover');
+      throw new Error(error.error || "Failed to upload book cover");
     }
 
     const result = await response.json();
     if (result.success && result.data) {
       return result.data.url; // Return the S3 URL
     } else {
-      throw new Error('Upload returned invalid response');
+      throw new Error("Upload returned invalid response");
     }
   } catch (error) {
-    console.error('Book cover upload error:', error);
+    console.error("Book cover upload error:", error);
     throw error;
   }
 }
@@ -531,34 +584,36 @@ async function uploadBookCoverToS3(file) {
 async function uploadDocumentToS3(file) {
   try {
     const uploadFormData = new FormData();
-    uploadFormData.append('bookFile', file);
+    uploadFormData.append("bookFile", file);
 
-    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    const token =
+      sessionStorage.getItem("accessToken") ||
+      localStorage.getItem("accessToken");
     if (!token) {
-      throw new Error('You must be logged in to upload');
+      throw new Error("You must be logged in to upload");
     }
 
-    const response = await fetch('http://localhost:5000/api/upload/book-file', {
-      method: 'POST',
+    const response = await fetch("http://localhost:5000/api/upload/book-file", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: uploadFormData
+      body: uploadFormData,
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to upload document');
+      throw new Error(error.error || "Failed to upload document");
     }
 
     const result = await response.json();
     if (result.success && result.data) {
       return result.data.url; // Return the S3 URL
     } else {
-      throw new Error('Upload returned invalid response');
+      throw new Error("Upload returned invalid response");
     }
   } catch (error) {
-    console.error('Document upload error:', error);
+    console.error("Document upload error:", error);
     throw error;
   }
 }
@@ -611,8 +666,8 @@ async function submitBookListing() {
     if (window.uploadedImages && window.uploadedImages.length > 0) {
       submitBtn.textContent = `Uploading ${window.uploadedImages.length} image(s)...`;
 
-      const uploadPromises = window.uploadedImages.map(imageData =>
-        uploadBookCoverToS3(imageData.file)
+      const uploadPromises = window.uploadedImages.map((imageData) =>
+        uploadBookCoverToS3(imageData.file),
       );
 
       bookImages = await Promise.all(uploadPromises);
@@ -631,12 +686,12 @@ async function submitBookListing() {
       title: formData.get("title"),
       author: formData.get("author"),
       price: parseFloat(formData.get("price")),
-      condition: mappedCondition,  // seller endpoint expects "condition"
+      condition: mappedCondition, // seller endpoint expects "condition"
       genre: formData.get("genre"),
       description: formData.get("description") || "",
-      image: bookImages.length > 0 ? { url: bookImages[0] } : null,  // Primary cover image
-      images: bookImages.map(url => ({ url })),  // All book cover images
-      documentUrl: documentUrl,  // Ebook/document file for buyer download
+      image: bookImages.length > 0 ? { url: bookImages[0] } : null, // Primary cover image
+      images: bookImages.map((url) => ({ url })), // All book cover images
+      documentUrl: documentUrl, // Ebook/document file for buyer download
     };
 
     // Optional fields
@@ -648,9 +703,11 @@ async function submitBookListing() {
     console.log("Submitting book data:", bookData);
 
     // Get auth token from sessionStorage or localStorage
-    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    const token =
+      sessionStorage.getItem("accessToken") ||
+      localStorage.getItem("accessToken");
     if (!token) {
-      throw new Error('You must be logged in to list a book');
+      throw new Error("You must be logged in to list a book");
     }
 
     // Make API call to create book using seller endpoint (authenticated)
@@ -658,7 +715,7 @@ async function submitBookListing() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(bookData),
     });
@@ -673,7 +730,9 @@ async function submitBookListing() {
       // Server returned non-JSON (likely error HTML page)
       const responseText = await response.text();
       console.error("Server returned non-JSON response:", responseText);
-      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Server error: ${response.status} ${response.statusText}`,
+      );
     }
 
     if (response.ok && result.success) {

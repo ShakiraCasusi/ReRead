@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-client-id" content="1075853611475-lgm1ne2um6tmccdepoe1c35jv092d2h3.apps.googleusercontent.com" />
   <title>Sign In | Re;Read</title>
 
   <!-- Google Fonts -->
@@ -434,15 +435,7 @@
 
           <!-- Social Buttons -->
           <div class="social-buttons">
-            <button type="button" class="social-btn google" id="google-login">
-              <span class="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512" width="18" height="18" fill="#EA4335">
-                  <path
-                    d="M488 261.8C488 403.3 391 512 248 512 110.8 512 0 401.2 0 264S110.8 16 248 16c66.5 0 122.5 24.4 164.2 64.6l-66.5 63.9C316.8 116.4 284 104 248 104c-86.6 0-157 70.4-157 157s70.4 157 157 157c82.5 0 135.1-47.4 144.4-113.8H248v-90.2h240c2.2 12.1 4 23.9 4 47.8z" />
-                </svg>
-              </span>
-              Google
-            </button>
+            <div id="google-login" class="social-google" aria-label="Sign in with Google"></div>
 
             <button type="button" class="social-btn facebook" id="facebook-login">
               <span class="icon">
@@ -551,6 +544,7 @@
 
   <script src="../scripts/auth.js" defer></script>
   <script src="../scripts/main.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../scripts/signin.js" defer></script>
 </body>

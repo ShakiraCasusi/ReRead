@@ -7,16 +7,16 @@ let currentEditingBookId = null;
 let uploadedEditImage = null;
 
 // Page initialization
-document.addEventListener('DOMContentLoaded', async function () {
-  console.log('Manage Listings page loaded');
+document.addEventListener("DOMContentLoaded", async function () {
+  console.log("Manage Listings page loaded");
 
   // Ensure user is a seller first
   await ensureUserIsSeller();
 
   // Setup description character counter
-  const descriptionInput = document.getElementById('editDescription');
+  const descriptionInput = document.getElementById("editDescription");
   if (descriptionInput) {
-    descriptionInput.addEventListener('input', updateCharacterCount);
+    descriptionInput.addEventListener("input", updateCharacterCount);
   }
 
   // Load initial data
@@ -29,233 +29,250 @@ document.addEventListener('DOMContentLoaded', async function () {
 // Ensure user is registered as a seller
 async function ensureUserIsSeller() {
   try {
-    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    const token =
+      sessionStorage.getItem("accessToken") ||
+      localStorage.getItem("accessToken");
     if (!token) {
-      console.error('No token found');
-      window.location.href = 'signin.html';
+      console.error("No token found");
+      window.location.href = "signin.html";
       return;
     }
 
     // Get current user profile
-    console.log('Fetching user profile...');
-    const profileResponse = await fetch('http://localhost:5000/api/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    console.log("Fetching user profile...");
+    const profileResponse = await fetch(
+      "http://localhost:5000/api/auth/profile",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
-    console.log('Profile response status:', profileResponse.status);
+    console.log("Profile response status:", profileResponse.status);
 
     if (!profileResponse.ok) {
-      console.error('Profile fetch failed:', profileResponse.status);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      sessionStorage.removeItem('accessToken');
-      window.location.href = 'signin.html';
+      console.error("Profile fetch failed:", profileResponse.status);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      window.location.href = "signin.html";
       return;
     }
 
     const profileData = await profileResponse.json();
-    console.log('User profile isSeller:', profileData.data?.isSeller);
+    console.log("User profile isSeller:", profileData.data?.isSeller);
     const user = profileData.data;
 
     // If user is not a seller, make them one
     if (!user.isSeller) {
-      console.log('User is not a seller, registering...');
+      console.log("User is not a seller, registering...");
 
       // Register as seller with default values
-      const sellerResponse = await fetch('http://localhost:5000/api/auth/become-seller', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const sellerResponse = await fetch(
+        "http://localhost:5000/api/auth/become-seller",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            storeName: user.firstName
+              ? `${user.firstName}'s Store`
+              : `${user.username}'s Store`,
+            description: "Welcome to my bookstore!",
+          }),
         },
-        body: JSON.stringify({
-          storeName: user.firstName ? `${user.firstName}'s Store` : `${user.username}'s Store`,
-          description: 'Welcome to my bookstore!'
-        })
-      });
+      );
 
-      console.log('Seller registration response status:', sellerResponse.status);
+      console.log(
+        "Seller registration response status:",
+        sellerResponse.status,
+      );
 
       if (!sellerResponse.ok) {
         const errorData = await sellerResponse.text();
-        console.error('Failed to register as seller:', errorData);
+        console.error("Failed to register as seller:", errorData);
       } else {
         const sellerData = await sellerResponse.json();
-        console.log('Successfully registered as seller');
+        console.log("Successfully registered as seller");
       }
     } else {
-      console.log('User is already a seller');
+      console.log("User is already a seller");
     }
   } catch (error) {
-    console.error('Error ensuring seller status:', error);
+    console.error("Error ensuring seller status:", error);
   }
 }
-
 
 // AUTHENTICATION & LOADING
 
 async function loadSellerBooks() {
-  const loadingState = document.getElementById('loadingState');
-  const errorState = document.getElementById('errorState');
-  const listingsContainer = document.getElementById('listingsContainer');
-  const emptyState = document.getElementById('emptyState');
+  const loadingState = document.getElementById("loadingState");
+  const errorState = document.getElementById("errorState");
+  const listingsContainer = document.getElementById("listingsContainer");
+  const emptyState = document.getElementById("emptyState");
 
   // Show loading state
-  loadingState.style.display = 'block';
-  errorState.style.display = 'none';
-  listingsContainer.style.display = 'none';
-  emptyState.style.display = 'none';
+  loadingState.style.display = "block";
+  errorState.style.display = "none";
+  listingsContainer.style.display = "none";
+  emptyState.style.display = "none";
 
   try {
-    // Token from sessionStorage 
-    const token = sessionStorage.getItem('accessToken');
-    console.log('Token exists:', !!token);
+    // Token from sessionStorage
+    const token = sessionStorage.getItem("accessToken");
+    console.log("Token exists:", !!token);
 
     if (!token) {
-      throw new Error('Not authenticated. Please sign in.');
+      throw new Error("Not authenticated. Please sign in.");
     }
 
-    console.log('Fetching books from API...');
+    console.log("Fetching books from API...");
 
     // Fetch seller's books
-    const response = await fetch('http://localhost:5000/api/seller/books', {
-      method: 'GET',
+    const response = await fetch("http://localhost:5000/api/seller/books", {
+      method: "GET",
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
 
-    console.log('API Response Status:', response.status);
+    console.log("API Response Status:", response.status);
 
     if (response.status === 401) {
-      console.log('Unauthorized - clearing tokens');
+      console.log("Unauthorized - clearing tokens");
       try {
         const errorData = await response.json();
-        console.error('Auth error response:', errorData);
+        console.error("Auth error response:", errorData);
       } catch (e) {
-        console.log('Could not parse error response');
+        console.log("Could not parse error response");
       }
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      sessionStorage.removeItem('accessToken');
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
       setTimeout(() => {
-        window.location.href = 'signin.html';
+        window.location.href = "signin.html";
       }, 2000);
-      throw new Error('Your session has expired. Please sign in again.');
+      throw new Error("Your session has expired. Please sign in again.");
     }
 
     if (response.status === 403) {
-      throw new Error('Access denied. You may not have seller privileges.');
+      throw new Error("Access denied. You may not have seller privileges.");
     }
 
     if (response.status === 500) {
       const errorText = await response.text();
-      console.error('Server Error (500):', errorText);
+      console.error("Server Error (500):", errorText);
       throw new Error(`Server error: ${errorText.substring(0, 200)}`);
     }
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('API Error Response:', errorData);
+      console.error("API Error Response:", errorData);
       throw new Error(`API Error: ${response.statusText} (${response.status})`);
     }
 
     const data = await response.json();
-    console.log('API Response Data:', data);
+    console.log("API Response Data:", data);
 
     // Handle different response formats
     allBooks = data.data || data.books || [];
-    console.log('Books loaded:', allBooks.length, 'Books array:', allBooks);
+    console.log("Books loaded:", allBooks.length, "Books array:", allBooks);
 
     // Display stats from response
     if (data.stats) {
-      console.log('Stats:', data.stats);
+      console.log("Stats:", data.stats);
       displayStatistics(data.stats, allBooks);
     }
 
     // Display listings
-    loadingState.style.display = 'none';
+    loadingState.style.display = "none";
 
     if (allBooks.length === 0) {
-      console.log('No books found - showing empty state');
-      emptyState.style.display = 'block';
+      console.log("No books found - showing empty state");
+      emptyState.style.display = "block";
     } else {
-      console.log('Displaying listings...');
+      console.log("Displaying listings...");
       filteredBooks = [...allBooks];
       displayListings(filteredBooks);
-      listingsContainer.style.display = 'block';
+      listingsContainer.style.display = "block";
     }
   } catch (error) {
-    console.error('Error loading books:', error);
-    loadingState.style.display = 'none';
-    errorState.style.display = 'block';
-    document.getElementById('errorMessage').textContent = error.message || 'Failed to load your listings. Please try again later.';
+    console.error("Error loading books:", error);
+    loadingState.style.display = "none";
+    errorState.style.display = "block";
+    document.getElementById("errorMessage").textContent =
+      error.message || "Failed to load your listings. Please try again later.";
 
     // If it's an auth error, redirect
-    if (error.message.includes('Not authenticated')) {
+    if (error.message.includes("Not authenticated")) {
       setTimeout(() => {
-        window.location.href = 'signin.html';
+        window.location.href = "signin.html";
       }, 2000);
     }
   }
 }
 
-
 // STATISTICS DISPLAY
 
 function displayStatistics(stats, books) {
   // Total Listings
-  document.getElementById('totalListings').textContent = stats.totalListings || 0;
+  document.getElementById("totalListings").textContent =
+    stats.totalListings || 0;
 
   // Total Revenue
   const totalRevenue = parseFloat(stats.totalPrice) || 0;
-  document.getElementById('totalRevenue').textContent = `₱${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  document.getElementById("totalRevenue").textContent =
+    `₱${totalRevenue.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   // Average Price
   const averagePrice = parseFloat(stats.averagePrice) || 0;
-  document.getElementById('averagePrice').textContent = `₱${averagePrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  document.getElementById("averagePrice").textContent =
+    `₱${averagePrice.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   // Featured Books Count
-  const featuredCount = books.filter(book => book.featured).length;
-  document.getElementById('featuredCount').textContent = featuredCount;
+  const featuredCount = books.filter((book) => book.featured).length;
+  document.getElementById("featuredCount").textContent = featuredCount;
 }
-
 
 // DISPLAY LISTINGS
 
 function displayListings(books) {
-  const tableBody = document.getElementById('listingsTableBody');
+  const tableBody = document.getElementById("listingsTableBody");
   if (!tableBody) return;
 
   if (books.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="9" class="text-center py-4">No listings match your filters</td></tr>';
+    tableBody.innerHTML =
+      '<tr><td colspan="9" class="text-center py-4">No listings match your filters</td></tr>';
     return;
   }
 
-  tableBody.innerHTML = books.map(book => `
+  tableBody.innerHTML = books
+    .map(
+      (book) => `
     <tr>
       <td style="text-align: center;">
         <input type="checkbox" class="form-check-input book-checkbox" value="${book._id}" onchange="updateBulkActionsBar()">
       </td>
       <td>
-        <img src="${typeof book.image === 'object' ? book.image?.url : book.image || 'https://via.placeholder.com/50x65?text=No+Image'}" alt="${book.title}" class="book-thumbnail">
+        <img src="${typeof book.image === "object" ? book.image?.url : book.image || "https://via.placeholder.com/50x65?text=No+Image"}" alt="${book.title}" class="book-thumbnail">
       </td>
       <td>
-        <strong>${book.title || 'N/A'}</strong>
+        <strong>${book.title || "N/A"}</strong>
       </td>
-      <td>${book.author || 'N/A'}</td>
-      <td>₱${(book.price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td>${book.author || "N/A"}</td>
+      <td>₱${book.price.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
       <td>
-        <span class="status-badge status-${getConditionClass(book.quality)}">${book.quality || 'N/A'}</span>
+        <span class="status-badge status-${getConditionClass(book.quality)}">${book.quality || "N/A"}</span>
       </td>
       <td>${formatDate(book.createdAt)}</td>
       <td>
-        <span class="status-badge ${book.featured ? 'status-featured' : 'status-listed'}">
-          ${book.featured ? 'Featured' : 'Listed'}
+        <span class="status-badge ${book.featured ? "status-featured" : "status-listed"}">
+          ${book.featured ? "Featured" : "Listed"}
         </span>
       </td>
       <td>
@@ -269,78 +286,92 @@ function displayListings(books) {
         </div>
       </td>
     </tr>
-    `).join('');
+    `,
+    )
+    .join("");
 }
-
 
 // FILTERS & SORTING
 
 function setupFilterListeners() {
-  document.getElementById('dateFilter')?.addEventListener('change', applyFilters);
-  document.getElementById('priceFilter')?.addEventListener('change', applyFilters);
-  document.getElementById('conditionFilter')?.addEventListener('change', applyFilters);
-  document.getElementById('sortFilter')?.addEventListener('change', applyFilters);
+  document
+    .getElementById("dateFilter")
+    ?.addEventListener("change", applyFilters);
+  document
+    .getElementById("priceFilter")
+    ?.addEventListener("change", applyFilters);
+  document
+    .getElementById("conditionFilter")
+    ?.addEventListener("change", applyFilters);
+  document
+    .getElementById("sortFilter")
+    ?.addEventListener("change", applyFilters);
 }
 
 function applyFilters() {
-  const dateFilter = document.getElementById('dateFilter')?.value || 'all';
-  const priceFilter = document.getElementById('priceFilter')?.value || 'all';
-  const conditionFilter = document.getElementById('conditionFilter')?.value || 'all';
-  const sortFilter = document.getElementById('sortFilter')?.value || 'newest';
+  const dateFilter = document.getElementById("dateFilter")?.value || "all";
+  const priceFilter = document.getElementById("priceFilter")?.value || "all";
+  const conditionFilter =
+    document.getElementById("conditionFilter")?.value || "all";
+  const sortFilter = document.getElementById("sortFilter")?.value || "newest";
 
   let filtered = [...allBooks];
 
   // Date filter
-  if (dateFilter !== 'all') {
+  if (dateFilter !== "all") {
     const now = new Date();
     let days = 0;
 
     switch (dateFilter) {
-      case '7days':
+      case "7days":
         days = 7;
         break;
-      case '30days':
+      case "30days":
         days = 30;
         break;
-      case '90days':
+      case "90days":
         days = 90;
         break;
     }
 
     if (days > 0) {
       const cutoffDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter(book => new Date(book.createdAt) >= cutoffDate);
+      filtered = filtered.filter(
+        (book) => new Date(book.createdAt) >= cutoffDate,
+      );
     }
   }
 
   // Price filter
-  if (priceFilter !== 'all') {
-    if (priceFilter === '0-500') {
-      filtered = filtered.filter(book => book.price < 500);
-    } else if (priceFilter === '500-1000') {
-      filtered = filtered.filter(book => book.price >= 500 && book.price < 1000);
-    } else if (priceFilter === '1000+') {
-      filtered = filtered.filter(book => book.price >= 1000);
+  if (priceFilter !== "all") {
+    if (priceFilter === "0-500") {
+      filtered = filtered.filter((book) => book.price < 500);
+    } else if (priceFilter === "500-1000") {
+      filtered = filtered.filter(
+        (book) => book.price >= 500 && book.price < 1000,
+      );
+    } else if (priceFilter === "1000+") {
+      filtered = filtered.filter((book) => book.price >= 1000);
     }
   }
 
   // Condition filter
-  if (conditionFilter !== 'all') {
-    filtered = filtered.filter(book => book.quality === conditionFilter);
+  if (conditionFilter !== "all") {
+    filtered = filtered.filter((book) => book.quality === conditionFilter);
   }
 
   // Sorting
   switch (sortFilter) {
-    case 'newest':
+    case "newest":
       filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       break;
-    case 'oldest':
+    case "oldest":
       filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
       break;
-    case 'price-low':
+    case "price-low":
       filtered.sort((a, b) => a.price - b.price);
       break;
-    case 'price-high':
+    case "price-high":
       filtered.sort((a, b) => b.price - a.price);
       break;
   }
@@ -350,7 +381,6 @@ function applyFilters() {
   clearSelection();
 }
 
-
 // EDIT FUNCTIONALITY
 
 async function openEditModal(bookId) {
@@ -358,55 +388,59 @@ async function openEditModal(bookId) {
   uploadedEditImage = null;
 
   try {
-    const token = sessionStorage.getItem('accessToken');
-    const response = await fetch(`http://localhost:5000/api/seller/books/${bookId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const token = sessionStorage.getItem("accessToken");
+    const response = await fetch(
+      `http://localhost:5000/api/seller/books/${bookId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
     if (!response.ok) {
-      throw new Error('Failed to load book details');
+      throw new Error("Failed to load book details");
     }
 
     const data = await response.json();
     const book = data.data;
 
     // Populate form
-    document.getElementById('editBookId').value = book._id;
-    document.getElementById('editTitle').value = book.title;
-    document.getElementById('editAuthor').value = book.author;
-    document.getElementById('editPrice').value = book.price;
-    document.getElementById('editCondition').value = book.quality;
-    document.getElementById('editGenre').value = book.genre || '';
-    document.getElementById('editDescription').value = book.description || '';
-    document.getElementById('editFeatured').checked = book.featured || false;
+    document.getElementById("editBookId").value = book._id;
+    document.getElementById("editTitle").value = book.title;
+    document.getElementById("editAuthor").value = book.author;
+    document.getElementById("editPrice").value = book.price;
+    document.getElementById("editCondition").value = book.quality;
+    document.getElementById("editGenre").value = book.genre || "";
+    document.getElementById("editDescription").value = book.description || "";
+    document.getElementById("editFeatured").checked = book.featured || false;
     updateCharacterCount();
 
     // Set image preview
     if (book.image) {
-      const imagePreview = document.getElementById('editImagePreview');
-      const imageUrl = typeof book.image === 'object' ? book.image?.url : book.image;
+      const imagePreview = document.getElementById("editImagePreview");
+      const imageUrl =
+        typeof book.image === "object" ? book.image?.url : book.image;
       imagePreview.innerHTML = `<img src="${imageUrl}" alt="Current book image">`;
-      imagePreview.classList.add('has-image');
+      imagePreview.classList.add("has-image");
     } else {
-      const imagePreview = document.getElementById('editImagePreview');
+      const imagePreview = document.getElementById("editImagePreview");
       imagePreview.innerHTML = '<i class="fas fa-image fa-3x text-muted"></i>';
-      imagePreview.classList.remove('has-image');
+      imagePreview.classList.remove("has-image");
     }
 
     // Clear file input
-    document.getElementById('editImageInput').value = '';
+    document.getElementById("editImageInput").value = "";
     uploadedEditImage = null;
 
     // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+    const modal = new bootstrap.Modal(document.getElementById("editModal"));
     modal.show();
   } catch (error) {
-    console.error('Error loading book:', error);
-    showError('Error', 'Failed to load book details');
+    console.error("Error loading book:", error);
+    showError("Error", "Failed to load book details");
   }
 }
 
@@ -416,12 +450,12 @@ function handleEditImageSelect(event) {
 
   // Validate file
   if (file.size > 5 * 1024 * 1024) {
-    showError('File too large', 'Image must be less than 5MB');
+    showError("File too large", "Image must be less than 5MB");
     return;
   }
 
-  if (!file.type.startsWith('image/')) {
-    showError('Invalid file', 'Please select an image file');
+  if (!file.type.startsWith("image/")) {
+    showError("Invalid file", "Please select an image file");
     return;
   }
 
@@ -431,36 +465,36 @@ function handleEditImageSelect(event) {
   // Read file as data URL for preview only
   const reader = new FileReader();
   reader.onload = function (e) {
-    const imagePreview = document.getElementById('editImagePreview');
+    const imagePreview = document.getElementById("editImagePreview");
     imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-    imagePreview.classList.add('has-image');
+    imagePreview.classList.add("has-image");
   };
   reader.readAsDataURL(file);
 }
 
 async function saveBookChanges() {
-  const bookId = document.getElementById('editBookId').value;
-  const title = document.getElementById('editTitle').value.trim();
-  const author = document.getElementById('editAuthor').value.trim();
-  const price = parseFloat(document.getElementById('editPrice').value);
-  const condition = document.getElementById('editCondition').value;
-  const genre = document.getElementById('editGenre').value;
-  const description = document.getElementById('editDescription').value.trim();
-  const featured = document.getElementById('editFeatured').checked;
+  const bookId = document.getElementById("editBookId").value;
+  const title = document.getElementById("editTitle").value.trim();
+  const author = document.getElementById("editAuthor").value.trim();
+  const price = parseFloat(document.getElementById("editPrice").value);
+  const condition = document.getElementById("editCondition").value;
+  const genre = document.getElementById("editGenre").value;
+  const description = document.getElementById("editDescription").value.trim();
+  const featured = document.getElementById("editFeatured").checked;
 
   // Validation
   if (!title || !author || !price || !condition) {
-    showError('Validation Error', 'Please fill in all required fields');
+    showError("Validation Error", "Please fill in all required fields");
     return;
   }
 
   if (price <= 0) {
-    showError('Validation Error', 'Price must be greater than 0');
+    showError("Validation Error", "Price must be greater than 0");
     return;
   }
 
   try {
-    const token = sessionStorage.getItem('accessToken');
+    const token = sessionStorage.getItem("accessToken");
 
     const updateData = {
       title,
@@ -469,26 +503,29 @@ async function saveBookChanges() {
       quality: condition,
       genre,
       description,
-      featured
+      featured,
     };
 
     // Upload image to S3 if a new file was selected
     if (uploadedEditImage && uploadedEditImage instanceof File) {
       try {
         const uploadFormData = new FormData();
-        uploadFormData.append('image', uploadedEditImage);
+        uploadFormData.append("image", uploadedEditImage);
 
-        const uploadResponse = await fetch('http://localhost:5000/api/upload/book-cover', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
+        const uploadResponse = await fetch(
+          "http://localhost:5000/api/upload/book-cover",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: uploadFormData,
           },
-          body: uploadFormData
-        });
+        );
 
         if (!uploadResponse.ok) {
           const error = await uploadResponse.json();
-          throw new Error(error.error || 'Failed to upload book cover');
+          throw new Error(error.error || "Failed to upload book cover");
         }
 
         const uploadResult = await uploadResponse.json();
@@ -496,86 +533,92 @@ async function saveBookChanges() {
           updateData.image = uploadResult.data.url; // Use the S3 URL
         }
       } catch (uploadError) {
-        console.error('Image upload error:', uploadError);
+        console.error("Image upload error:", uploadError);
         throw new Error(`Failed to upload image: ${uploadError.message}`);
       }
     }
 
-    const response = await fetch(`http://localhost:5000/api/seller/books/${bookId}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      `http://localhost:5000/api/seller/books/${bookId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
       },
-      body: JSON.stringify(updateData)
-    });
+    );
 
     if (!response.ok) {
-      throw new Error('Failed to save changes');
+      throw new Error("Failed to save changes");
     }
 
     const data = await response.json();
 
     // Update in memory
-    const bookIndex = allBooks.findIndex(b => b._id === bookId);
+    const bookIndex = allBooks.findIndex((b) => b._id === bookId);
     if (bookIndex !== -1) {
       allBooks[bookIndex] = data.data;
     }
 
     // Close modal
-    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 
     // Reapply filters and display
     applyFilters();
 
-    showSuccess('Success', 'Book listing updated successfully');
+    showSuccess("Success", "Book listing updated successfully");
   } catch (error) {
-    console.error('Error saving changes:', error);
-    showError('Error', 'Failed to save changes');
+    console.error("Error saving changes:", error);
+    showError("Error", "Failed to save changes");
   }
 }
 
 // DELETE FUNCTIONALITY
 
 function openDeleteModal(bookId, bookTitle) {
-  document.getElementById('deleteBookId').value = bookId;
-  document.getElementById('deleteBookTitle').textContent = bookTitle;
+  document.getElementById("deleteBookId").value = bookId;
+  document.getElementById("deleteBookTitle").textContent = bookTitle;
 
-  const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+  const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
   modal.show();
 }
 
 async function confirmDeleteBook() {
-  const bookId = document.getElementById('deleteBookId').value;
+  const bookId = document.getElementById("deleteBookId").value;
 
   try {
-    const token = sessionStorage.getItem('accessToken');
-    const response = await fetch(`http://localhost:5000/api/seller/books/${bookId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const token = sessionStorage.getItem("accessToken");
+    const response = await fetch(
+      `http://localhost:5000/api/seller/books/${bookId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
     if (!response.ok) {
-      throw new Error('Failed to delete book');
+      throw new Error("Failed to delete book");
     }
 
     // Remove from memory
-    allBooks = allBooks.filter(b => b._id !== bookId);
-    filteredBooks = filteredBooks.filter(b => b._id !== bookId);
+    allBooks = allBooks.filter((b) => b._id !== bookId);
+    filteredBooks = filteredBooks.filter((b) => b._id !== bookId);
 
     // Close modal
-    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    bootstrap.Modal.getInstance(document.getElementById("deleteModal")).hide();
 
     // Reload page
     await loadSellerBooks();
 
-    showSuccess('Success', 'Book listing deleted successfully');
+    showSuccess("Success", "Book listing deleted successfully");
   } catch (error) {
-    console.error('Error deleting book:', error);
-    showError('Error', 'Failed to delete book');
+    console.error("Error deleting book:", error);
+    showError("Error", "Failed to delete book");
   }
 }
 
@@ -583,13 +626,14 @@ async function confirmDeleteBook() {
 
 function openBulkDeleteModal() {
   if (selectedBookIds.length === 0) {
-    showWarning('No Selection', 'Please select at least one book to delete');
+    showWarning("No Selection", "Please select at least one book to delete");
     return;
   }
 
-  document.getElementById('bulkDeleteCount').textContent = `${selectedBookIds.length} book${selectedBookIds.length === 1 ? '' : 's'}`;
+  document.getElementById("bulkDeleteCount").textContent =
+    `${selectedBookIds.length} book${selectedBookIds.length === 1 ? "" : "s"}`;
 
-  const modal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
+  const modal = new bootstrap.Modal(document.getElementById("bulkDeleteModal"));
   modal.show();
 }
 
@@ -597,80 +641,88 @@ async function confirmBulkDelete() {
   if (selectedBookIds.length === 0) return;
 
   try {
-    const token = sessionStorage.getItem('accessToken');
+    const token = sessionStorage.getItem("accessToken");
 
     // Delete each book
     for (const bookId of selectedBookIds) {
-      const response = await fetch(`http://localhost:5000/api/seller/books/${bookId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/seller/books/${bookId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to delete book ${bookId}`);
       }
 
       // Remove from memory
-      allBooks = allBooks.filter(b => b._id !== bookId);
-      filteredBooks = filteredBooks.filter(b => b._id !== bookId);
+      allBooks = allBooks.filter((b) => b._id !== bookId);
+      filteredBooks = filteredBooks.filter((b) => b._id !== bookId);
     }
 
     // Close modal
-    bootstrap.Modal.getInstance(document.getElementById('bulkDeleteModal')).hide();
+    bootstrap.Modal.getInstance(
+      document.getElementById("bulkDeleteModal"),
+    ).hide();
 
     // Clear selection and reload
     clearSelection();
     await loadSellerBooks();
 
-    showSuccess('Success', `${selectedBookIds.length} book${selectedBookIds.length === 1 ? '' : 's'} deleted successfully`);
+    showSuccess(
+      "Success",
+      `${selectedBookIds.length} book${selectedBookIds.length === 1 ? "" : "s"} deleted successfully`,
+    );
   } catch (error) {
-    console.error('Error deleting books:', error);
-    showError('Error', 'Failed to delete selected books');
+    console.error("Error deleting books:", error);
+    showError("Error", "Failed to delete selected books");
   }
 }
 
 // SELECTION & BULK ACTIONS
 
 function toggleSelectAll(checked) {
-  document.querySelectorAll('.book-checkbox').forEach(checkbox => {
+  document.querySelectorAll(".book-checkbox").forEach((checkbox) => {
     checkbox.checked = checked;
   });
   updateBulkActionsBar();
 }
 
 function updateBulkActionsBar() {
-  const checkboxes = document.querySelectorAll('.book-checkbox');
+  const checkboxes = document.querySelectorAll(".book-checkbox");
   selectedBookIds = Array.from(checkboxes)
-    .filter(cb => cb.checked)
-    .map(cb => cb.value);
+    .filter((cb) => cb.checked)
+    .map((cb) => cb.value);
 
-  const bulkActionsBar = document.getElementById('bulkActionsBar');
-  const selectedCount = document.getElementById('selectedCount');
-  const selectAllCheckbox = document.getElementById('selectAllCheckboxTable');
+  const bulkActionsBar = document.getElementById("bulkActionsBar");
+  const selectedCount = document.getElementById("selectedCount");
+  const selectAllCheckbox = document.getElementById("selectAllCheckboxTable");
 
   if (selectedBookIds.length === 0) {
-    bulkActionsBar.style.display = 'none';
+    bulkActionsBar.style.display = "none";
     selectAllCheckbox.checked = false;
   } else {
-    bulkActionsBar.style.display = 'block';
-    selectedCount.textContent = `${selectedBookIds.length} item${selectedBookIds.length === 1 ? '' : 's'} selected`;
+    bulkActionsBar.style.display = "block";
+    selectedCount.textContent = `${selectedBookIds.length} item${selectedBookIds.length === 1 ? "" : "s"} selected`;
 
     // Update select all checkbox state
-    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
     selectAllCheckbox.checked = allChecked;
   }
 }
 
 function clearSelection() {
-  document.querySelectorAll('.book-checkbox').forEach(checkbox => {
+  document.querySelectorAll(".book-checkbox").forEach((checkbox) => {
     checkbox.checked = false;
   });
-  document.getElementById('selectAllCheckboxTable').checked = false;
+  document.getElementById("selectAllCheckboxTable").checked = false;
   selectedBookIds = [];
-  document.getElementById('bulkActionsBar').style.display = 'none';
+  document.getElementById("bulkActionsBar").style.display = "none";
 }
 
 function deselectAll() {
@@ -681,29 +733,33 @@ function deselectAll() {
 
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function getConditionClass(condition) {
   switch (condition) {
-    case 'New':
-      return 'new';
-    case 'Like New':
-      return 'like-new';
-    case 'Very Good':
-      return 'very-good';
-    case 'Good':
-      return 'good';
-    case 'Fair':
-      return 'fair';
+    case "New":
+      return "new";
+    case "Like New":
+      return "like-new";
+    case "Very Good":
+      return "very-good";
+    case "Good":
+      return "good";
+    case "Fair":
+      return "fair";
     default:
-      return 'good';
+      return "good";
   }
 }
 
 function updateCharacterCount() {
-  const textarea = document.getElementById('editDescription');
-  const counter = document.getElementById('descriptionCharCount');
+  const textarea = document.getElementById("editDescription");
+  const counter = document.getElementById("descriptionCharCount");
   if (textarea && counter) {
     counter.textContent = `${textarea.value.length}/1000 characters`;
   }
@@ -712,33 +768,33 @@ function updateCharacterCount() {
 // NOTIFICATION (existing functions from main.js lang din)
 
 function showSuccess(title, message = "") {
-  if (typeof window.showSuccess === 'function') {
+  if (typeof window.showSuccess === "function") {
     window.showSuccess(title, message);
   } else {
-    console.log('Success:', title, message);
+    console.log("Success:", title, message);
   }
 }
 
 function showError(title, message = "") {
-  if (typeof window.showError === 'function') {
+  if (typeof window.showError === "function") {
     window.showError(title, message);
   } else {
-    console.error('Error:', title, message);
+    console.error("Error:", title, message);
   }
 }
 
 function showWarning(title, message = "") {
-  if (typeof window.showWarning === 'function') {
+  if (typeof window.showWarning === "function") {
     window.showWarning(title, message);
   } else {
-    console.warn('Warning:', title, message);
+    console.warn("Warning:", title, message);
   }
 }
 
 // GO TO PAGES
 
 function goToSellPage() {
-  window.location.href = 'sell.html';
+  window.location.href = "sell.html";
 }
 
-console.log('Manage Listings script loaded successfully');
+console.log("Manage Listings script loaded successfully");

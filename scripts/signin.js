@@ -11,6 +11,13 @@ const authMessages = {
   },
 };
 
+const GOOGLE_CLIENT_ID_META = "google-client-id";
+
+function getGoogleClientId() {
+  const meta = document.querySelector(`meta[name="${GOOGLE_CLIENT_ID_META}"]`);
+  return meta ? meta.getAttribute("content") : "";
+}
+
 // Track login attempts
 const loginAttempts = {
   count: 0,
@@ -170,7 +177,7 @@ function initFormValidation() {
           nameInput.value.trim(),
           emailInput.value.trim(),
           passwordInput.value,
-          confirmInput.value
+          confirmInput.value,
         );
       }
     });
@@ -262,7 +269,7 @@ function validateSignupField(field) {
       return validatePasswordConfirmation(
         document.getElementById("signup-password").value,
         value,
-        field
+        field,
       );
     }
   }
@@ -307,7 +314,7 @@ function validateSignupForm(name, email, password, confirmPassword) {
     validatePasswordConfirmation(
       password,
       confirmPassword,
-      document.getElementById("signup-confirm")
+      document.getElementById("signup-confirm"),
     )
   );
 }
@@ -402,16 +409,43 @@ function initPasswordToggle() {
 }
 
 function initSocialLogin() {
-  const googleBtns = document.querySelectorAll(".social-btn.google");
+  const googleContainer = document.getElementById("google-login");
   const facebookBtns = document.querySelectorAll(".social-btn.facebook");
 
-  googleBtns.forEach((btn) => {
-    btn.addEventListener("click", function (e) {
-      e.preventDefault();
-      // Placeholder for Google OAuth
-      alert("Google login integration coming soon!");
-    });
-  });
+  if (googleContainer) {
+    const clientId = getGoogleClientId();
+
+    if (clientId && window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredential,
+      });
+
+      const buttonWidth = googleContainer.clientWidth || 240;
+      window.google.accounts.id.renderButton(googleContainer, {
+        theme: "outline",
+        size: "large",
+        width: buttonWidth,
+        shape: "rectangular",
+      });
+    } else if (clientId) {
+      initSocialLogin.retryCount = (initSocialLogin.retryCount || 0) + 1;
+      if (initSocialLogin.retryCount <= 8) {
+        setTimeout(initSocialLogin, 300);
+        return;
+      }
+
+      googleContainer.addEventListener("click", (e) => {
+        e.preventDefault();
+        alert("Google login is still loading. Please try again.");
+      });
+    } else {
+      googleContainer.addEventListener("click", (e) => {
+        e.preventDefault();
+        alert("Google login is not configured yet.");
+      });
+    }
+  }
 
   facebookBtns.forEach((btn) => {
     btn.addEventListener("click", function (e) {
@@ -446,6 +480,88 @@ function initRememberMe() {
   }
 }
 
+function handleGoogleCredential(response) {
+  if (!response?.credential) {
+    showErrorMessage("Google sign-in failed. Please try again.");
+    return;
+  }
+
+  submitGoogleSignin(response.credential);
+}
+
+function persistAuthSession(result, email, rememberMe) {
+  const data = result?.data || {};
+
+  if (data.accessToken) {
+    sessionStorage.setItem("accessToken", data.accessToken);
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+    }
+
+    const expiresInMs = Number(data.expiresIn || 900000);
+    sessionStorage.setItem("tokenExpiryTime", String(Date.now() + expiresInMs));
+
+    sessionStorage.setItem(
+      "user",
+      JSON.stringify({
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        role: data.role,
+        isSeller: data.isSeller,
+      }),
+    );
+  }
+
+  const userSession = {
+    id: data.id,
+    username: data.username,
+    email: data.email,
+    role: data.role,
+    isSeller: data.isSeller,
+    signinTime: new Date().toISOString(),
+  };
+
+  localStorage.setItem("rereadUser", JSON.stringify(userSession));
+
+  if (rememberMe && email) {
+    localStorage.setItem("rereadUserRemembered", JSON.stringify({ email }));
+  } else {
+    localStorage.removeItem("rereadUserRemembered");
+  }
+}
+
+async function submitGoogleSignin(idToken) {
+  try {
+    const response = await fetch("http://localhost:5000/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      const rememberCheckbox = document.querySelector(
+        'input[name="remember-me"]',
+      );
+      const isRemembered = rememberCheckbox && rememberCheckbox.checked;
+      persistAuthSession(result, result.data?.email, isRemembered);
+
+      showSuccessMessage("Sign in successful! Redirecting...");
+      setTimeout(() => {
+        window.dispatchEvent(new Event("storage"));
+        window.location.href = "../index.html";
+      }, 1000);
+    } else {
+      showErrorMessage(result.message || "Google sign-in failed.");
+    }
+  } catch (error) {
+    console.error("Google sign-in error:", error);
+    showErrorMessage("Error connecting to server. Please try again.");
+  }
+}
+
 async function submitSignin(email, password) {
   // Show loading state
   const submitBtn = document.querySelector(".panel-signin .btn");
@@ -455,9 +571,9 @@ async function submitSignin(email, password) {
   submitBtn.disabled = true;
 
   try {
-    const response = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
@@ -466,58 +582,11 @@ async function submitSignin(email, password) {
     if (result.success) {
       // Reset login attempts on successful signin
       loginAttempts.count = 0;
-
-      // Save JWT tokens for API-authenticated pages (Profile, Orders, etc.)
-      // Backend returns: result.data.accessToken / result.data.refreshToken / result.data.expiresIn
-      if (result.data && result.data.accessToken) {
-        sessionStorage.setItem("accessToken", result.data.accessToken);
-        if (result.data.refreshToken) {
-          localStorage.setItem("refreshToken", result.data.refreshToken);
-        }
-
-        const expiresInMs = Number(result.data.expiresIn || 900000); // default 15 minutes
-        sessionStorage.setItem(
-          "tokenExpiryTime",
-          String(Date.now() + expiresInMs)
-        );
-
-        // Store user for JWT-based auth manager (authPhase3-style)
-        sessionStorage.setItem(
-          "user",
-          JSON.stringify({
-            id: result.data.id,
-            username: result.data.username,
-            email: result.data.email,
-            role: result.data.role,
-            isSeller: result.data.isSeller,
-          })
-        );
-      }
-
-      // Check if remember me is checked
-      const rememberCheckbox = document.querySelector('input[name="remember-me"]');
+      const rememberCheckbox = document.querySelector(
+        'input[name="remember-me"]',
+      );
       const isRemembered = rememberCheckbox && rememberCheckbox.checked;
-
-      // Store user session in localStorage
-      const userSession = {
-        id: result.data.id,
-        username: result.data.username,
-        email: result.data.email,
-        role: result.data.role,
-        signinTime: new Date().toISOString(),
-      };
-
-      localStorage.setItem("rereadUser", JSON.stringify(userSession));
-
-      // Only save for remember me if checkbox is checked
-      if (isRemembered) {
-        localStorage.setItem("rereadUserRemembered", JSON.stringify({
-          email: email,
-        }));
-      } else {
-        // Clear remembered user if checkbox is unchecked
-        localStorage.removeItem("rereadUserRemembered");
-      }
+      persistAuthSession(result, email, isRemembered);
 
       showSuccessMessage("Sign in successful! Redirecting...");
 
@@ -536,9 +605,10 @@ async function submitSignin(email, password) {
       let errorMsg = "The username or password you entered is incorrect.";
 
       if (attemptsRemaining > 0) {
-        errorMsg += ` You have ${attemptsRemaining} attempt${attemptsRemaining !== 1 ? 's' : ''} remaining.`;
+        errorMsg += ` You have ${attemptsRemaining} attempt${attemptsRemaining !== 1 ? "s" : ""} remaining.`;
       } else {
-        errorMsg = "Maximum login attempts exceeded. Please try again later or contact support.";
+        errorMsg =
+          "Maximum login attempts exceeded. Please try again later or contact support.";
       }
 
       showErrorMessage(errorMsg);
@@ -562,16 +632,16 @@ async function submitSignup(name, email, password, confirmPassword) {
   submitBtn.disabled = true;
 
   // Split name into first and last name
-  const nameParts = name.trim().split(' ');
+  const nameParts = name.trim().split(" ");
   const firstName = nameParts[0];
-  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
 
   try {
-    const response = await fetch('http://localhost:5000/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("http://localhost:5000/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: email.split('@')[0],
+        username: email.split("@")[0],
         email,
         password,
         firstName,
@@ -582,44 +652,12 @@ async function submitSignup(name, email, password, confirmPassword) {
     const result = await response.json();
 
     if (result.success) {
-      // Auto-sign-in after successful registration (so Profile becomes dynamic immediately)
-      if (result.data && result.data.accessToken) {
-        sessionStorage.setItem("accessToken", result.data.accessToken);
-        if (result.data.refreshToken) {
-          localStorage.setItem("refreshToken", result.data.refreshToken);
-        }
+      persistAuthSession(result, email, false);
 
-        const expiresInMs = Number(result.data.expiresIn || 900000);
-        sessionStorage.setItem(
-          "tokenExpiryTime",
-          String(Date.now() + expiresInMs)
-        );
-
-        sessionStorage.setItem(
-          "user",
-          JSON.stringify({
-            id: result.data.id,
-            username: result.data.username,
-            email: result.data.email,
-            role: result.data.role,
-            isSeller: result.data.isSeller,
-          })
-        );
-
-        // Keep existing localStorage user session too (used by scripts/auth.js)
-        localStorage.setItem(
-          "rereadUser",
-          JSON.stringify({
-            id: result.data.id,
-            username: result.data.username,
-            email: result.data.email,
-            role: result.data.role,
-            signinTime: new Date().toISOString(),
-          })
-        );
-      }
-
-      showSuccessMessage("Account created successfully! Signing you in...", true);
+      showSuccessMessage(
+        "Account created successfully! Signing you in...",
+        true,
+      );
 
       // Redirect after brief delay
       setTimeout(() => {
@@ -646,7 +684,7 @@ function showSuccessMessage(message, isSignup = false) {
   console.log("Showing success message:", message);
 
   // Create and show success message
-  const alertDiv = document.createElement('div');
+  const alertDiv = document.createElement("div");
   alertDiv.style.cssText = `
     position: fixed;
     top: 20px;
@@ -682,7 +720,7 @@ function showErrorMessage(message) {
   console.log("Showing error message:", message);
 
   // Create and show error message
-  const alertDiv = document.createElement('div');
+  const alertDiv = document.createElement("div");
   alertDiv.style.cssText = `
     position: fixed;
     top: 20px;

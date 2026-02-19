@@ -233,6 +233,17 @@
   gap: 16px;
 }
 
+.social-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-google > div,
+.social-google iframe {
+  width: 100% !important;
+}
+
 .social-btn {
   display: flex;
   align-items: center;

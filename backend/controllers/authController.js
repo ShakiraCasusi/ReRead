@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const tokenManager = require("../utils/tokenManager");
+const { googleClient, GOOGLE_CLIENT_ID } = require("../config/googleConfig");
 
 // Validation function for password strength
 const validatePassword = (password) => {
@@ -33,6 +34,30 @@ const validatePassword = (password) => {
 const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+};
+
+// Build a safe base username
+const buildBaseUsername = (email, name) => {
+  const raw = (name || email.split("@")[0] || "user").toLowerCase();
+  const sanitized = raw.replace(/[^a-z0-9_]/g, "");
+  return sanitized || `user${Date.now()}`;
+};
+
+// Ensure username is unique
+const getUniqueUsername = async (base) => {
+  let candidate = base;
+  let attempts = 0;
+
+  while (attempts < 5) {
+    const existing = await User.findOne({ username: candidate });
+    if (!existing) return candidate;
+
+    const suffix = Math.floor(1000 + Math.random() * 9000);
+    candidate = `${base}${suffix}`;
+    attempts += 1;
+  }
+
+  return `${base}${Date.now()}`;
 };
 
 // Register user (Phase 3 - Enhanced)
@@ -104,6 +129,7 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       firstName: firstName || "",
       lastName: lastName || "",
+      authProvider: "local",
       role: ["buyer"],
       isSeller: false,
     });
@@ -178,6 +204,25 @@ exports.login = async (req, res) => {
       });
     }
 
+    if (!user.password || user.authProvider === "google") {
+      return res.status(401).json({
+        success: false,
+        errorType: "GOOGLE_ACCOUNT",
+        message:
+          "This account uses Google Sign-In. Please continue with Google.",
+      });
+    }
+
+    if (user.authProvider === "google" && !user.password) {
+      return res.status(401).json({
+        success: false,
+        errorType: "GOOGLE_ACCOUNT",
+        message:
+          "This account uses Google sign-in. Please continue with Google.",
+        suggestion: "google",
+      });
+    }
+
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -223,6 +268,145 @@ exports.login = async (req, res) => {
       success: false,
       errorType: "SERVER_ERROR",
       message: "Error logging in. Please try again.",
+    });
+  }
+};
+
+// Google OAuth login
+exports.googleLogin = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({
+        success: false,
+        errorType: "VALIDATION_ERROR",
+        message: "Google ID token is required",
+      });
+    }
+
+    if (!googleClient || !GOOGLE_CLIENT_ID) {
+      return res.status(500).json({
+        success: false,
+        errorType: "GOOGLE_OAUTH_NOT_CONFIGURED",
+        message: "Google OAuth is not configured on the server",
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const googleId = payload?.sub;
+    const email = payload?.email?.toLowerCase();
+    const emailVerified = payload?.email_verified;
+    const firstName = payload?.given_name || "";
+    const lastName = payload?.family_name || "";
+    const fullName = payload?.name || "";
+    const pictureUrl = payload?.picture || null;
+
+    if (!googleId || !email) {
+      return res.status(401).json({
+        success: false,
+        errorType: "INVALID_GOOGLE_TOKEN",
+        message: "Invalid Google token payload",
+      });
+    }
+
+    if (emailVerified === false) {
+      return res.status(401).json({
+        success: false,
+        errorType: "UNVERIFIED_GOOGLE_EMAIL",
+        message: "Google email is not verified",
+      });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      if (user.googleId && user.googleId !== googleId) {
+        return res.status(403).json({
+          success: false,
+          errorType: "GOOGLE_ACCOUNT_MISMATCH",
+          message: "This email is linked to a different Google account",
+        });
+      }
+
+      if (!user.googleId) {
+        user.googleId = googleId;
+      }
+
+      if (!user.authProvider) {
+        user.authProvider = "local";
+      }
+
+      if (!user.isVerified) {
+        user.isVerified = true;
+      }
+
+      if (pictureUrl && (!user.profilePicture || !user.profilePicture.url)) {
+        user.profilePicture = {
+          url: pictureUrl,
+          uploadedAt: new Date(),
+        };
+      }
+
+      await user.save();
+    } else {
+      const baseUsername = buildBaseUsername(email, fullName);
+      const username = await getUniqueUsername(baseUsername);
+
+      user = await User.create({
+        username,
+        email,
+        firstName,
+        lastName,
+        password: null,
+        googleId,
+        authProvider: "google",
+        role: ["buyer"],
+        isSeller: false,
+        isVerified: true,
+        profilePicture: pictureUrl
+          ? { url: pictureUrl, uploadedAt: new Date() }
+          : undefined,
+      });
+    }
+
+    const { accessToken, refreshToken, expiresIn } =
+      tokenManager.generateTokens(
+        user._id,
+        user.email,
+        user.username,
+        user.role,
+        user.isSeller,
+      );
+
+    res.status(200).json({
+      success: true,
+      message: `Welcome, ${user.firstName || user.username}!`,
+      notificationType: "SUCCESS_LOGIN",
+      data: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isSeller: user.isSeller,
+        accessToken,
+        refreshToken,
+        expiresIn,
+      },
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    res.status(500).json({
+      success: false,
+      errorType: "GOOGLE_LOGIN_ERROR",
+      message: "Error logging in with Google",
     });
   }
 };
@@ -306,12 +490,19 @@ exports.getCurrentProfile = async (req, res) => {
 
     // Generate signed URL for profile picture if it's an S3 image
     const userObj = user.toObject();
-    if (userObj.profilePicture && userObj.profilePicture.url && typeof userObj.profilePicture.url === 'string') {
+    if (
+      userObj.profilePicture &&
+      userObj.profilePicture.url &&
+      typeof userObj.profilePicture.url === "string"
+    ) {
       const pictureUrl = userObj.profilePicture.url;
-      if (pictureUrl.includes('.s3.') && !pictureUrl.includes('?X-Amz-Signature')) {
+      if (
+        pictureUrl.includes(".s3.") &&
+        !pictureUrl.includes("?X-Amz-Signature")
+      ) {
         try {
-          const { getSignedDownloadUrl } = require('../services/s3Service');
-          const urlParts = pictureUrl.split('.amazonaws.com/');
+          const { getSignedDownloadUrl } = require("../services/s3Service");
+          const urlParts = pictureUrl.split(".amazonaws.com/");
           if (urlParts.length === 2) {
             const s3Key = decodeURIComponent(urlParts[1]);
             const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600);
@@ -320,7 +511,10 @@ exports.getCurrentProfile = async (req, res) => {
             }
           }
         } catch (err) {
-          console.warn('Could not generate signed URL for profile picture:', err.message);
+          console.warn(
+            "Could not generate signed URL for profile picture:",
+            err.message,
+          );
         }
       }
     }
@@ -413,13 +607,13 @@ exports.updateProfile = async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (profilePicture !== undefined) {
       // Handle S3 file uploads (object with url and key)
-      if (typeof profilePicture === 'object' && profilePicture.url) {
+      if (typeof profilePicture === "object" && profilePicture.url) {
         updateData.profilePicture = profilePicture;
-      } else if (typeof profilePicture === 'string' && profilePicture) {
+      } else if (typeof profilePicture === "string" && profilePicture) {
         // Handle legacy URL strings
         updateData.profilePicture = {
           url: profilePicture,
-          uploadedAt: new Date()
+          uploadedAt: new Date(),
         };
       }
     }
@@ -433,12 +627,19 @@ exports.updateProfile = async (req, res) => {
 
     // Generate signed URL for profile picture if it's an S3 image
     const userObj = user.toObject();
-    if (userObj.profilePicture && userObj.profilePicture.url && typeof userObj.profilePicture.url === 'string') {
+    if (
+      userObj.profilePicture &&
+      userObj.profilePicture.url &&
+      typeof userObj.profilePicture.url === "string"
+    ) {
       const pictureUrl = userObj.profilePicture.url;
-      if (pictureUrl.includes('.s3.') && !pictureUrl.includes('?X-Amz-Signature')) {
+      if (
+        pictureUrl.includes(".s3.") &&
+        !pictureUrl.includes("?X-Amz-Signature")
+      ) {
         try {
-          const { getSignedDownloadUrl } = require('../services/s3Service');
-          const urlParts = pictureUrl.split('.amazonaws.com/');
+          const { getSignedDownloadUrl } = require("../services/s3Service");
+          const urlParts = pictureUrl.split(".amazonaws.com/");
           if (urlParts.length === 2) {
             const s3Key = decodeURIComponent(urlParts[1]);
             const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600);
@@ -447,7 +648,10 @@ exports.updateProfile = async (req, res) => {
             }
           }
         } catch (err) {
-          console.warn('Could not generate signed URL for profile picture:', err.message);
+          console.warn(
+            "Could not generate signed URL for profile picture:",
+            err.message,
+          );
         }
       }
     }

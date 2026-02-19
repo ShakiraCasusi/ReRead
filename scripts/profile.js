@@ -32,16 +32,18 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 // Setup profile picture upload
 function setupProfilePictureUpload() {
-  const uploadPhotoBtn = document.querySelector('.profile-avatar-placeholder').parentElement.querySelector('button');
+  const uploadPhotoBtn = document
+    .querySelector(".profile-avatar-placeholder")
+    .parentElement.querySelector("button");
 
   if (uploadPhotoBtn) {
-    uploadPhotoBtn.addEventListener('click', function (e) {
+    uploadPhotoBtn.addEventListener("click", function (e) {
       e.preventDefault();
       // Create hidden file input
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-      fileInput.addEventListener('change', async function (e) {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.addEventListener("change", async function (e) {
         const file = e.target.files[0];
         if (file) {
           await handleProfilePictureUpload(file);
@@ -56,40 +58,43 @@ function setupProfilePictureUpload() {
 async function handleProfilePictureUpload(file) {
   try {
     // Validate file
-    if (!file.type.startsWith('image/')) {
-      showNotification('Please select a valid image file', 'error');
+    if (!file.type.startsWith("image/")) {
+      showNotification("Please select a valid image file", "error");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      showNotification('Image must be less than 5MB', 'error');
+      showNotification("Image must be less than 5MB", "error");
       return;
     }
 
-    const token = sessionStorage.getItem('accessToken');
+    const token = sessionStorage.getItem("accessToken");
     if (!token) {
-      showNotification('You must be logged in to upload a profile picture', 'error');
+      showNotification(
+        "You must be logged in to upload a profile picture",
+        "error",
+      );
       return;
     }
 
     // Show loading state
-    showNotification('Uploading profile picture...', 'info');
+    showNotification("Uploading profile picture...", "info");
 
     // Upload to S3
     const formData = new FormData();
-    formData.append('profilePicture', file);
+    formData.append("profilePicture", file);
 
     const response = await fetch(`${API_BASE_URL}/upload/profile-picture`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: formData
+      body: formData,
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to upload profile picture');
+      throw new Error(error.error || "Failed to upload profile picture");
     }
 
     const result = await response.json();
@@ -99,15 +104,15 @@ async function handleProfilePictureUpload(file) {
       // Update user profile with new picture URL
       await updateProfilePicture(uploadedProfilePicture);
 
-      showNotification('Profile picture uploaded successfully!', 'success');
+      showNotification("Profile picture uploaded successfully!", "success");
     } else {
-      throw new Error('Upload returned invalid response');
+      throw new Error("Upload returned invalid response");
     }
   } catch (error) {
-    console.error('Profile picture upload error:', error);
+    console.error("Profile picture upload error:", error);
     showNotification(
-      error.message || 'Failed to upload profile picture',
-      'error'
+      error.message || "Failed to upload profile picture",
+      "error",
     );
   }
 }
@@ -115,25 +120,25 @@ async function handleProfilePictureUpload(file) {
 // Update user profile with picture URL
 async function updateProfilePicture(pictureUrl) {
   try {
-    const token = sessionStorage.getItem('accessToken');
+    const token = sessionStorage.getItem("accessToken");
     if (!token) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // Update profile with picture URL
     const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        profilePicture: pictureUrl
-      })
+        profilePicture: pictureUrl,
+      }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to save profile picture');
+      throw new Error("Failed to save profile picture");
     }
 
     const result = await response.json();
@@ -142,32 +147,32 @@ async function updateProfilePicture(pictureUrl) {
       displayProfilePicture(pictureUrl);
     }
   } catch (error) {
-    console.error('Error updating profile picture:', error);
+    console.error("Error updating profile picture:", error);
     showNotification(
-      error.message || 'Failed to save profile picture',
-      'error'
+      error.message || "Failed to save profile picture",
+      "error",
     );
   }
 }
 
 // Display profile picture
 function displayProfilePicture(pictureUrl) {
-  const avatarContainer = document.querySelector('.profile-avatar-placeholder');
+  const avatarContainer = document.querySelector(".profile-avatar-placeholder");
   if (avatarContainer) {
     // Handle both string URLs and object format
     let imageUrl = pictureUrl;
-    if (typeof pictureUrl === 'object' && pictureUrl.url) {
+    if (typeof pictureUrl === "object" && pictureUrl.url) {
       imageUrl = pictureUrl.url;
     }
 
     if (imageUrl) {
       // Clear existing content
-      avatarContainer.innerHTML = '';
+      avatarContainer.innerHTML = "";
 
       // Create and display image
-      const img = document.createElement('img');
+      const img = document.createElement("img");
       img.src = imageUrl;
-      img.alt = 'Profile Picture';
+      img.alt = "Profile Picture";
       img.style.cssText = `
         width: 100%;
         height: 100%;
@@ -464,7 +469,7 @@ function updateNavbarWithUsername(username) {
     }
 
     // Desktop navigation - Find and update Sign In link
-    const desktopNav = document.querySelector('nav.d-none.d-lg-flex');
+    const desktopNav = document.querySelector("nav.d-none.d-lg-flex");
     if (desktopNav) {
       const signInLink = desktopNav.querySelector('a[href="signin.html"]');
       if (signInLink) {

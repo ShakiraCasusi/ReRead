@@ -4,276 +4,276 @@
  */
 
 class APIService {
-    constructor() {
-        this.baseURL = 'http://localhost:5000/api';
-        this.maxRetries = 3;
-    }
+  constructor() {
+    this.baseURL = "http://localhost:5000/api";
+    this.maxRetries = 3;
+  }
 
-    getAuthHeaders() {
-        const headers = { 'Content-Type': 'application/json' };
-        if (window.authManager && window.authManager.isLoggedIn()) {
-            const token = window.authManager.getAccessToken();
-            if (token) headers['Authorization'] = `Bearer ${token}`;
+  getAuthHeaders() {
+    const headers = { "Content-Type": "application/json" };
+    if (window.authManager && window.authManager.isLoggedIn()) {
+      const token = window.authManager.getAccessToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
+  }
+
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const config = {
+      ...options,
+      headers: { ...this.getAuthHeaders(), ...options.headers },
+      credentials: "include",
+    };
+
+    try {
+      const response = await fetch(url, config);
+
+      if (response.status === 401 && window.authManager) {
+        if (await window.authManager.refreshAccessToken()) {
+          config.headers = this.getAuthHeaders();
+          return await fetch(url, config).then((r) => r.json());
+        } else {
+          window.location.href = "../pages/signin.html";
+          throw new Error("Session expired. Please login again.");
         }
-        return headers;
+      }
+
+      const data = await response.json();
+      if (!response.ok) {
+        const error = new Error(data.message || "API request failed");
+        error.status = response.status;
+        error.errorType = data.errorType;
+        error.data = data;
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      console.error("API error:", error);
+      throw error;
     }
+  }
 
-    async request(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
-        const config = {
-            ...options,
-            headers: { ...this.getAuthHeaders(), ...options.headers },
-            credentials: 'include'
-        };
+  // ========== AUTH ENDPOINTS ==========
+  async register(username, email, password, firstName = "", lastName = "") {
+    return this.request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username, email, password, firstName, lastName }),
+    });
+  }
 
-        try {
-            const response = await fetch(url, config);
+  async login(email, password) {
+    return this.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+  }
 
-            if (response.status === 401 && window.authManager) {
-                if (await window.authManager.refreshAccessToken()) {
-                    config.headers = this.getAuthHeaders();
-                    return await fetch(url, config).then(r => r.json());
-                } else {
-                    window.location.href = '../pages/signin.html';
-                    throw new Error('Session expired. Please login again.');
-                }
-            }
+  async logout() {
+    return this.request("/auth/logout", { method: "POST" });
+  }
 
-            const data = await response.json();
-            if (!response.ok) {
-                const error = new Error(data.message || 'API request failed');
-                error.status = response.status;
-                error.errorType = data.errorType;
-                error.data = data;
-                throw error;
-            }
-            return data;
-        } catch (error) {
-            console.error('API error:', error);
-            throw error;
-        }
-    }
+  async getCurrentProfile() {
+    return this.request("/auth/profile");
+  }
 
-    // ========== AUTH ENDPOINTS ========== 
-    async register(username, email, password, firstName = '', lastName = '') {
-        return this.request('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify({ username, email, password, firstName, lastName })
-        });
-    }
+  async getProfile(userId) {
+    return this.request(`/auth/profile/${userId}`);
+  }
 
-    async login(email, password) {
-        return this.request('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password })
-        });
-    }
+  async updateProfile(data) {
+    return this.request("/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
 
-    async logout() {
-        return this.request('/auth/logout', { method: 'POST' });
-    }
+  async refreshToken(refreshToken) {
+    return this.request("/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+    });
+  }
 
-    async getCurrentProfile() {
-        return this.request('/auth/profile');
-    }
+  // ========== BOOKS ENDPOINTS ==========
+  async getBooks(filters = {}) {
+    const params = new URLSearchParams(filters);
+    return this.request(`/books?${params}`);
+  }
 
-    async getProfile(userId) {
-        return this.request(`/auth/profile/${userId}`);
-    }
+  async getAllBooks() {
+    return this.request("/books");
+  }
 
-    async updateProfile(data) {
-        return this.request('/auth/profile', {
-            method: 'PUT',
-            body: JSON.stringify(data)
-        });
-    }
+  async getBook(bookId) {
+    return this.request(`/books/${bookId}`);
+  }
 
-    async refreshToken(refreshToken) {
-        return this.request('/auth/refresh', {
-            method: 'POST',
-            body: JSON.stringify({ refreshToken })
-        });
-    }
+  async createBook(bookData) {
+    return this.request("/books", {
+      method: "POST",
+      body: JSON.stringify(bookData),
+    });
+  }
 
-    // ========== BOOKS ENDPOINTS ==========
-    async getBooks(filters = {}) {
-        const params = new URLSearchParams(filters);
-        return this.request(`/books?${params}`);
-    }
+  async updateBook(bookId, bookData) {
+    return this.request(`/books/${bookId}`, {
+      method: "PUT",
+      body: JSON.stringify(bookData),
+    });
+  }
 
-    async getAllBooks() {
-        return this.request('/books');
-    }
+  async deleteBook(bookId) {
+    return this.request(`/books/${bookId}`, { method: "DELETE" });
+  }
 
-    async getBook(bookId) {
-        return this.request(`/books/${bookId}`);
-    }
+  async searchBooks(query) {
+    return this.request(`/books/search?query=${query}`);
+  }
 
-    async createBook(bookData) {
-        return this.request('/books', {
-            method: 'POST',
-            body: JSON.stringify(bookData)
-        });
-    }
+  async searchExternal(query) {
+    return this.request(`/books/external/search?query=${query}`);
+  }
 
-    async updateBook(bookId, bookData) {
-        return this.request(`/books/${bookId}`, {
-            method: 'PUT',
-            body: JSON.stringify(bookData)
-        });
-    }
+  // ========== CART ENDPOINTS ==========
+  async getCart() {
+    return this.request("/cart");
+  }
 
-    async deleteBook(bookId) {
-        return this.request(`/books/${bookId}`, { method: 'DELETE' });
-    }
+  async getCartCount() {
+    return this.request("/cart/count");
+  }
 
-    async searchBooks(query) {
-        return this.request(`/books/search?query=${query}`);
-    }
+  async addToCart(bookId, quantity = 1) {
+    return this.request("/cart/add", {
+      method: "POST",
+      body: JSON.stringify({ bookId, quantity }),
+    });
+  }
 
-    async searchExternal(query) {
-        return this.request(`/books/external/search?query=${query}`);
-    }
+  async updateCartItem(itemIndex, quantity) {
+    return this.request(`/cart/update/${itemIndex}`, {
+      method: "PUT",
+      body: JSON.stringify({ quantity }),
+    });
+  }
 
-    // ========== CART ENDPOINTS ==========
-    async getCart() {
-        return this.request('/cart');
-    }
+  async removeFromCart(itemIndex) {
+    return this.request(`/cart/remove/${itemIndex}`, { method: "DELETE" });
+  }
 
-    async getCartCount() {
-        return this.request('/cart/count');
-    }
+  async clearCart() {
+    return this.request("/cart/clear", { method: "DELETE" });
+  }
 
-    async addToCart(bookId, quantity = 1) {
-        return this.request('/cart/add', {
-            method: 'POST',
-            body: JSON.stringify({ bookId, quantity })
-        });
-    }
+  // ========== ORDER ENDPOINTS ==========
+  async createOrder(shippingAddress, totalAmount, paymentIntentId = null) {
+    return this.request("/orders", {
+      method: "POST",
+      body: JSON.stringify({ shippingAddress, totalAmount, paymentIntentId }),
+    });
+  }
 
-    async updateCartItem(itemIndex, quantity) {
-        return this.request(`/cart/update/${itemIndex}`, {
-            method: 'PUT',
-            body: JSON.stringify({ quantity })
-        });
-    }
+  async getBuyerOrders() {
+    return this.request("/orders/buyer");
+  }
 
-    async removeFromCart(itemIndex) {
-        return this.request(`/cart/remove/${itemIndex}`, { method: 'DELETE' });
-    }
+  async getSellerOrders() {
+    return this.request("/orders/seller");
+  }
 
-    async clearCart() {
-        return this.request('/cart/clear', { method: 'DELETE' });
-    }
+  async getOrder(orderId) {
+    return this.request(`/orders/${orderId}`);
+  }
 
-    // ========== ORDER ENDPOINTS ==========
-    async createOrder(shippingAddress, totalAmount, paymentIntentId = null) {
-        return this.request('/orders', {
-            method: 'POST',
-            body: JSON.stringify({ shippingAddress, totalAmount, paymentIntentId })
-        });
-    }
+  async updateOrderStatus(orderId, status, trackingNumber = null) {
+    return this.request(`/orders/${orderId}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status, trackingNumber }),
+    });
+  }
 
-    async getBuyerOrders() {
-        return this.request('/orders/buyer');
-    }
+  async updatePaymentStatus(orderId, paymentStatus, paymentIntentId = null) {
+    return this.request(`/orders/${orderId}/payment`, {
+      method: "PUT",
+      body: JSON.stringify({ paymentStatus, paymentIntentId }),
+    });
+  }
 
-    async getSellerOrders() {
-        return this.request('/orders/seller');
-    }
+  // ========== REVIEW ENDPOINTS ==========
+  async createReview(bookId, orderId, rating, title, comment) {
+    return this.request("/reviews", {
+      method: "POST",
+      body: JSON.stringify({ bookId, orderId, rating, title, comment }),
+    });
+  }
 
-    async getOrder(orderId) {
-        return this.request(`/orders/${orderId}`);
-    }
+  async getBookReviews(bookId, sortBy = "recent", filterRating = null) {
+    const params = new URLSearchParams({ sortBy });
+    if (filterRating) params.append("filterRating", filterRating);
+    return this.request(`/reviews/book/${bookId}?${params}`);
+  }
 
-    async updateOrderStatus(orderId, status, trackingNumber = null) {
-        return this.request(`/orders/${orderId}/status`, {
-            method: 'PUT',
-            body: JSON.stringify({ status, trackingNumber })
-        });
-    }
+  async getReview(reviewId) {
+    return this.request(`/reviews/${reviewId}`);
+  }
 
-    async updatePaymentStatus(orderId, paymentStatus, paymentIntentId = null) {
-        return this.request(`/orders/${orderId}/payment`, {
-            method: 'PUT',
-            body: JSON.stringify({ paymentStatus, paymentIntentId })
-        });
-    }
+  async updateReview(reviewId, rating, title, comment) {
+    return this.request(`/reviews/${reviewId}`, {
+      method: "PUT",
+      body: JSON.stringify({ rating, title, comment }),
+    });
+  }
 
-    // ========== REVIEW ENDPOINTS ==========
-    async createReview(bookId, orderId, rating, title, comment) {
-        return this.request('/reviews', {
-            method: 'POST',
-            body: JSON.stringify({ bookId, orderId, rating, title, comment })
-        });
-    }
+  async deleteReview(reviewId) {
+    return this.request(`/reviews/${reviewId}`, { method: "DELETE" });
+  }
 
-    async getBookReviews(bookId, sortBy = 'recent', filterRating = null) {
-        const params = new URLSearchParams({ sortBy });
-        if (filterRating) params.append('filterRating', filterRating);
-        return this.request(`/reviews/book/${bookId}?${params}`);
-    }
+  async markReviewHelpful(reviewId) {
+    return this.request(`/reviews/${reviewId}/helpful`, { method: "POST" });
+  }
 
-    async getReview(reviewId) {
-        return this.request(`/reviews/${reviewId}`);
-    }
+  // ========== SELLER ENDPOINTS ==========
+  async becomeSeller(storeName, description, bankAccount = "") {
+    return this.request("/seller/register", {
+      method: "POST",
+      body: JSON.stringify({ storeName, description, bankAccount }),
+    });
+  }
 
-    async updateReview(reviewId, rating, title, comment) {
-        return this.request(`/reviews/${reviewId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ rating, title, comment })
-        });
-    }
+  async uploadBook(bookData) {
+    return this.request("/seller/books", {
+      method: "POST",
+      body: JSON.stringify(bookData),
+    });
+  }
 
-    async deleteReview(reviewId) {
-        return this.request(`/reviews/${reviewId}`, { method: 'DELETE' });
-    }
+  async getSellerBooks() {
+    return this.request("/seller/books");
+  }
 
-    async markReviewHelpful(reviewId) {
-        return this.request(`/reviews/${reviewId}/helpful`, { method: 'POST' });
-    }
+  async getSellerBook(bookId) {
+    return this.request(`/seller/books/${bookId}`);
+  }
 
-    // ========== SELLER ENDPOINTS ==========
-    async becomeSeller(storeName, description, bankAccount = '') {
-        return this.request('/seller/register', {
-            method: 'POST',
-            body: JSON.stringify({ storeName, description, bankAccount })
-        });
-    }
+  async updateBookListing(bookId, bookData) {
+    return this.request(`/seller/books/${bookId}`, {
+      method: "PUT",
+      body: JSON.stringify(bookData),
+    });
+  }
 
-    async uploadBook(bookData) {
-        return this.request('/seller/books', {
-            method: 'POST',
-            body: JSON.stringify(bookData)
-        });
-    }
+  async deleteBookListing(bookId) {
+    return this.request(`/seller/books/${bookId}`, { method: "DELETE" });
+  }
 
-    async getSellerBooks() {
-        return this.request('/seller/books');
-    }
+  async getSellerProfile(sellerId) {
+    return this.request(`/seller/profile/${sellerId}`);
+  }
 
-    async getSellerBook(bookId) {
-        return this.request(`/seller/books/${bookId}`);
-    }
-
-    async updateBookListing(bookId, bookData) {
-        return this.request(`/seller/books/${bookId}`, {
-            method: 'PUT',
-            body: JSON.stringify(bookData)
-        });
-    }
-
-    async deleteBookListing(bookId) {
-        return this.request(`/seller/books/${bookId}`, { method: 'DELETE' });
-    }
-
-    async getSellerProfile(sellerId) {
-        return this.request(`/seller/profile/${sellerId}`);
-    }
-
-    async getAllSellers() {
-        return this.request('/seller');
-    }
+  async getAllSellers() {
+    return this.request("/seller");
+  }
 }
 
 window.apiService = new APIService();
