@@ -102,6 +102,11 @@ async function ensureUserIsSeller() {
           authManager.user = sellerData.data;
           authManager.initAuthUI();
         }
+
+        // Reload page after a short delay to ensure navbar reinitializes properly
+        setTimeout(() => {
+          location.reload();
+        }, 500);
       }
     }
   } catch (error) {

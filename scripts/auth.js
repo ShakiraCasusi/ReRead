@@ -46,6 +46,25 @@ class AuthManager {
     return this.user?.isSeller || this.getUserRoles().includes("seller");
   }
 
+  // Close any open Bootstrap dropdowns, modals, or offcanvas
+  closeBootstrapComponents() {
+    // Close all dropdowns
+    document.querySelectorAll(".dropdown-menu.show").forEach((menu) => {
+      menu.classList.remove("show");
+    });
+
+    // Close offcanvas if open
+    const offcanvas = document.querySelector(".offcanvas.show");
+    if (offcanvas) {
+      const instance = bootstrap.Offcanvas.getInstance(offcanvas);
+      if (instance) instance.hide();
+    }
+
+    // Remove backdrop if present
+    const backdrops = document.querySelectorAll(".modal-backdrop");
+    backdrops.forEach((backdrop) => backdrop.remove());
+  }
+
   // Logout user
   logout() {
     localStorage.removeItem("rereadUser");
@@ -54,12 +73,15 @@ class AuthManager {
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("tokenExpiryTime");
     this.user = null;
+    this.closeBootstrapComponents();
     this.initAuthUI();
     window.location.href = "../pages/signin.html";
   }
 
   // Initialize authentication UI (show/hide buttons based on login state)
   initAuthUI() {
+    // Close any leftover Bootstrap components from previous page navigation
+    this.closeBootstrapComponents();
     const signinButtons = document.querySelectorAll(
       'a[href="signin.html"], a[href="../pages/signin.html"]',
     );
@@ -153,6 +175,14 @@ class AuthManager {
       nav.appendChild(dropdown);
     }
 
+    // Add click handlers to close dropdown when navigating
+    const dropdownItems = dropdown.querySelectorAll(".dropdown-item[href]");
+    dropdownItems.forEach((item) => {
+      item.addEventListener("click", () => {
+        this.closeBootstrapComponents();
+      });
+    });
+
     document.getElementById("logoutBtn").addEventListener("click", (e) => {
       e.preventDefault();
       this.logout();
@@ -232,6 +262,16 @@ class AuthManager {
         this.logout();
       });
     }
+
+    // Add click handlers to close offcanvas when navigating
+    const mobileMenuLinks = mobileMenuItem.querySelectorAll(
+      "a[href]:not(#mobileLogoutBtn)",
+    );
+    mobileMenuLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        this.closeBootstrapComponents();
+      });
+    });
   }
 
   // Remove mobile user profile menu
