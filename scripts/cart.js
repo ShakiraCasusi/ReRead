@@ -85,22 +85,23 @@ function initRemoveButtons() {
         cartItem?.querySelector(".item-title")?.textContent || "Item";
       const itemIndex = parseInt(cartItem.dataset.index);
 
-      if (confirm(`Remove "${itemTitle}" from your cart?`)) {
-        // Remove from localStorage
-        const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-        cart.splice(itemIndex, 1);
-        localStorage.setItem("rereadCart", JSON.stringify(cart));
+      // Remove from localStorage
+      const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
+      const removedItem = cart[itemIndex];
+      cart.splice(itemIndex, 1);
+      localStorage.setItem("rereadCart", JSON.stringify(cart));
 
-        // Animate removal
-        cartItem.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-        cartItem.style.opacity = "0";
-        cartItem.style.transform = "translateX(-100%)";
+      // Animate removal
+      cartItem.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+      cartItem.style.opacity = "0";
+      cartItem.style.transform = "translateX(-100%)";
 
-        setTimeout(() => {
-          // Reload cart to update indices
-          loadCartFromStorage();
-        }, 300);
-      }
+      setTimeout(() => {
+        // Reload cart to update indices
+        loadCartFromStorage();
+        // Show notification with undo option
+        showRemovalNotification(itemTitle, removedItem, itemIndex);
+      }, 300);
     });
   });
 }
@@ -143,13 +144,10 @@ function initClearCartButton() {
 
     // Add event listener
     clearAllBtn.addEventListener("click", function () {
-      if (
-        confirm("Are you sure you want to remove all items from your cart?")
-      ) {
-        localStorage.removeItem("rereadCart");
-        loadCartFromStorage(); // Reload the cart UI
-        showNotification("Cart has been cleared.", "info");
-      }
+      const currentCart = JSON.parse(localStorage.getItem("rereadCart")) || [];
+      localStorage.removeItem("rereadCart");
+      loadCartFromStorage(); // Reload the cart UI
+      showClearCartNotification(currentCart);
     });
 
     cartListHeader.appendChild(clearAllBtn);
@@ -232,16 +230,13 @@ function loadCartFromStorage() {
                 
                 <div class="item-details">
                     <div class="item-title">${item.title}</div>
-                    <div class="item-author">${
-                      item.author || "Unknown Author"
-                    }</div>
+                    <div class="item-author">${item.author || "Unknown Author"
+      }</div>
                     <div class="item-meta">
-                        <span class="item-badge">${
-                          item.condition || "Good"
-                        }</span>
-                        <span class="item-seller">${
-                          item.seller || "Sold by Re;Read"
-                        }</span>
+                        <span class="item-badge">${item.condition || "Good"
+      }</span>
+                        <span class="item-seller">${item.seller || "Sold by Re;Read"
+      }</span>
                     </div>
                     
                     <div class="item-price">
@@ -360,6 +355,136 @@ function showNotification(message) {
       }
     }, 300);
   }, 3000);
+}
+
+// Show removal notification with undo option
+function showRemovalNotification(itemTitle, removedItem, itemIndex) {
+  const notification = document.createElement("div");
+  notification.className = "cart-notification cart-notification-removal";
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #f59e0b;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  `;
+
+  notification.innerHTML = `
+    <span>"${itemTitle}" removed from cart</span>
+    <button id="undoRemoval" style="background: rgba(255,255,255,0.3); border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 600;">Undo</button>
+  `;
+
+  document.body.appendChild(notification);
+
+  const undoBtn = notification.querySelector("#undoRemoval");
+  let dismissed = false;
+
+  if (undoBtn) {
+    undoBtn.addEventListener("click", () => {
+      if (dismissed) return;
+      dismissed = true;
+
+      // Restore item to cart
+      const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
+      cart.splice(itemIndex, 0, removedItem);
+      localStorage.setItem("rereadCart", JSON.stringify(cart));
+      loadCartFromStorage();
+
+      // Remove notification
+      notification.style.animation = "slideOut 0.3s ease";
+      setTimeout(() => {
+        if (notification.parentNode) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+
+      showNotification(`"${itemTitle}" restored to cart`);
+    });
+  }
+
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (!dismissed) {
+      dismissed = true;
+      notification.style.animation = "slideOut 0.3s ease";
+      setTimeout(() => {
+        if (notification.parentNode) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }
+  }, 5000);
+}
+
+// Show clear cart notification with undo option
+function showClearCartNotification(clearedCart) {
+  const notification = document.createElement("div");
+  notification.className = "cart-notification cart-notification-clear";
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ef4444;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  `;
+
+  notification.innerHTML = `
+    <span>Cart cleared (${clearedCart.length} item${clearedCart.length !== 1 ? 's' : ''})</span>
+    <button id="undoClear" style="background: rgba(255,255,255,0.3); border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 600;">Undo</button>
+  `;
+
+  document.body.appendChild(notification);
+
+  const undoBtn = notification.querySelector("#undoClear");
+  let dismissed = false;
+
+  if (undoBtn) {
+    undoBtn.addEventListener("click", () => {
+      if (dismissed) return;
+      dismissed = true;
+
+      // Restore cart
+      localStorage.setItem("rereadCart", JSON.stringify(clearedCart));
+      loadCartFromStorage();
+
+      // Remove notification
+      notification.style.animation = "slideOut 0.3s ease";
+      setTimeout(() => {
+        if (notification.parentNode) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+
+      showNotification("Cart restored");
+    });
+  }
+
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (!dismissed) {
+      dismissed = true;
+      notification.style.animation = "slideOut 0.3s ease";
+      setTimeout(() => {
+        if (notification.parentNode) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }
+  }, 5000);
 }
 
 // Add CSS animations for notifications

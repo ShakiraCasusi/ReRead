@@ -721,6 +721,9 @@ function displayReviewItems() {
   reviewItems.innerHTML = cart.map(item => {
     const price = parseFloat(item.price.replace('₱', ''));
     const itemTotal = price * item.quantity;
+    const isDigital = item.bookFile || item.isDigital;
+    const itemType = isDigital ? 'Digital Download' : 'Physical Delivery';
+    const itemTypeColor = isDigital ? '#0891b2' : '#059669';
 
     return `
       <div class="review-item">
@@ -731,6 +734,9 @@ function displayReviewItems() {
           <div class="review-item-author">${item.author}</div>
           <div class="review-item-condition">${item.condition}</div>
           <div class="review-item-price">₱${price.toFixed(2)} × ${item.quantity} = ₱${itemTotal.toFixed(2)}</div>
+          <div style="display: inline-block; background-color: ${itemTypeColor}20; color: ${itemTypeColor}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-top: 4px;">
+            ${itemType}
+          </div>
         </div>
       </div>
     `;
@@ -875,7 +881,9 @@ function finalizeOrder(method) {
     paymentMethod: method,
     status: 'pending',
     isDigitalOnly: isAllDigital,
-    digitalItems: digitalItems
+    digitalItems: digitalItems,
+    physicalItems: physicalItems,
+    hasMixedItems: digitalItems.length > 0 && physicalItems.length > 0
   };
 
   localStorage.setItem('rereadLastOrder', JSON.stringify(orderData));
@@ -892,12 +900,24 @@ function finalizeOrder(method) {
       console.log(`🔗 Redirect URL: ${redirectUrl}`);
       window.location.href = redirectUrl;
     }, 1000);
+  } else if (orderData.hasMixedItems) {
+    // For mixed orders (both digital and physical)
+    console.log(`📦 Mixed order detected: ${digitalItems.length} digital + ${physicalItems.length} physical`);
+    localStorage.setItem('rereadDigitalDownloads', JSON.stringify(digitalItems));
+
+    showNotification(`Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\nPayment Method: ${method.toUpperCase()}\n\n✓ Digital books ready to download\n✓ Physical books will be shipped`, 'success', 4000);
+
+    setTimeout(() => {
+      // For mixed orders, first show digital downloads, then redirect to home
+      if (digitalItems.length > 0) {
+        window.location.href = './digital-downloads.html?order=' + orderData.orderNumber + '&return=true';
+      } else {
+        window.location.href = '../index.html';
+      }
+    }, 1000);
   } else {
-    // For mixed or physical-only orders
-    console.log(`📮 Redirecting to home page...`);
-    if (digitalItems.length > 0) {
-      localStorage.setItem('rereadDigitalDownloads', JSON.stringify(digitalItems));
-    }
+    // For physical-only orders
+    console.log(`📮 Physical-only order - redirecting to home page...`);
     showNotification(`Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\nPayment Method: ${method.toUpperCase()}\n\nYou will receive a confirmation email shortly.`, 'success', 4000);
 
     setTimeout(() => {

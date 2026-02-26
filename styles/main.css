@@ -1458,17 +1458,17 @@ footer p {
 }
 
 .dropdown-menu-custom a:hover {
-  background-color: #000;
-  color: #fff !important;
+  background-color: #f3f4f6;
+  color: #030213 !important;
   border-radius: 6px;
   padding: 8px;
   margin: -4px;
 }
 
-/* Dropdown items hover - black background */
+/* Dropdown items hover - light background for readability */
 .dropdown-menu .dropdown-item:hover {
-  background-color: #000;
-  color: #fff !important;
+  background-color: #f3f4f6;
+  color: #030213 !important;
 }
 
 /* Mobile Offcanvas Styling */

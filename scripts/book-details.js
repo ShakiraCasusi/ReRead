@@ -128,6 +128,17 @@ function updateImageDisplay() {
 // Load book details from localStorage (books database)
 async function loadBookDetails(bookId) {
   try {
+    // Check if this is a wishlist book
+    const wishlistBookData = sessionStorage.getItem("wishlistBookData");
+    if (wishlistBookData && bookId.startsWith("wishlist_")) {
+      const book = JSON.parse(wishlistBookData);
+      currentBook = book;
+      displayBookDetails(book);
+      hideLoadingState();
+      sessionStorage.removeItem("wishlistBookData"); // Clean up
+      return;
+    }
+
     // Retrieve books database from shop.js or localStorage
     let allBooks = [];
 
@@ -377,11 +388,16 @@ function initializeEventListeners() {
     .addEventListener("click", addCurrentBookToCart);
 
   // Wishlist button
-  document
-    .querySelector(".btn-outline-secondary:has(i.fa-heart)")
-    .addEventListener("click", () => {
-      showNotification("Added to wishlist!", "success");
+  const wishlistBtn = document.querySelector(".btn-outline-secondary:has(i.fa-heart)");
+  if (wishlistBtn) {
+    wishlistBtn.addEventListener("click", () => {
+      if (!currentBook) {
+        showNotification("Error loading book data", "error");
+        return;
+      }
+      addToWishlist(currentBook);
     });
+  }
 }
 
 // Add current book to cart
@@ -430,6 +446,41 @@ function addCurrentBookToCart() {
   // Reset quantity
   quantity = 1;
   document.getElementById("quantityInput").value = 1;
+}
+
+// Add book to wishlist
+function addToWishlist(book) {
+  const wishlist = JSON.parse(localStorage.getItem("rereadWishlist")) || [];
+
+  // Check if book already in wishlist
+  const existingItem = wishlist.find((item) => item.title === book.title);
+
+  if (existingItem) {
+    showNotification(`"${book.title}" is already in your wishlist!`, "info");
+    return;
+  }
+
+  // Add book to wishlist
+  const wishlistItem = {
+    id: book.id || Date.now(),
+    title: book.title,
+    author: book.author,
+    price: book.price,
+    image: book.image,
+    condition: book.quality || "Good",
+    seller: book.seller || "Sold by Re;Read",
+    addedDate: new Date().toISOString()
+  };
+
+  if (book.bookFile) {
+    wishlistItem.bookFile = book.bookFile;
+    wishlistItem.isDigital = true;
+  }
+
+  wishlist.push(wishlistItem);
+  localStorage.setItem("rereadWishlist", JSON.stringify(wishlist));
+
+  showNotification(`"${book.title}" added to My Likes! `, "success");
 }
 
 // Update cart badge

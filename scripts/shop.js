@@ -427,6 +427,18 @@ async function fetchBooksFromAPI() {
 // Initialize shop page
 document.addEventListener("DOMContentLoaded", async function () {
   const booksGrid = document.getElementById("booksGrid");
+
+  // Check if displaying wishlist
+  if (window.location.hash === "#likes") {
+    console.log("Loading wishlist/My Likes...");
+    // Initialize header search functionality
+    initHeaderSearch();
+    // Initialize the wishlist display
+    initWishlistPage();
+    updateCartBadge();
+    return;
+  }
+
   if (booksGrid) {
     booksGrid.innerHTML = `
       <div class="loading-state" style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
@@ -474,6 +486,42 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 });
+
+// Initialize header search functionality (used for both shop and wishlist pages)
+function initHeaderSearch() {
+  // Get search inputs from header
+  const searchInputs = document.querySelectorAll('[data-role="shop-search"]');
+
+  // Add event listeners for search functionality
+  searchInputs.forEach((input) => {
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const searchQuery = this.value.trim();
+        if (searchQuery) {
+          // Navigate to shop results
+          window.location.href = `shop.html?search=${encodeURIComponent(searchQuery)}`;
+        }
+      }
+    });
+
+    // Optional: Clear search functionality
+    input.addEventListener("focus", function () {
+      this.style.borderColor = "#030213";
+    });
+
+    input.addEventListener("blur", function () {
+      this.style.borderColor = "";
+    });
+  });
+
+  // Make sure the search bar is clickable and not blocked
+  const searchBars = document.querySelectorAll(".search-bar");
+  searchBars.forEach((bar) => {
+    bar.style.pointerEvents = "auto";
+    bar.style.cursor = "text";
+  });
+}
 
 function initShopPage() {
   console.log("initShopPage() called");
@@ -1015,6 +1063,386 @@ function showNotification(message, type = "info") {
   setTimeout(() => {
     notification.remove();
   }, 3500);
+}
+
+// Initialize and display wishlist/My Likes page
+function initWishlistPage() {
+  // Add CSS styles for wishlist animations and header visibility
+  if (!document.querySelector("#wishlist-styles")) {
+    const style = document.createElement("style");
+    style.id = "wishlist-styles";
+    style.textContent = `
+      /* Ensure header is visible */
+      .header {
+        display: flex !important;
+        visibility: visible !important;
+        z-index: 50 !important;
+      }
+
+      /* Ensure logo is visible */
+      .logo {
+        display: block !important;
+        visibility: visible !important;
+      }
+
+      .logo a {
+        display: block !important;
+        pointer-events: auto !important;
+      }
+
+      /* Ensure search bar is clickable */
+      .search-bar {
+        pointer-events: auto !important;
+        display: flex !important;
+        visibility: visible !important;
+      }
+
+      .search-bar input {
+        pointer-events: auto !important;
+        cursor: text !important;
+      }
+
+      /* Ensure navigation is visible */
+      nav {
+        display: flex !important;
+        visibility: visible !important;
+      }
+
+      /* Wishlist card styles */
+      .wishlist-card {
+        transition: all 0.3s ease;
+      }
+
+      .wishlist-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .wishlist-action-btn {
+        transition: all 0.2s ease !important;
+      }
+
+      .wishlist-action-btn:active {
+        transform: scale(0.97);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Ensure header elements are visible and interactive
+  const header = document.querySelector(".header");
+  if (header) {
+    header.style.display = "flex";
+    header.style.visibility = "visible";
+    header.style.zIndex = "50";
+  }
+
+  const logo = document.querySelector(".logo");
+  if (logo) {
+    logo.style.display = "block";
+    logo.style.visibility = "visible";
+  }
+
+  const searchBars = document.querySelectorAll(".search-bar");
+  searchBars.forEach((bar) => {
+    bar.style.pointerEvents = "auto";
+    bar.style.display = "flex";
+    bar.style.visibility = "visible";
+    const input = bar.querySelector("input");
+    if (input) {
+      input.style.pointerEvents = "auto";
+      input.style.cursor = "text";
+    }
+  });
+
+  // Update page title in header if exists
+  const pageTitle = document.querySelector(".shop-header h1, .shop-page-title, .page-title");
+  if (pageTitle) {
+    pageTitle.textContent = "My Likes";
+  }
+
+  // Update document title
+  document.title = "My Likes | Re;Read";
+
+  const wishlist = JSON.parse(localStorage.getItem("rereadWishlist")) || [];
+  const booksGrid = document.getElementById("booksGrid");
+
+  if (!booksGrid) return;
+
+  if (wishlist.length === 0) {
+    booksGrid.innerHTML = `
+      <div class="empty-wishlist" style="grid-column: 1/-1; text-align: center; padding: 80px 20px;">
+        <i class="fas fa-heart" style="font-size: 80px; color: #ef4444; margin-bottom: 20px; opacity: 0.2;"></i>
+        <h2 style="color: #1f2937; margin-top: 20px; font-size: 32px; font-weight: 600;">Your wishlist is empty</h2>
+        <p style="color: #6b7280; margin-top: 12px; font-size: 16px;">Start adding your favorite books to your wishlist!</p>
+        <a href="shop.html" class="btn btn-primary mt-4" style="background: #030213; border: none; padding: 12px 32px;">Browse Books</a>
+      </div>
+    `;
+    return;
+  }
+
+  // Render wishlist items with shop-style cards
+  booksGrid.innerHTML = wishlist.map((book, index) => {
+    const price = book.price || "N/A";
+    const priceDisplay = typeof price === "string" && price.startsWith("₱") ? price : `₱${price}`;
+    const bookType = book.isDigital ? "Digital" : "Physical";
+    const badgeColor = book.isDigital ? "#0891b2" : "#2a9d8f";
+
+    return `
+      <div class="book-card wishlist-card" data-book-id="${book.id || index}" data-wishlist-index="${index}" style="cursor: pointer;">
+        <div class="book-image" style="position: relative;">
+          <img src="${book.image || DEFAULT_PLACEHOLDER}"
+               alt="${book.title}"
+               style="opacity: 1; transition: opacity 0.3s ease;"
+               onerror="this.src='${DEFAULT_PLACEHOLDER}'">
+          <div class="badge" style="background-color: ${badgeColor};">
+            <i class="fas ${book.isDigital ? 'fa-download' : 'fa-box'}"></i> ${bookType}
+          </div>
+
+          <!-- Wishlist Actions Overlay -->
+          <div class="wishlist-actions-overlay" style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+            z-index: 20;
+          ">
+            <button class="wishlist-action-btn btn-view-details" style="
+              background: #fff;
+              color: #030213;
+              border: none;
+              padding: 10px 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              transition: all 0.2s ease;
+              font-size: 14px;
+            " title="View Details">
+              <i class="fas fa-eye"></i> View Details
+            </button>
+            <button class="wishlist-action-btn btn-add-to-cart-overlay" style="
+              background: #030213;
+              color: #fff;
+              border: none;
+              padding: 10px 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              transition: all 0.2s ease;
+              font-size: 14px;
+            " title="Add to Cart">
+              <i class="fas fa-shopping-cart"></i> Add to Cart
+            </button>
+            <button class="wishlist-action-btn btn-remove-from-wishlist-overlay" style="
+              background: #ef4444;
+              color: #fff;
+              border: none;
+              padding: 10px 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              transition: all 0.2s ease;
+              font-size: 14px;
+            " title="Remove from Wishlist">
+              <i class="fas fa-trash"></i> Remove
+            </button>
+          </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #1f2937; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${book.title}</h3>
+          <p style="color: #6b7280; font-size: 14px; margin: 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${book.author}</p>
+          <div style="margin: 8px 0;">
+            <span style="display: inline-block; background: #f3f4f6; color: #374151; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+              ${book.condition}
+            </span>
+          </div>
+          <p style="color: #6b7280; font-size: 13px; margin: 8px 0 auto 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${book.seller}
+          </p>
+          <p style="font-size: 18px; font-weight: 600; color: #030213; margin: 12px 0 0 0; padding-top: 8px;">${priceDisplay}</p>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Add event listeners for wishlist card interactions
+  document.querySelectorAll(".wishlist-card").forEach((card) => {
+    const index = parseInt(card.dataset.wishlistIndex);
+    const overlay = card.querySelector(".wishlist-actions-overlay");
+    const bookImage = card.querySelector(".book-image");
+    const bookImg = card.querySelector(".book-image img");
+
+    // Show overlay on hover
+    card.addEventListener("mouseenter", () => {
+      if (overlay) {
+        overlay.style.display = "flex";
+        setTimeout(() => {
+          overlay.style.opacity = "1";
+        }, 10);
+      }
+      if (bookImg) {
+        bookImg.style.opacity = "0.4";
+      }
+    });
+
+    // Hide overlay on mouse leave
+    card.addEventListener("mouseleave", () => {
+      if (overlay) {
+        overlay.style.opacity = "0";
+        setTimeout(() => {
+          overlay.style.display = "none";
+        }, 300);
+      }
+      if (bookImg) {
+        bookImg.style.opacity = "1";
+      }
+    });
+
+    // Make entire card clickable for viewing details (if no overlay button clicked)
+    card.addEventListener("click", function (e) {
+      if (!e.target.closest(".wishlist-actions-overlay") && !e.target.closest("button")) {
+        viewWishlistBookDetails(index);
+      }
+    });
+
+    // View Details button
+    const viewDetailsBtn = card.querySelector(".btn-view-details");
+    if (viewDetailsBtn) {
+      viewDetailsBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        viewWishlistBookDetails(index);
+      });
+      viewDetailsBtn.addEventListener("mouseenter", () => {
+        viewDetailsBtn.style.background = "#f3f4f6";
+      });
+      viewDetailsBtn.addEventListener("mouseleave", () => {
+        viewDetailsBtn.style.background = "#fff";
+      });
+    }
+
+    // Add to Cart button
+    const addToCartBtn = card.querySelector(".btn-add-to-cart-overlay");
+    if (addToCartBtn) {
+      addToCartBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addWishlistItemToCart(index);
+      });
+      addToCartBtn.addEventListener("mouseenter", () => {
+        addToCartBtn.style.background = "#1f2937";
+      });
+      addToCartBtn.addEventListener("mouseleave", () => {
+        addToCartBtn.style.background = "#030213";
+      });
+    }
+
+    // Remove from Wishlist button
+    const removeBtn = card.querySelector(".btn-remove-from-wishlist-overlay");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        removeFromWishlist(index);
+      });
+      removeBtn.addEventListener("mouseenter", () => {
+        removeBtn.style.background = "#dc2626";
+      });
+      removeBtn.addEventListener("mouseleave", () => {
+        removeBtn.style.background = "#ef4444";
+      });
+    }
+  });
+
+  updateCartBadge();
+}
+
+// Add wishlist item to cart
+function addWishlistItemToCart(wishlistIndex) {
+  const wishlist = JSON.parse(localStorage.getItem("rereadWishlist")) || [];
+  const book = wishlist[wishlistIndex];
+
+  if (!book) return;
+
+  // Add to cart
+  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
+  const existingItem = cart.find((item) => item.title === book.title);
+
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    const cartItem = {
+      title: book.title,
+      author: book.author,
+      price: book.price,
+      image: book.image,
+      quantity: 1,
+      condition: book.condition,
+      seller: book.seller,
+    };
+
+    if (book.bookFile) {
+      cartItem.bookFile = book.bookFile;
+      cartItem.isDigital = book.isDigital;
+    }
+
+    cart.push(cartItem);
+  }
+
+  localStorage.setItem("rereadCart", JSON.stringify(cart));
+  showNotification(`"${book.title}" added to cart!`, "success");
+  updateCartBadge();
+}
+
+// Remove item from wishlist
+function removeFromWishlist(wishlistIndex) {
+  const wishlist = JSON.parse(localStorage.getItem("rereadWishlist")) || [];
+  const book = wishlist[wishlistIndex];
+
+  if (!book) return;
+
+  wishlist.splice(wishlistIndex, 1);
+  localStorage.setItem("rereadWishlist", JSON.stringify(wishlist));
+
+  showNotification(`"${book.title}" removed from My Likes`, "info");
+  initWishlistPage();
+}
+
+// View wishlist book details
+function viewWishlistBookDetails(wishlistIndex) {
+  const wishlist = JSON.parse(localStorage.getItem("rereadWishlist")) || [];
+  const book = wishlist[wishlistIndex];
+
+  if (!book) {
+    showNotification("Book not found", "error");
+    return;
+  }
+
+  // Store the book data temporarily for the details page
+  sessionStorage.setItem("wishlistBookData", JSON.stringify(book));
+
+  // Navigate to book details page
+  // If book has an id from the database, use it; otherwise use wishlist index
+  const bookId = book.id || `wishlist_${wishlistIndex}`;
+  window.location.href = `book-details.html?id=${encodeURIComponent(bookId)}&source=wishlist`;
 }
 
 //# sourceMappingURL=shop.js.map
