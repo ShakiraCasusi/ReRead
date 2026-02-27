@@ -2,33 +2,56 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
 const tokenManager = require("../utils/tokenManager");
+const { authValidators } = require("../middleware/validators");
+const { authLimiter, registerLimiter } = require("../middleware/rateLimiter");
+const { logger } = require("../config/logger");
 
-router.post("/register", authController.register);
-router.post("/login", authController.login);
+// Unprotected routes with validation and rate limiting
+router.post("/register", registerLimiter, authValidators.register, authController.register);
+router.post("/login", authLimiter, authValidators.login, authController.login);
 router.post("/google", authController.googleLogin);
 router.post("/refresh-token", authController.refreshToken);
 
 // Protected routes
-router.post("/logout", tokenManager.authenticateToken, authController.logout);
+router.post(
+  "/logout",
+  tokenManager.authenticateToken,
+  authController.logout
+);
+
 router.get(
   "/profile",
   tokenManager.authenticateToken,
-  authController.getCurrentProfile,
+  authController.getCurrentProfile
 );
+
 router.put(
   "/profile",
   tokenManager.authenticateToken,
-  authController.updateProfile,
+  authValidators.updateProfile,
+  authController.updateProfile
 );
+
 router.delete(
   "/profile",
   tokenManager.authenticateToken,
-  authController.deleteAccount,
+  authController.deleteAccount
 );
+
 router.post(
   "/become-seller",
   tokenManager.authenticateToken,
-  authController.becomeSeller,
+  authController.becomeSeller
 );
+
+// Error logging middleware
+router.use((err, req, res, next) => {
+  logger.error("Auth route error", {
+    path: req.path,
+    method: req.method,
+    error: err.message,
+  });
+  next(err);
+});
 
 module.exports = router;

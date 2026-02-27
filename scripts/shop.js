@@ -431,8 +431,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Check if displaying wishlist
   if (window.location.hash === "#likes") {
     console.log("Loading wishlist/My Likes...");
-    // Initialize header search functionality
-    initHeaderSearch();
     // Initialize the wishlist display
     initWishlistPage();
     updateCartBadge();
@@ -489,38 +487,158 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 // Initialize header search functionality (used for both shop and wishlist pages)
 function initHeaderSearch() {
+  // Ensure search bar CSS has maximum priority and proper layering
+  if (!document.querySelector("#search-bar-fix")) {
+    const searchFixStyle = document.createElement("style");
+    searchFixStyle.id = "search-bar-fix";
+    searchFixStyle.textContent = `
+      /* Ensure header is always on top with highest priority */
+      .header {
+        position: relative !important;
+        z-index: 9999 !important;
+        pointer-events: auto !important;
+      }
+
+      /* Search bar with maximum z-index priority */
+      .search-bar {
+        pointer-events: auto !important;
+        display: flex !important;
+        visibility: visible !important;
+        z-index: 9999 !important;
+        position: relative !important;
+      }
+
+      .search-bar input {
+        pointer-events: auto !important;
+        cursor: text !important;
+        z-index: 9999 !important;
+        position: relative !important;
+      }
+
+      .search-bar input:focus,
+      .search-bar input:hover {
+        pointer-events: auto !important;
+      }
+
+      .search-bar i {
+        pointer-events: none !important;
+      }
+
+      /* Ensure nav elements don't block header */
+      nav {
+        pointer-events: auto !important;
+        z-index: 9998 !important;
+      }
+
+      nav * {
+        pointer-events: auto !important;
+      }
+
+      /* Ensure wishlist overlay stays below header */
+      .wishlist-actions-overlay {
+        z-index: 20 !important;
+      }
+    `;
+    document.head.appendChild(searchFixStyle);
+  }
+
   // Get search inputs from header
   const searchInputs = document.querySelectorAll('[data-role="shop-search"]');
 
+  if (searchInputs.length === 0) {
+    console.warn("Search input not found");
+    return;
+  }
+
   // Add event listeners for search functionality
   searchInputs.forEach((input) => {
+    // Force maximum z-index and interaction properties
+    input.style.pointerEvents = "auto";
+    input.style.cursor = "text";
+    input.style.zIndex = "9999";
+    input.style.position = "relative";
+
+    // Ensure placeholder is visible
+    input.placeholder = "Search books, authors, subjects...";
+
+    // Handle Enter key to search
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
         const searchQuery = this.value.trim();
         if (searchQuery) {
+          console.log("Searching for:", searchQuery);
           // Navigate to shop results
           window.location.href = `shop.html?search=${encodeURIComponent(searchQuery)}`;
         }
       }
     });
 
-    // Optional: Clear search functionality
+    // Handle Input event for real-time search feedback
+    input.addEventListener("input", function () {
+      this.style.pointerEvents = "auto";
+      this.style.cursor = "text";
+    });
+
+    // Debug click events
+    input.addEventListener("click", function (e) {
+      console.log("Search input clicked:", e);
+      this.focus();
+    });
+
+    // Debug mousedown events
+    input.addEventListener("mousedown", function (e) {
+      console.log("Search input mousedown:", e);
+      this.focus();
+    });
+
+    // Visual feedback on focus
     input.addEventListener("focus", function () {
+      console.log("Search input focused");
       this.style.borderColor = "#030213";
+      this.style.boxShadow = "0 0 0 3px rgba(3, 2, 19, 0.1)";
     });
 
     input.addEventListener("blur", function () {
       this.style.borderColor = "";
+      this.style.boxShadow = "";
     });
   });
 
-  // Make sure the search bar is clickable and not blocked
+  // Make sure the search bar wrapper has maximum priority
   const searchBars = document.querySelectorAll(".search-bar");
   searchBars.forEach((bar) => {
     bar.style.pointerEvents = "auto";
-    bar.style.cursor = "text";
+    bar.style.display = "flex";
+    bar.style.visibility = "visible";
+    bar.style.zIndex = "9999";
+    bar.style.position = "relative";
+
+    // Ensure all child elements allow pointer events
+    bar.querySelectorAll("*").forEach((child) => {
+      if (child.tagName !== "I") { // Except icons
+        child.style.pointerEvents = "auto";
+        child.style.zIndex = "9999";
+      }
+    });
   });
+
+  // Ensure header has proper layering
+  const header = document.querySelector(".header");
+  if (header) {
+    header.style.position = "relative";
+    header.style.zIndex = "9999";
+    header.style.pointerEvents = "auto";
+  }
+
+  // Ensure nav elements are interactive
+  const nav = document.querySelector("nav");
+  if (nav) {
+    nav.style.pointerEvents = "auto";
+    nav.style.zIndex = "9998";
+  }
+
+  console.log("Search bar initialized with " + searchInputs.length + " input(s) - z-index: 9999");
 }
 
 function initShopPage() {
@@ -1072,24 +1190,6 @@ function initWishlistPage() {
     const style = document.createElement("style");
     style.id = "wishlist-styles";
     style.textContent = `
-      /* Ensure header is visible */
-      .header {
-        display: flex !important;
-        visibility: visible !important;
-        z-index: 50 !important;
-      }
-
-      /* Ensure logo is visible */
-      .logo {
-        display: block !important;
-        visibility: visible !important;
-      }
-
-      .logo a {
-        display: block !important;
-        pointer-events: auto !important;
-      }
-
       /* Ensure search bar is clickable */
       .search-bar {
         pointer-events: auto !important;
@@ -1127,20 +1227,6 @@ function initWishlistPage() {
       }
     `;
     document.head.appendChild(style);
-  }
-
-  // Ensure header elements are visible and interactive
-  const header = document.querySelector(".header");
-  if (header) {
-    header.style.display = "flex";
-    header.style.visibility = "visible";
-    header.style.zIndex = "50";
-  }
-
-  const logo = document.querySelector(".logo");
-  if (logo) {
-    logo.style.display = "block";
-    logo.style.visibility = "visible";
   }
 
   const searchBars = document.querySelectorAll(".search-bar");
@@ -1373,6 +1459,9 @@ function initWishlistPage() {
   });
 
   updateCartBadge();
+
+  // Re-initialize search bar to ensure it's responsive after wishlist page renders
+  initHeaderSearch();
 }
 
 // Add wishlist item to cart
