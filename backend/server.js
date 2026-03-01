@@ -1,24 +1,24 @@
 require("dotenv").config();
 
-// ============================================
+
 // ENVIRONMENT VALIDATION (FIRST!)
-// ============================================
+
 const { validateEnv, getConfig } = require("./config/envConfig");
 validateEnv();
 const config = getConfig();
 
-// ============================================
+
 // CORE DEPENDENCIES
-// ============================================
+
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const connectDB = require("./config/database");
 
-// ============================================
+
 // LOGGING & ERROR HANDLING
-// ============================================
+
 const { logger, morganStream } = require("./config/logger");
 const {
   globalErrorHandler,
@@ -26,9 +26,9 @@ const {
   handleUnhandledRejection,
 } = require("./middleware/errorHandler");
 
-// ============================================
+
 // SECURITY MIDDLEWARE
-// ============================================
+
 const helmetConfig = require("./config/helmetConfig");
 const {
   authLimiter,
@@ -37,9 +37,9 @@ const {
   uploadLimiter,
 } = require("./middleware/rateLimiter");
 
-// ============================================
+
 // ROUTE IMPORTS
-// ============================================
+
 const bookRoutes = require("./routes/books");
 const cartRoutes = require("./routes/cart");
 const authRoutes = require("./routes/auth");
@@ -48,27 +48,27 @@ const reviewRoutes = require("./routes/reviews");
 const sellerRoutes = require("./routes/seller");
 const uploadRoutes = require("./routes/upload");
 
-// ============================================
+
 // EXPRESS APP SETUP
-// ============================================
+
 const app = express();
 
-// ============================================
+
 // SECURITY HEADERS (HELMET)
-// ============================================
+
 app.use(helmetConfig);
 
-// ============================================
+
 // LOGGING (MORGAN)
-// ============================================
+
 const morganFormat = process.env.NODE_ENV === "production"
   ? "combined"
   : "dev";
 app.use(morgan(morganFormat, { stream: morganStream }));
 
-// ============================================
+
 // CORS CONFIGURATION
-// ============================================
+
 const corsOptions = {
   origin: config.allowedOrigins,
   credentials: true,
@@ -82,26 +82,27 @@ if (config.nodeEnv === "development") {
   corsOptions.origin = [
     "http://localhost:3000",
     "http://localhost:5173",
+    "http://localhost:8080",
     ...config.allowedOrigins,
   ];
 }
 
 app.use(cors(corsOptions));
 
-// ============================================
+
 // BODY PARSING
-// ============================================
+
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// ============================================
+
 // GENERAL API RATE LIMITING
-// ============================================
+
 app.use("/api/", apiLimiter);
 
-// ============================================
+
 // ROUTE MOUNTING
-// ============================================
+
 
 // Auth routes (limiters applied within routes)
 app.use("/api/auth", authRoutes);
@@ -114,9 +115,9 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/upload", uploadLimiter, uploadRoutes);
 
-// ============================================
+
 // HEALTH CHECK
-// ============================================
+
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
@@ -126,9 +127,9 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ============================================
+
 // ERROR HANDLING MIDDLEWARE
-// ============================================
+
 
 // 404 handler (must be before error handler)
 app.use(notFoundHandler);
@@ -136,14 +137,14 @@ app.use(notFoundHandler);
 // Global error handler (must be last)
 app.use(globalErrorHandler);
 
-// ============================================
+
 // UNHANDLED REJECTION HANDLING
-// ============================================
+
 handleUnhandledRejection();
 
-// ============================================
+
 // DATABASE & SERVER START
-// ============================================
+
 async function start() {
   try {
     // Validate environment first
