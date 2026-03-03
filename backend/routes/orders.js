@@ -6,87 +6,141 @@ const Book = require("../models/Book");
 const User = require("../models/User");
 const tokenManager = require("../utils/tokenManager");
 const { requireRole } = require("../middleware/authorize");
+const { orderValidators } = require("../middleware/validators");
 
 // Middleware to authenticate requests
 const authenticateToken = tokenManager.authenticateToken;
 
 // Create order from cart (Phase 3 - New)
-router.post("/", authenticateToken, async (req, res) => {
-  try {
-    const { shippingAddress, totalAmount, paymentIntentId } = req.body;
-
-    if (!shippingAddress || !totalAmount) {
-      return res.status(400).json({
-        success: false,
-        message: "Shipping address and total amount are required",
-      });
-    }
-
-    // Get user's cart
-    const cart = await Cart.findOne({ userId: req.user.userId }).populate(
-      "items.bookId",
-    );
-
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Cart is empty",
-      });
-    }
-
-    // Group items by seller
-    const itemsBySeller = {};
-    cart.items.forEach((item) => {
-      const sellerId = item.bookId.sellerId;
-      if (!itemsBySeller[sellerId]) {
-        itemsBySeller[sellerId] = [];
-      }
-      itemsBySeller[sellerId].push({
-        bookId: item.bookId._id,
-        title: item.bookId.title,
-        author: item.bookId.author,
-        quantity: item.quantity,
-        pricePerUnit: item.priceAtTime,
-        subtotal: item.priceAtTime * item.quantity,
-      });
-    });
-
-    // Create orders for each seller
-    const orders = [];
-    for (const [sellerId, items] of Object.entries(itemsBySeller)) {
-      const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-
-      const order = await Order.create({
-        buyerId: req.user.userId,
-        sellerId,
-        items,
-        totalAmount: subtotal,
+router.post(
+  "/",
+  authenticateToken,
+  orderValidators.create,
+  async (req, res) => {
+    try {
+      const {
         shippingAddress,
-        status: "pending",
-        paymentStatus: "pending",
-        paymentIntentId: paymentIntentId || null,
+        totalAmount,
+        paymentIntentId,
+        items: providedItems,
+      } = req.body;
+
+      if (!totalAmount) {
+        return res.status(400).json({
+          success: false,
+          message: "Total amount is required",
+        });
+      }
+
+      let cartItems = [];
+
+      // Option 1: Items provided directly in request (for direct checkout)
+      if (
+        providedItems &&
+        Array.isArray(providedItems) &&
+        providedItems.length > 0
+      ) {
+        // Validate and populate book data
+        for (const item of providedItems) {
+          const book = await Book.findById(item.bookId);
+          if (!book) {
+            return res.status(404).json({
+              success: false,
+              message: `Book not found: ${item.bookId}`,
+            });
+          }
+
+          cartItems.push({
+            bookId: book,
+            quantity: item.quantity || 1,
+            priceAtTime: item.price || book.price,
+          });
+        }
+      } else {
+        // Option 2: Get items from user's cart in database
+        const cart = await Cart.findOne({ userId: req.user.userId }).populate(
+          "items.bookId",
+        );
+
+        if (!cart || cart.items.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: "Cart is empty and no items provided",
+          });
+        }
+
+        cartItems = cart.items;
+      }
+
+      if (cartItems.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No items to order",
+        });
+      }
+
+      // Group items by seller
+      const itemsBySeller = {};
+      cartItems.forEach((item) => {
+        const book = item.bookId;
+        const sellerId = book.sellerId || book.seller || req.user.userId; // Fallback to user if no seller
+
+        if (!itemsBySeller[sellerId]) {
+          itemsBySeller[sellerId] = [];
+        }
+
+        itemsBySeller[sellerId].push({
+          bookId: book._id,
+          title: book.title,
+          author: book.author,
+          quantity: item.quantity,
+          pricePerUnit: item.priceAtTime,
+          subtotal: item.priceAtTime * item.quantity,
+        });
       });
 
-      orders.push(order);
+      // Create orders for each seller
+      const orders = [];
+      for (const [sellerId, items] of Object.entries(itemsBySeller)) {
+        const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+
+        const order = await Order.create({
+          buyerId: req.user.userId,
+          sellerId,
+          items,
+          totalAmount: subtotal,
+          shippingAddress: shippingAddress || {},
+          status: "pending",
+          paymentStatus: "pending",
+          paymentIntentId: paymentIntentId || null,
+        });
+
+        orders.push(order);
+      }
+
+      // Clear cart if it exists and was used
+      if (!providedItems) {
+        const cart = await Cart.findOne({ userId: req.user.userId });
+        if (cart) {
+          cart.items = [];
+          await cart.save();
+        }
+      }
+
+      res.status(201).json({
+        success: true,
+        message: "Order created successfully",
+        notificationType: "ORDER_CREATED",
+        data: { orders, orderCount: orders.length },
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
-
-    // Clear cart
-    cart.items = [];
-    await cart.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Order created successfully",
-      notificationType: "ORDER_CREATED",
-      data: { orders, orderCount: orders.length },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
+  },
+);
 
 // Get buyer's orders
 router.get("/buyer", authenticateToken, async (req, res) => {

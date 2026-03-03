@@ -1,49 +1,50 @@
 /**
  * Phase 3 - Enhanced Authentication Manager with JWT Support
  * Manages JWT tokens, user session, and authentication state
+ * All tokens and auth data stored in localStorage as required
  */
 
 class AuthManager {
   constructor() {
-    this.accessToken = sessionStorage.getItem("accessToken");
+    this.accessToken = localStorage.getItem("accessToken");
     this.refreshToken = localStorage.getItem("refreshToken");
     this.user = this.loadUser();
-    this.tokenExpiryTime = sessionStorage.getItem("tokenExpiryTime");
+    this.tokenExpiryTime = localStorage.getItem("tokenExpiryTime");
     this.initAuthUI();
     this.setupTokenRefresh();
   }
 
   /**
-   * Load user from sessionStorage
+   * Load user from localStorage
    */
   loadUser() {
-    const userStr = sessionStorage.getItem("user");
+    const userStr = localStorage.getItem("user");
     return userStr ? JSON.parse(userStr) : null;
   }
 
   /**
-   * Save user to sessionStorage
+   * Save user to localStorage
    */
   saveUser(user) {
     if (user) {
-      sessionStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user));
       this.user = user;
     }
   }
 
   /**
-   * Save tokens
+   * Save tokens to localStorage
    */
   saveTokens(accessToken, refreshToken, expiresIn = 900000) {
     // 15 minutes default
-    sessionStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("accessToken", accessToken);
     if (refreshToken) {
       localStorage.setItem("refreshToken", refreshToken);
     }
 
     // Store token expiry time (15 minutes from now)
     const expiryTime = Date.now() + expiresIn;
-    sessionStorage.setItem("tokenExpiryTime", expiryTime.toString());
+    localStorage.setItem("tokenExpiryTime", expiryTime.toString());
 
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
@@ -51,12 +52,12 @@ class AuthManager {
   }
 
   /**
-   * Clear all tokens and user data
+   * Clear all tokens and user data from localStorage
    */
   clearTokens() {
-    sessionStorage.removeItem("accessToken");
-    sessionStorage.removeItem("user");
-    sessionStorage.removeItem("tokenExpiryTime");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tokenExpiryTime");
     localStorage.removeItem("refreshToken");
 
     this.accessToken = null;

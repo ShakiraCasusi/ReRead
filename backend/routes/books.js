@@ -6,6 +6,7 @@ const { asyncHandler } = require("../utils/errorHandler");
 const { AppError } = require("../utils/errorHandler");
 const { bookValidators } = require("../middleware/validators");
 const { logger } = require("../config/logger");
+const tokenManager = require("../utils/tokenManager");
 
 // Specific routes MUST come before generic /:id route
 router.get("/search", bookValidators.search, bookController.searchBooks);
@@ -29,7 +30,7 @@ router.get(
       data: books,
       timestamp: new Date().toISOString(),
     });
-  })
+  }),
 );
 
 router.get(
@@ -50,14 +51,30 @@ router.get(
       data: books,
       timestamp: new Date().toISOString(),
     });
-  })
+  }),
 );
 
 // Generic routes
 router.get("/", bookController.getAllBooks);
-router.post("/", bookController.createBook);
-router.get("/:id", bookController.getBook);
-router.put("/:id", bookController.updateBook);
-router.delete("/:id", bookController.deleteBook);
+router.post(
+  "/",
+  tokenManager.authenticateToken,
+  bookValidators.upsert,
+  bookController.createBook,
+);
+router.get("/:id", bookValidators.checkBookId, bookController.getBook);
+router.put(
+  "/:id",
+  tokenManager.authenticateToken,
+  bookValidators.checkBookId,
+  bookValidators.upsert,
+  bookController.updateBook,
+);
+router.delete(
+  "/:id",
+  tokenManager.authenticateToken,
+  bookValidators.checkBookId,
+  bookController.deleteBook,
+);
 
 module.exports = router;

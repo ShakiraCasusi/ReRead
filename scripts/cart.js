@@ -1,5 +1,8 @@
 // scripts/cart.js - JavaScript for the cart page
 
+let cartSearchQuery = "";
+let fullCartData = [];
+
 document.addEventListener("DOMContentLoaded", function () {
   initCartPage();
 });
@@ -11,6 +14,7 @@ function initCartPage() {
   initRemoveButtons();
   initClearCartButton();
   loadCartFromStorage(); // Load cart first
+  setupCartSearchListener();
   initCheckoutProcess();
   initContinueShopping();
   console.log("=== Cart page initialized ===");
@@ -65,7 +69,7 @@ function updateItemTotal(cartItem, quantity) {
 
   if (priceElement) {
     const price = parseFloat(
-      priceElement.textContent.replace("₱", "").replace(",", "")
+      priceElement.textContent.replace("₱", "").replace(",", ""),
     );
     const total = price * quantity;
 
@@ -193,18 +197,22 @@ function initContinueShopping() {
 }
 
 function loadCartFromStorage() {
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
+  fullCartData = JSON.parse(localStorage.getItem("rereadCart")) || [];
+  displayCartItems(fullCartData);
+}
+
+function displayCartItems(itemsToDisplay = fullCartData) {
   const cartItemsContainer = document.getElementById("cartItems");
 
   if (!cartItemsContainer) return;
 
-  if (cart.length === 0) {
+  if (itemsToDisplay.length === 0) {
     cartItemsContainer.innerHTML = `
             <div class="empty-cart">
                 <i class="fas fa-shopping-cart"></i>
-                <h3>Your cart is empty</h3>
-                <p>Add some books to get started!</p>
-                <a href="shop.html" class="btn btn-primary">Start Shopping</a>
+                <h3>${cartSearchQuery.trim() ? "No items found" : "Your cart is empty"}</h3>
+                <p>${cartSearchQuery.trim() ? "Try another search" : "Add some books to get started!"}</p>
+                ${!cartSearchQuery.trim() ? '<a href="shop.html" class="btn btn-primary">Start Shopping</a>' : ""}
             </div>
         `;
     updateCartTotal();
@@ -215,7 +223,12 @@ function loadCartFromStorage() {
   cartItemsContainer.innerHTML = "";
 
   // Add each cart item
-  cart.forEach((item, index) => {
+  itemsToDisplay.forEach((item, index) => {
+    // Get the original index from fullCartData
+    const originalIndex = fullCartData.findIndex(
+      (i) => i.title === item.title && i.author === item.author,
+    );
+
     // Adjust image path for cart page (pages/cart.html)
     let imagePath = item.image || "../images/placeholder.jpg";
     if (imagePath.startsWith("images/")) {
@@ -223,20 +236,17 @@ function loadCartFromStorage() {
     }
 
     const cartItemHTML = `
-            <div class="cart-item" data-index="${index}">
+            <div class="cart-item" data-index="${originalIndex}">
                 <div class="item-image">
                     <img src="${imagePath}" alt="${item.title}"/>
                 </div>
                 
                 <div class="item-details">
                     <div class="item-title">${item.title}</div>
-                    <div class="item-author">${item.author || "Unknown Author"
-      }</div>
+                    <div class="item-author">${item.author || "Unknown Author"}</div>
                     <div class="item-meta">
-                        <span class="item-badge">${item.condition || "Good"
-      }</span>
-                        <span class="item-seller">${item.seller || "Sold by Re;Read"
-      }</span>
+                        <span class="item-badge">${item.condition || "Good"}</span>
+                        <span class="item-seller">${item.seller || "Sold by Re;Read"}</span>
                     </div>
                     
                     <div class="item-price">
@@ -274,7 +284,7 @@ function updateCartTotal() {
 
     if (priceElement && quantityElement) {
       const price = parseFloat(
-        priceElement.textContent.replace("₱", "").replace(",", "")
+        priceElement.textContent.replace("₱", "").replace(",", ""),
       );
       const quantity = parseInt(quantityElement.textContent);
       subtotal += price * quantity;
@@ -443,7 +453,7 @@ function showClearCartNotification(clearedCart) {
   `;
 
   notification.innerHTML = `
-    <span>Cart cleared (${clearedCart.length} item${clearedCart.length !== 1 ? 's' : ''})</span>
+    <span>Cart cleared (${clearedCart.length} item${clearedCart.length !== 1 ? "s" : ""})</span>
     <button id="undoClear" style="background: rgba(255,255,255,0.3); border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 600;">Undo</button>
   `;
 
@@ -485,6 +495,40 @@ function showClearCartNotification(clearedCart) {
       }, 300);
     }
   }, 5000);
+}
+
+function setupCartSearchListener() {
+  const searchInput = document.getElementById("cartSearchInput");
+  if (!searchInput) return;
+
+  searchInput.addEventListener("input", (e) => {
+    cartSearchQuery = e.target.value;
+    filterCartItems();
+  });
+
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      searchInput.value = "";
+      cartSearchQuery = "";
+      filterCartItems();
+    }
+  });
+}
+
+function filterCartItems() {
+  if (!cartSearchQuery.trim()) {
+    displayCartItems(fullCartData);
+    return;
+  }
+
+  const query = cartSearchQuery.toLowerCase().trim();
+  const filtered = fullCartData.filter((item) => {
+    const titleMatch = item.title.toLowerCase().includes(query);
+    const authorMatch = (item.author || "").toLowerCase().includes(query);
+    return titleMatch || authorMatch;
+  });
+
+  displayCartItems(filtered);
 }
 
 // Add CSS animations for notifications

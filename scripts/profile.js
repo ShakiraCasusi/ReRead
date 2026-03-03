@@ -145,6 +145,10 @@ async function updateProfilePicture(pictureUrl) {
     if (result.success && result.data) {
       currentUser = result.data;
       displayProfilePicture(pictureUrl);
+      // Reload page to display updated profile picture everywhere
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     }
   } catch (error) {
     console.error("Error updating profile picture:", error);
@@ -159,10 +163,16 @@ async function updateProfilePicture(pictureUrl) {
 function displayProfilePicture(pictureUrl) {
   const avatarContainer = document.querySelector(".profile-avatar-placeholder");
   if (avatarContainer) {
-    // Handle both string URLs and object format
-    let imageUrl = pictureUrl;
-    if (typeof pictureUrl === "object" && pictureUrl.url) {
-      imageUrl = pictureUrl.url;
+    // Handle both string URLs and object format safely
+    let imageUrl = null;
+    if (typeof pictureUrl === "string") {
+      imageUrl = pictureUrl.trim();
+    } else if (
+      pictureUrl &&
+      typeof pictureUrl === "object" &&
+      typeof pictureUrl.url === "string"
+    ) {
+      imageUrl = pictureUrl.url.trim();
     }
 
     if (imageUrl) {
@@ -179,6 +189,10 @@ function displayProfilePicture(pictureUrl) {
         object-fit: cover;
         border-radius: 50%;
       `;
+      img.onerror = function () {
+        avatarContainer.innerHTML =
+          '<i class="fas fa-user" style="font-size: 72px; color: #9ca3af"></i>';
+      };
 
       avatarContainer.appendChild(img);
     }

@@ -101,7 +101,7 @@ function validateImageUrl(imageUrl) {
 
   // Handle object format with .url property (from database)
   let urlString;
-  if (typeof imageUrl === 'object' && imageUrl.url) {
+  if (typeof imageUrl === "object" && imageUrl.url) {
     urlString = String(imageUrl.url).trim();
   } else {
     urlString = String(imageUrl).trim();
@@ -428,6 +428,8 @@ async function fetchBooksFromAPI() {
 document.addEventListener("DOMContentLoaded", async function () {
   const booksGrid = document.getElementById("booksGrid");
 
+  initHeaderSearch();
+
   // Check if displaying wishlist
   if (window.location.hash === "#likes") {
     console.log("Loading wishlist/My Likes...");
@@ -509,6 +511,8 @@ function initHeaderSearch() {
       }
 
       .search-bar input {
+        display: block !important;
+        visibility: visible !important;
         pointer-events: auto !important;
         cursor: text !important;
         z-index: 9999 !important;
@@ -553,10 +557,12 @@ function initHeaderSearch() {
   // Add event listeners for search functionality
   searchInputs.forEach((input) => {
     // Force maximum z-index and interaction properties
+    input.style.display = "block"; // Force display: block to override any hidden state
     input.style.pointerEvents = "auto";
     input.style.cursor = "text";
     input.style.zIndex = "9999";
     input.style.position = "relative";
+    input.style.visibility = "visible"; // Ensure visibility
 
     // Ensure placeholder is visible
     input.placeholder = "Search books, authors, subjects...";
@@ -616,7 +622,8 @@ function initHeaderSearch() {
 
     // Ensure all child elements allow pointer events
     bar.querySelectorAll("*").forEach((child) => {
-      if (child.tagName !== "I") { // Except icons
+      if (child.tagName !== "I") {
+        // Except icons
         child.style.pointerEvents = "auto";
         child.style.zIndex = "9999";
       }
@@ -638,14 +645,21 @@ function initHeaderSearch() {
     nav.style.zIndex = "9998";
   }
 
-  console.log("Search bar initialized with " + searchInputs.length + " input(s) - z-index: 9999");
+  console.log(
+    "Search bar initialized with " +
+      searchInputs.length +
+      " input(s) - z-index: 9999",
+  );
 }
 
 function initShopPage() {
   console.log("initShopPage() called");
 
+  // Initialize header search FIRST to ensure search bar is interactive before filters
+  initHeaderSearch();
+
   // Initialize event listeners
-  populateDynamicGenres(); // Add this line to populate genres from API
+  populateDynamicGenres();
   initFilters();
   initSearch();
   initPagination();
@@ -761,7 +775,7 @@ function renderBooks() {
       <p class="price">₱${book.price} <span class="original-price">₱${book.originalPrice}</span></p>
       <p class="rating">${book.rating} ★</p>
       <div class="book-actions">
-        <button class="btn btn-dark add-to-cart" data-book-id="${book.id}" data-book-title="${safeTitle}" data-book-author="${safeAuthor}" data-book-price="${book.price}" data-book-image="${imageSrc}" data-book-quality="${book.quality || ""}" data-has-file="${book.bookFile ? 'true' : 'false'}">
+        <button class="btn btn-dark add-to-cart" data-book-id="${book.id}" data-book-title="${safeTitle}" data-book-author="${safeAuthor}" data-book-price="${book.price}" data-book-image="${imageSrc}" data-book-quality="${book.quality || ""}" data-has-file="${book.bookFile ? "true" : "false"}">
           <i class="fas fa-shopping-cart"></i> Add to Cart
         </button>
         <a href="book-details.html?id=${book.id}" class="btn btn-outline-secondary view-book">View</a>
@@ -809,10 +823,10 @@ function initAddToCartButtons() {
     const bookPrice = addToCartBtn.dataset.bookPrice;
     const bookImage = addToCartBtn.dataset.bookImage;
     const bookQuality = addToCartBtn.dataset.bookQuality;
-    const hasFile = addToCartBtn.dataset.hasFile === 'true';
+    const hasFile = addToCartBtn.dataset.hasFile === "true";
 
     // Get the full book object to access bookFile
-    const fullBook = booksDatabase.find(b => String(b.id) === bookId);
+    const fullBook = booksDatabase.find((b) => String(b.id) === bookId);
     const bookFile = fullBook && fullBook.bookFile ? fullBook.bookFile : null;
 
     if (!bookId) {
@@ -1242,7 +1256,9 @@ function initWishlistPage() {
   });
 
   // Update page title in header if exists
-  const pageTitle = document.querySelector(".shop-header h1, .shop-page-title, .page-title");
+  const pageTitle = document.querySelector(
+    ".shop-header h1, .shop-page-title, .page-title",
+  );
   if (pageTitle) {
     pageTitle.textContent = "My Likes";
   }
@@ -1268,13 +1284,17 @@ function initWishlistPage() {
   }
 
   // Render wishlist items with shop-style cards
-  booksGrid.innerHTML = wishlist.map((book, index) => {
-    const price = book.price || "N/A";
-    const priceDisplay = typeof price === "string" && price.startsWith("₱") ? price : `₱${price}`;
-    const bookType = book.isDigital ? "Digital" : "Physical";
-    const badgeColor = book.isDigital ? "#0891b2" : "#2a9d8f";
+  booksGrid.innerHTML = wishlist
+    .map((book, index) => {
+      const price = book.price || "N/A";
+      const priceDisplay =
+        typeof price === "string" && price.startsWith("₱")
+          ? price
+          : `₱${price}`;
+      const bookType = book.isDigital ? "Digital" : "Physical";
+      const badgeColor = book.isDigital ? "#0891b2" : "#2a9d8f";
 
-    return `
+      return `
       <div class="book-card wishlist-card" data-book-id="${book.id || index}" data-wishlist-index="${index}" style="cursor: pointer;">
         <div class="book-image" style="position: relative;">
           <img src="${book.image || DEFAULT_PLACEHOLDER}"
@@ -1282,7 +1302,7 @@ function initWishlistPage() {
                style="opacity: 1; transition: opacity 0.3s ease;"
                onerror="this.src='${DEFAULT_PLACEHOLDER}'">
           <div class="badge" style="background-color: ${badgeColor};">
-            <i class="fas ${book.isDigital ? 'fa-download' : 'fa-box'}"></i> ${bookType}
+            <i class="fas ${book.isDigital ? "fa-download" : "fa-box"}"></i> ${bookType}
           </div>
 
           <!-- Wishlist Actions Overlay -->
@@ -1370,7 +1390,8 @@ function initWishlistPage() {
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
   // Add event listeners for wishlist card interactions
   document.querySelectorAll(".wishlist-card").forEach((card) => {
@@ -1407,7 +1428,10 @@ function initWishlistPage() {
 
     // Make entire card clickable for viewing details (if no overlay button clicked)
     card.addEventListener("click", function (e) {
-      if (!e.target.closest(".wishlist-actions-overlay") && !e.target.closest("button")) {
+      if (
+        !e.target.closest(".wishlist-actions-overlay") &&
+        !e.target.closest("button")
+      ) {
         viewWishlistBookDetails(index);
       }
     });
