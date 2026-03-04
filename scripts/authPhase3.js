@@ -327,20 +327,20 @@ class AuthManager {
     if (!this.isLoggedIn()) return;
 
     try {
-      const response = await fetch("http://localhost:5000/api/cart/count", {
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-        },
-      });
+      let itemCount = 0;
 
-      const data = await response.json();
-      if (data.success) {
-        const badge = document.querySelector(".cart-badge");
-        if (badge) {
-          badge.textContent = data.data.itemCount;
-          badge.style.display =
-            data.data.itemCount > 0 ? "inline-block" : "none";
-        }
+      if (window.CartService && CartService.isAuthenticated()) {
+        const cartItems = await CartService.getCart();
+        itemCount = cartItems.reduce(
+          (total, item) => total + (item.quantity || 1),
+          0,
+        );
+      }
+
+      const badge = document.querySelector(".cart-badge");
+      if (badge) {
+        badge.textContent = itemCount;
+        badge.style.display = itemCount > 0 ? "inline-block" : "none";
       }
     } catch (error) {
       console.warn("Error updating cart badge:", error);

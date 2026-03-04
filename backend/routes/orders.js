@@ -58,9 +58,9 @@ router.post(
         }
       } else {
         // Option 2: Get items from user's cart in database
-        const cart = await Cart.findOne({ userId: req.user.userId }).populate(
-          "items.bookId",
-        );
+        const cart = await Cart.findOne({
+          $or: [{ userId: req.user.userId }, { user: req.user.userId }],
+        }).populate("items.bookId");
 
         if (!cart || cart.items.length === 0) {
           return res.status(400).json({
@@ -94,7 +94,7 @@ router.post(
           title: book.title,
           author: book.author,
           quantity: item.quantity,
-          pricePerUnit: item.priceAtTime,
+          price: item.priceAtTime,
           subtotal: item.priceAtTime * item.quantity,
         });
       });
@@ -120,7 +120,9 @@ router.post(
 
       // Clear cart if it exists and was used
       if (!providedItems) {
-        const cart = await Cart.findOne({ userId: req.user.userId });
+        const cart = await Cart.findOne({
+          $or: [{ userId: req.user.userId }, { user: req.user.userId }],
+        });
         if (cart) {
           cart.items = [];
           await cart.save();

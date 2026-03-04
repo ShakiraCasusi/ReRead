@@ -107,28 +107,23 @@ async function loadOrders() {
         const data = await response.json();
         const apiOrders = (data.data || []).map(normalizeOrder);
 
-        // If API returns orders, use them
-        if (apiOrders.length > 0) {
-          allOrders = apiOrders;
-          displayOrders();
-          return;
-        }
-        // If API returns empty, fall through to local fallback
+        // Use API orders for authenticated users (even if empty)
+        allOrders = apiOrders;
+        displayOrders();
+        return;
       }
 
       if (response.status === 401) {
         sessionStorage.removeItem("accessToken");
         localStorage.removeItem("accessToken");
+        console.log("Session expired, please log in again");
       }
     } catch (error) {
-      console.warn(
-        "Orders API unavailable, using local fallback:",
-        error.message,
-      );
+      console.warn("Orders API unavailable:", error.message);
     }
   }
 
-  // Fallback to locally stored checkout orders
+  // For guest users or API failure, use localStorage fallback
   allOrders = getLocalOrders();
   displayOrders();
 }

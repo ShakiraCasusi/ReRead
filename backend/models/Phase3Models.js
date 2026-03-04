@@ -3,6 +3,11 @@ const mongoose = require("mongoose");
 // Cart Model
 const cartSchema = new mongoose.Schema(
   {
+    // Legacy compatibility: existing DB may still have a unique index on `user`
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

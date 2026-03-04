@@ -848,49 +848,31 @@ function initAddToCartButtons() {
 }
 
 // Add book to cart
-function addBookToCart(bookData) {
+async function addBookToCart(bookData) {
   if (!bookData.title) {
     showNotification("Error: Invalid book data", "error");
     return;
   }
 
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-  const existingItem = cart.find((item) => item.title === bookData.title);
-
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    // Ensure image is always valid
-    const cartImage = validateImageUrl(bookData.image);
-
-    const cartItem = {
-      title: bookData.title,
-      author: bookData.author,
-      price: bookData.price.toString().startsWith("₱")
-        ? bookData.price
-        : `₱${bookData.price}`,
-      image: cartImage,
-      quantity: 1,
-      condition: bookData.quality || "Good",
-      seller: "Sold by Re;Read",
-    };
-
-    // Include bookFile if it exists (for digital books)
-    if (bookData.bookFile) {
-      cartItem.bookFile = bookData.bookFile;
-      cartItem.isDigital = true;
-    }
-
-    cart.push(cartItem);
+  if (!window.CartService || !CartService.isAuthenticated()) {
+    showNotification("Please sign in to add items to your cart", "info");
+    return;
   }
 
-  localStorage.setItem("rereadCart", JSON.stringify(cart));
-  updateCartBadge();
+  try {
+    await CartService.addToCartDB(bookData.id, 1, bookData.title || "");
+  } catch (error) {
+    console.warn("Failed to add to DB cart from shop:", error);
+    showNotification("Could not add to cart. Please try again.", "error");
+    return;
+  }
+
+  await updateCartBadge();
   showNotification(`${bookData.title} added to cart!`, "success");
 }
 
 // Add to cart function
-function addToCartFromShop(bookId) {
+async function addToCartFromShop(bookId) {
   const bookIdStr = String(bookId);
   const book = booksDatabase.find((b) => String(b.id) === bookIdStr);
   if (!book) {
@@ -899,41 +881,30 @@ function addToCartFromShop(bookId) {
     return;
   }
 
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-  const existingItem = cart.find((item) => item.title === book.title);
-
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    const cartImage = validateImageUrl(book.image);
-
-    const cartItem = {
-      title: book.title,
-      author: book.author,
-      price: `₱${book.price}`,
-      image: cartImage,
-      quantity: 1,
-      condition: book.quality || "Good",
-      seller: "Sold by Re;Read",
-    };
-
-    // Include bookFile if it exists (for digital books)
-    if (book.bookFile) {
-      cartItem.bookFile = book.bookFile;
-      cartItem.isDigital = true;
-    }
-
-    cart.push(cartItem);
+  if (!window.CartService || !CartService.isAuthenticated()) {
+    showNotification("Please sign in to add items to your cart", "info");
+    return;
   }
 
-  localStorage.setItem("rereadCart", JSON.stringify(cart));
-  updateCartBadge();
+  try {
+    await CartService.addToCartDB(book.id, 1, book.title || "");
+  } catch (error) {
+    console.warn("Failed to add to DB cart from shop helper:", error);
+    showNotification("Could not add to cart. Please try again.", "error");
+    return;
+  }
+
+  await updateCartBadge();
   showNotification(`${book.title} added to cart!`, "success");
 }
 
-function updateCartBadge() {
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-  const count = cart.reduce((total, item) => total + item.quantity, 0);
+async function updateCartBadge() {
+  let count = 0;
+  if (window.CartService && CartService.isAuthenticated()) {
+    const cart = await CartService.getCart();
+    count = cart.reduce((total, item) => total + (item.quantity || 1), 0);
+  }
+
   const badges = document.querySelectorAll("#cartBadge, #cartBadgeMobile");
 
   badges.forEach((badge) => {
@@ -1489,40 +1460,27 @@ function initWishlistPage() {
 }
 
 // Add wishlist item to cart
-function addWishlistItemToCart(wishlistIndex) {
+async function addWishlistItemToCart(wishlistIndex) {
   const wishlist = JSON.parse(localStorage.getItem("rereadWishlist")) || [];
   const book = wishlist[wishlistIndex];
 
   if (!book) return;
 
-  // Add to cart
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-  const existingItem = cart.find((item) => item.title === book.title);
-
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    const cartItem = {
-      title: book.title,
-      author: book.author,
-      price: book.price,
-      image: book.image,
-      quantity: 1,
-      condition: book.condition,
-      seller: book.seller,
-    };
-
-    if (book.bookFile) {
-      cartItem.bookFile = book.bookFile;
-      cartItem.isDigital = book.isDigital;
-    }
-
-    cart.push(cartItem);
+  if (!window.CartService || !CartService.isAuthenticated()) {
+    showNotification("Please sign in to add items to your cart", "info");
+    return;
   }
 
-  localStorage.setItem("rereadCart", JSON.stringify(cart));
+  try {
+    await CartService.addToCartDB(book.id, 1, book.title || "");
+  } catch (error) {
+    console.warn("Failed to add wishlist item to DB cart:", error);
+    showNotification("Could not add to cart. Please try again.", "error");
+    return;
+  }
+
   showNotification(`"${book.title}" added to cart!`, "success");
-  updateCartBadge();
+  await updateCartBadge();
 }
 
 // Remove item from wishlist

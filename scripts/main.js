@@ -16,10 +16,14 @@ document.addEventListener("DOMContentLoaded", function () {
     initFilterFunctionality();
   }
 
-  loadCartFromLocalStorage();
+  updateCartCount();
 
   // Load homepage API-integrated books if on homepage
-  if (document.querySelector(".hero-images") || document.querySelector(".new-releases") || document.querySelector(".featured-section")) {
+  if (
+    document.querySelector(".hero-images") ||
+    document.querySelector(".new-releases") ||
+    document.querySelector(".featured-section")
+  ) {
     initHomepageBooks();
   }
 
@@ -286,8 +290,8 @@ function initScrollAnimations() {
   // Observe all animated elements
   const animatedElements = document.querySelectorAll(
     ".animate-down, .animate-up, .fade-in, .slide-in-left, .slide-in-right, " +
-    ".new-releases, .featured-section, .stats-section, .filters, " +
-    ".section-header, .books-grid, .stats, article, .book-card",
+      ".new-releases, .featured-section, .stats-section, .filters, " +
+      ".section-header, .books-grid, .stats, article, .book-card",
   );
 
   animatedElements.forEach((el) => {
@@ -495,6 +499,10 @@ function initCartFunctionality() {
 
       const bookCard = this.closest(".book-card, article");
       if (bookCard) {
+        const bookId =
+          this.getAttribute("data-book-id") ||
+          bookCard.getAttribute("data-book-id") ||
+          "";
         const title =
           bookCard.querySelector("h3")?.textContent || "Unknown Book";
         const author =
@@ -512,6 +520,7 @@ function initCartFunctionality() {
         }
 
         addToCart({
+          bookId: bookId,
           title: title,
           author: author,
           price: price,
@@ -566,25 +575,46 @@ function initCartFunctionality() {
 // Cart management
 let cart = [];
 
-function addToCart(item) {
-  const existingItem = cart.find((cartItem) => cartItem.title === item.title);
-
-  if (existingItem) {
-    existingItem.quantity += item.quantity;
-    existingItem.author = item.author;
-    existingItem.price = item.price;
-    existingItem.image = item.image;
-  } else {
-    cart.push(item);
+async function addToCart(item) {
+  if (!window.CartService || !CartService.isAuthenticated()) {
+    showNotification("Please sign in to add items to your cart", "info");
+    return;
   }
 
-  updateCartCount();
+  try {
+    const bookId = item._id || item.bookId;
+    if (bookId || item.title) {
+      await CartService.addToCartDB(
+        bookId,
+        item.quantity || 1,
+        item.title || "",
+      );
+    }
+  } catch (error) {
+    console.warn("Failed to add to cart database:", error);
+    showNotification("Could not add to cart. Please try again.", "error");
+    return;
+  }
+
+  await updateCartCount();
   updateCartTotal();
-  saveCartToLocalStorage();
 }
 
-function updateCartCount() {
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+async function updateCartCount() {
+  let cartCount = 0;
+  if (window.CartService && CartService.isAuthenticated()) {
+    try {
+      const dbCart = await CartService.getCart();
+      cartCount = dbCart.reduce(
+        (total, item) => total + (item.quantity || 1),
+        0,
+      );
+    } catch (error) {
+      console.warn("Failed to refresh cart count:", error);
+      cartCount = 0;
+    }
+  }
+
   const badges = document.querySelectorAll("#cartBadge, #cartBadgeMobile");
 
   badges.forEach((badge) => {
@@ -638,17 +668,9 @@ function updateCartTotal() {
   }
 }
 
-function saveCartToLocalStorage() {
-  localStorage.setItem("rereadCart", JSON.stringify(cart));
-}
+function saveCartToLocalStorage() {}
 
-function loadCartFromLocalStorage() {
-  const savedCart = localStorage.getItem("rereadCart");
-  if (savedCart) {
-    cart = JSON.parse(savedCart);
-    updateCartCount();
-  }
-}
+function loadCartFromLocalStorage() {}
 
 // Notification system with types
 function showNotification(message, type = "success") {
@@ -878,7 +900,6 @@ document.addEventListener("DOMContentLoaded", () => {
   })();
 });
 
-
 // NOTIFICATION SYSTEM
 /**
  * Show a notification to the user
@@ -971,9 +992,7 @@ function showInfo(title, message = "", duration = 5000) {
   return showNotification("info", title, message, duration);
 }
 
-
 // HOMEPAGE API-INTEGRATED BOOKS
-
 
 /**
  * Initialize books on homepage by fetching from Open Library API
@@ -999,13 +1018,11 @@ async function initHomepageBooks() {
       newReleaseBooks.length === 0 &&
       featuredBooks.length === 0
     ) {
-      throw new Error(
-        "No books fetched from Open Library API"
-      );
+      throw new Error("No books fetched from Open Library API");
     }
 
     console.log(
-      `✅ Successfully fetched ${heroBooks.length + newReleaseBooks.length + featuredBooks.length} books from API`
+      `✅ Successfully fetched ${heroBooks.length + newReleaseBooks.length + featuredBooks.length} books from API`,
     );
 
     // Combine all books for sessionStorage
@@ -1086,18 +1103,78 @@ async function fetchRandomGenreBooks(totalBooks = 4) {
 
     // Top-tier famous authors guaranteed to have book covers on Open Library
     const genreAuthors = {
-      romance: ["Jane Austen", "Nora Roberts", "Nicholas Sparks", "Danielle Steel"],
-      mystery: ["Agatha Christie", "Arthur Conan Doyle", "Sherlock Holmes", "Ellery Queen"],
-      "science fiction": ["Isaac Asimov", "Philip K. Dick", "Ray Bradbury", "Arthur C. Clarke"],
-      fantasy: ["J.R.R. Tolkien", "J.K. Rowling", "George R.R. Martin", "Brandon Sanderson"],
-      horror: ["Stephen King", "H.P. Lovecraft", "Edgar Allan Poe", "Bram Stoker"],
-      adventure: ["Jules Verne", "Robert Louis Stevenson", "Mark Twain", "Jack London"],
-      thriller: ["Agatha Christie", "James Patterson", "Dan Brown", "Gillian Flynn"],
-      biography: ["Malcolm Gladwell", "Bill Gates", "Steve Jobs", "Walter Isaacson"],
-      history: ["Yuval Noah Harari", "David McCullough", "Howard Zinn", "Barbara Tuchman"],
-      "self-help": ["Dale Carnegie", "Tony Robbins", "Stephen Covey", "Brene Brown"],
-      business: ["Peter Drucker", "Jim Collins", "Michael Porter", "Clayton Christensen"],
-      education: ["Paulo Freire", "Malcolm Knowles", "Carol Dweck", "John Dewey"],
+      romance: [
+        "Jane Austen",
+        "Nora Roberts",
+        "Nicholas Sparks",
+        "Danielle Steel",
+      ],
+      mystery: [
+        "Agatha Christie",
+        "Arthur Conan Doyle",
+        "Sherlock Holmes",
+        "Ellery Queen",
+      ],
+      "science fiction": [
+        "Isaac Asimov",
+        "Philip K. Dick",
+        "Ray Bradbury",
+        "Arthur C. Clarke",
+      ],
+      fantasy: [
+        "J.R.R. Tolkien",
+        "J.K. Rowling",
+        "George R.R. Martin",
+        "Brandon Sanderson",
+      ],
+      horror: [
+        "Stephen King",
+        "H.P. Lovecraft",
+        "Edgar Allan Poe",
+        "Bram Stoker",
+      ],
+      adventure: [
+        "Jules Verne",
+        "Robert Louis Stevenson",
+        "Mark Twain",
+        "Jack London",
+      ],
+      thriller: [
+        "Agatha Christie",
+        "James Patterson",
+        "Dan Brown",
+        "Gillian Flynn",
+      ],
+      biography: [
+        "Malcolm Gladwell",
+        "Bill Gates",
+        "Steve Jobs",
+        "Walter Isaacson",
+      ],
+      history: [
+        "Yuval Noah Harari",
+        "David McCullough",
+        "Howard Zinn",
+        "Barbara Tuchman",
+      ],
+      "self-help": [
+        "Dale Carnegie",
+        "Tony Robbins",
+        "Stephen Covey",
+        "Brene Brown",
+      ],
+      business: [
+        "Peter Drucker",
+        "Jim Collins",
+        "Michael Porter",
+        "Clayton Christensen",
+      ],
+      education: [
+        "Paulo Freire",
+        "Malcolm Knowles",
+        "Carol Dweck",
+        "John Dewey",
+      ],
     };
 
     const genres = Object.keys(genreAuthors);
@@ -1121,7 +1198,11 @@ async function fetchRandomGenreBooks(totalBooks = 4) {
 
           // Filter for books with covers and high ratings
           const booksWithCovers = books.filter((book) => {
-            return book.cover_i && book.first_publish_year && !uniqueIds.has(book.key);
+            return (
+              book.cover_i &&
+              book.first_publish_year &&
+              !uniqueIds.has(book.key)
+            );
           });
 
           if (booksWithCovers.length > 0) {
@@ -1132,7 +1213,10 @@ async function fetchRandomGenreBooks(totalBooks = 4) {
           }
         }
       } catch (error) {
-        console.warn(`Failed to fetch ${genre} books from author ${author}:`, error);
+        console.warn(
+          `Failed to fetch ${genre} books from author ${author}:`,
+          error,
+        );
       }
 
       // Small delay to avoid rate limiting
@@ -1179,7 +1263,7 @@ async function fetchRandomGenreBooks(totalBooks = 4) {
     }
 
     console.log(
-      `✅ Fetched ${allBooks.length} popular books with covers from famous authors`
+      `✅ Fetched ${allBooks.length} popular books with covers from famous authors`,
     );
     return allBooks.slice(0, totalBooks);
   } catch (error) {
@@ -1293,7 +1377,9 @@ async function fetchBooksFromOpenLibrary(category, limit = 4) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
-      console.log(`✅ Fetched ${allBooks.length} recent books from popular authors`);
+      console.log(
+        `✅ Fetched ${allBooks.length} recent books from popular authors`,
+      );
       return allBooks.slice(0, limit);
     }
 
@@ -1333,10 +1419,10 @@ async function fetchBooksFromOpenLibrary(category, limit = 4) {
         books = booksWithCovers.slice(0, limit);
       } else {
         // Mix covered books with others if not enough
-        books = [
-          ...booksWithCovers,
-          ...books.filter((b) => !b.cover_i),
-        ].slice(0, limit);
+        books = [...booksWithCovers, ...books.filter((b) => !b.cover_i)].slice(
+          0,
+          limit,
+        );
       }
     } else {
       books = books.slice(0, limit);
@@ -1344,17 +1430,17 @@ async function fetchBooksFromOpenLibrary(category, limit = 4) {
 
     // Parse and transform books
     const parsedBooks = books.map((book, index) =>
-      parseOpenLibraryBook(book, index)
+      parseOpenLibraryBook(book, index),
     );
 
     console.log(
-      `✅ Fetched ${parsedBooks.length} ${category} books from Open Library`
+      `✅ Fetched ${parsedBooks.length} ${category} books from Open Library`,
     );
     return parsedBooks;
   } catch (error) {
     console.error(
       `❌ Error fetching ${category} books from Open Library:`,
-      error
+      error,
     );
     return [];
   }
@@ -1395,10 +1481,26 @@ async function fetchPopularBooks(limit = 4) {
 
     // Mix searches - use some authors, some titles
     const searchQueries = [
-      { type: "author", query: popularAuthors[Math.floor(Math.random() * popularAuthors.length)] },
-      { type: "title", query: popularSearches[Math.floor(Math.random() * popularSearches.length)] },
-      { type: "author", query: popularAuthors[Math.floor(Math.random() * popularAuthors.length)] },
-      { type: "title", query: popularSearches[Math.floor(Math.random() * popularSearches.length)] },
+      {
+        type: "author",
+        query:
+          popularAuthors[Math.floor(Math.random() * popularAuthors.length)],
+      },
+      {
+        type: "title",
+        query:
+          popularSearches[Math.floor(Math.random() * popularSearches.length)],
+      },
+      {
+        type: "author",
+        query:
+          popularAuthors[Math.floor(Math.random() * popularAuthors.length)],
+      },
+      {
+        type: "title",
+        query:
+          popularSearches[Math.floor(Math.random() * popularSearches.length)],
+      },
     ];
 
     // Fetch books for each search query
@@ -1413,7 +1515,9 @@ async function fetchPopularBooks(limit = 4) {
           url = `https://openlibrary.org/search.json?title=${encodeURIComponent(search.query)}&limit=3`;
         }
 
-        console.log(`Fetching popular books from ${search.type}: ${search.query}`);
+        console.log(
+          `Fetching popular books from ${search.type}: ${search.query}`,
+        );
 
         const response = await fetch(url, {
           method: "GET",
@@ -1436,7 +1540,10 @@ async function fetchPopularBooks(limit = 4) {
           }
         }
       } catch (error) {
-        console.warn(`Failed to fetch from ${search.type} ${search.query}:`, error);
+        console.warn(
+          `Failed to fetch from ${search.type} ${search.query}:`,
+          error,
+        );
         continue;
       }
 
@@ -1445,11 +1552,15 @@ async function fetchPopularBooks(limit = 4) {
     }
 
     if (allBooks.length === 0) {
-      console.warn("⚠️ No popular books found, falling back to general fiction");
+      console.warn(
+        "⚠️ No popular books found, falling back to general fiction",
+      );
       return await fetchBooksFromOpenLibrary("fiction", limit);
     }
 
-    console.log(`✅ Fetched ${allBooks.length} popular books from Open Library`);
+    console.log(
+      `✅ Fetched ${allBooks.length} popular books from Open Library`,
+    );
     return allBooks.slice(0, limit);
   } catch (error) {
     console.error("❌ Error fetching popular books from Open Library:", error);
@@ -1475,7 +1586,9 @@ function parseOpenLibraryBook(book, index) {
 
   // Generate realistic prices
   const originalPrice = Math.floor(Math.random() * (2000 - 800) + 800);
-  const discountedPrice = Math.floor(originalPrice * (0.4 + Math.random() * 0.3));
+  const discountedPrice = Math.floor(
+    originalPrice * (0.4 + Math.random() * 0.3),
+  );
 
   return {
     id: book.key || book.isbn_0?.[0] || `book-${index}-${Math.random()}`,
@@ -1515,16 +1628,16 @@ function renderHeroBooks(books) {
           .map(
             (book) => `
           <div class="book-card" data-book-id="${book.id}" style="cursor: pointer;">
-            <img src="${typeof book.image === 'object' ? book.image?.url : book.image}" alt="${book.title}" class="hero-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
+            <img src="${typeof book.image === "object" ? book.image?.url : book.image}" alt="${book.title}" class="hero-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
             <h4>${book.title}</h4>
             <p class="author">by ${book.author}</p>
             <p class="new-price">₱${book.price.toLocaleString("en-PH")}</p>
             <p class="old-price"><del>₱${book.originalPrice.toLocaleString("en-PH")}</del></p>
           </div>
-        `
+        `,
           )
           .join("")}
-      </div>`
+      </div>`,
     )
     .join("");
 
@@ -1550,17 +1663,16 @@ function renderNewReleases(books) {
   if (!booksGrid) return;
 
   booksGrid.innerHTML = books
-    .map(
-      (book) => {
-        const daysAgo = Math.floor(Math.random() * 5) + 1;
-        const dayText = daysAgo > 1 ? "s" : "";
-        return `
+    .map((book) => {
+      const daysAgo = Math.floor(Math.random() * 5) + 1;
+      const dayText = daysAgo > 1 ? "s" : "";
+      return `
     <article class="book-card" data-book-id="${book.id}" style="cursor: pointer;">
       <div class="badge new-release">
         <i class="fas fa-tag"></i> ${daysAgo} day${dayText} ago
       </div>
       <figure class="book-image book-clickable">
-        <img src="${typeof book.image === 'object' ? book.image?.url : book.image}" alt="${book.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
+        <img src="${typeof book.image === "object" ? book.image?.url : book.image}" alt="${book.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
       </figure>
       <h3>${book.title}</h3>
       <p class="author">${book.author}</p>
@@ -1574,29 +1686,26 @@ function renderNewReleases(books) {
       </div>
     </article>
   `;
-      }
-    )
+    })
     .join("");
 
   console.log("✅ Rendered new releases from Open Library API");
 
   // Add click handlers to navigate to book details
-  document
-    .querySelectorAll(".new-releases .book-card")
-    .forEach((card) => {
-      card.addEventListener("click", function (event) {
-        // Only navigate if not clicking the buttons
-        if (
-          !event.target.classList.contains("btn") &&
-          !event.target.closest(".btn")
-        ) {
-          const bookId = this.getAttribute("data-book-id");
-          if (bookId) {
-            window.location.href = `pages/book-details.html?id=${bookId}`;
-          }
+  document.querySelectorAll(".new-releases .book-card").forEach((card) => {
+    card.addEventListener("click", function (event) {
+      // Only navigate if not clicking the buttons
+      if (
+        !event.target.classList.contains("btn") &&
+        !event.target.closest(".btn")
+      ) {
+        const bookId = this.getAttribute("data-book-id");
+        if (bookId) {
+          window.location.href = `pages/book-details.html?id=${bookId}`;
         }
-      });
+      }
     });
+  });
 
   // Re-initialize cart listeners for newly added buttons
   initCartFunctionality();
@@ -1616,7 +1725,7 @@ function renderFeaturedBooks(books) {
     <article class="book-card" data-book-id="${book.id}" style="cursor: pointer;">
       <div class="badge featured-books">Featured</div>
       <figure class="book-image book-clickable">
-        <img src="${typeof book.image === 'object' ? book.image?.url : book.image}" alt="${book.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
+        <img src="${typeof book.image === "object" ? book.image?.url : book.image}" alt="${book.title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+';" />
       </figure>
       <h3>${book.title}</h3>
       <p class="author">${book.author}</p>
@@ -1629,31 +1738,28 @@ function renderFeaturedBooks(books) {
         <a href="pages/book-details.html?id=${book.id}" class="btn btn-outline-secondary view-book">View</a>
       </div>
     </article>
-  `
+  `,
     )
     .join("");
 
   console.log("✅ Rendered featured books from Open Library API");
 
   // Add click handlers to navigate to book details
-  document
-    .querySelectorAll(".featured-section .book-card")
-    .forEach((card) => {
-      card.addEventListener("click", function (event) {
-        // Only navigate if not clicking the buttons
-        if (
-          !event.target.classList.contains("btn") &&
-          !event.target.closest(".btn")
-        ) {
-          const bookId = this.getAttribute("data-book-id");
-          if (bookId) {
-            window.location.href = `pages/book-details.html?id=${bookId}`;
-          }
+  document.querySelectorAll(".featured-section .book-card").forEach((card) => {
+    card.addEventListener("click", function (event) {
+      // Only navigate if not clicking the buttons
+      if (
+        !event.target.classList.contains("btn") &&
+        !event.target.closest(".btn")
+      ) {
+        const bookId = this.getAttribute("data-book-id");
+        if (bookId) {
+          window.location.href = `pages/book-details.html?id=${bookId}`;
         }
-      });
+      }
     });
+  });
 
   // Re-initialize cart listeners for newly added buttons
   initCartFunctionality();
 }
-

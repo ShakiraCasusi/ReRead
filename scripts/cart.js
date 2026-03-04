@@ -1,19 +1,16 @@
-// scripts/cart.js - JavaScript for the cart page
+// scripts/cart.js - JavaScript for the cart page with database integration
 
 let cartSearchQuery = "";
 let fullCartData = [];
 
-document.addEventListener("DOMContentLoaded", function () {
-  initCartPage();
+document.addEventListener("DOMContentLoaded", async function () {
+  await initCartPage();
 });
 
-function initCartPage() {
+async function initCartPage() {
   console.log("=== Cart page initializing ===");
   initCartCalculations();
-  initQuantityControls();
-  initRemoveButtons();
-  initClearCartButton();
-  loadCartFromStorage(); // Load cart first
+  await loadCart();
   setupCartSearchListener();
   initCheckoutProcess();
   initContinueShopping();
@@ -32,7 +29,7 @@ function initQuantityControls() {
   const quantityBtns = document.querySelectorAll(".quantity button");
 
   quantityBtns.forEach((btn) => {
-    btn.addEventListener("click", function () {
+    btn.addEventListener("click", async function () {
       const cartItem = this.closest(".cart-item");
       const quantitySpan = cartItem.querySelector(".quantity span");
       const itemIndex = parseInt(cartItem.dataset.index);
@@ -48,11 +45,23 @@ function initQuantityControls() {
 
       quantitySpan.textContent = quantity;
 
-      // Update localStorage
-      const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-      if (cart[itemIndex]) {
-        cart[itemIndex].quantity = quantity;
-        localStorage.setItem("rereadCart", JSON.stringify(cart));
+      // Update cart in database
+      const item = fullCartData[itemIndex];
+      if (!window.CartService || !CartService.isAuthenticated()) {
+        showNotification("Please sign in to manage your cart");
+        await loadCart();
+        return;
+      }
+
+      await CartService.updateCartItemDB(
+        item.bookId || item._id,
+        quantity,
+        item.title || "",
+      );
+
+      // Update fullCartData
+      if (fullCartData[itemIndex]) {
+        fullCartData[itemIndex].quantity = quantity;
       }
 
       // Update overall cart total
@@ -83,26 +92,32 @@ function initRemoveButtons() {
   const removeBtns = document.querySelectorAll(".btn-remove");
 
   removeBtns.forEach((btn) => {
-    btn.addEventListener("click", function () {
+    btn.addEventListener("click", async function () {
       const cartItem = this.closest(".cart-item");
       const itemTitle =
         cartItem?.querySelector(".item-title")?.textContent || "Item";
       const itemIndex = parseInt(cartItem.dataset.index);
+      const removedItem = fullCartData[itemIndex];
 
-      // Remove from localStorage
-      const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-      const removedItem = cart[itemIndex];
-      cart.splice(itemIndex, 1);
-      localStorage.setItem("rereadCart", JSON.stringify(cart));
+      // Remove from cart in database
+      if (!window.CartService || !CartService.isAuthenticated()) {
+        showNotification("Please sign in to manage your cart");
+        return;
+      }
+
+      await CartService.removeFromCartDB(
+        removedItem.bookId || removedItem._id,
+        removedItem.title || "",
+      );
 
       // Animate removal
       cartItem.style.transition = "opacity 0.3s ease, transform 0.3s ease";
       cartItem.style.opacity = "0";
       cartItem.style.transform = "translateX(-100%)";
 
-      setTimeout(() => {
+      setTimeout(async () => {
         // Reload cart to update indices
-        loadCartFromStorage();
+        await loadCart();
         // Show notification with undo option
         showRemovalNotification(itemTitle, removedItem, itemIndex);
       }, 300);
@@ -114,6 +129,17 @@ function initClearCartButton() {
   const cartListHeader = document.querySelector(".cart-list-header");
 
   if (cartListHeader) {
+    // Ensure only one clear button exists
+    const existingClearBtn = cartListHeader.querySelector(".btn-clear-all");
+    if (existingClearBtn) {
+      existingClearBtn.remove();
+    }
+
+    // Don't render clear button when cart is empty
+    if (!Array.isArray(fullCartData) || fullCartData.length === 0) {
+      return;
+    }
+
     // Ensure the header is a flex container for proper alignment
     cartListHeader.style.display = "flex";
     cartListHeader.style.justifyContent = "space-between";
@@ -147,10 +173,18 @@ function initClearCartButton() {
     });
 
     // Add event listener
-    clearAllBtn.addEventListener("click", function () {
-      const currentCart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-      localStorage.removeItem("rereadCart");
-      loadCartFromStorage(); // Reload the cart UI
+    clearAllBtn.addEventListener("click", async function () {
+      const currentCart = [...fullCartData];
+
+      // Clear cart in database
+      if (!window.CartService || !CartService.isAuthenticated()) {
+        showNotification("Please sign in to manage your cart");
+        return;
+      }
+
+      await CartService.clearCartDB();
+
+      await loadCart(); // Reload the cart UI
       showClearCartNotification(currentCart);
     });
 
@@ -196,17 +230,66 @@ function initContinueShopping() {
   // Just let them work naturally
 }
 
-function loadCartFromStorage() {
-  fullCartData = JSON.parse(localStorage.getItem("rereadCart")) || [];
-  displayCartItems(fullCartData);
+async function loadCart() {
+  try {
+    console.log("=== loadCart() started ===");
+    if (!window.CartService) {
+      console.warn("CartService not available, rendering empty cart");
+      fullCartData = [];
+    } else {
+      console.log("CartService available, calling getCart()");
+      fullCartData = await CartService.getCart();
+      console.log(
+        "CartService.getCart() returned",
+        fullCartData?.length || 0,
+        "items",
+      );
+      console.log("fullCartData:", fullCartData);
+    }
+
+    console.log("Displaying", fullCartData.length, "cart items");
+    if (fullCartData && fullCartData.length > 0) {
+      console.log(
+        "[cart.js] First item in fullCartData:",
+        JSON.stringify(fullCartData[0]),
+      );
+    }
+    displayCartItems(fullCartData);
+    initQuantityControls();
+    initRemoveButtons();
+    initClearCartButton();
+  } catch (error) {
+    console.error("Error loading cart:", error);
+    console.error("[cart.js] Stack trace:", error.stack);
+    fullCartData = [];
+    displayCartItems(fullCartData);
+    initQuantityControls();
+    initRemoveButtons();
+    initClearCartButton();
+  }
 }
 
 function displayCartItems(itemsToDisplay = fullCartData) {
   const cartItemsContainer = document.getElementById("cartItems");
 
-  if (!cartItemsContainer) return;
+  if (!cartItemsContainer) {
+    console.error("Cart container not found");
+    return;
+  }
+
+  console.log(
+    "[cart.js] displayCartItems() - items to display:",
+    itemsToDisplay?.length || 0,
+  );
+  if (itemsToDisplay && itemsToDisplay.length > 0) {
+    console.log(
+      "[cart.js] First item to display:",
+      JSON.stringify(itemsToDisplay[0]),
+    );
+  }
 
   if (itemsToDisplay.length === 0) {
+    console.log("No items to display, showing empty cart message");
     cartItemsContainer.innerHTML = `
             <div class="empty-cart">
                 <i class="fas fa-shopping-cart"></i>
@@ -224,6 +307,10 @@ function displayCartItems(itemsToDisplay = fullCartData) {
 
   // Add each cart item
   itemsToDisplay.forEach((item, index) => {
+    console.log(`[cart.js] Rendering cart item ${index}:`, item.title);
+    console.log(
+      `[cart.js] Item ${index} - price: ${item.price}, image: ${item.image}, quantity: ${item.quantity}`,
+    );
     // Get the original index from fullCartData
     const originalIndex = fullCartData.findIndex(
       (i) => i.title === item.title && i.author === item.author,
@@ -231,14 +318,14 @@ function displayCartItems(itemsToDisplay = fullCartData) {
 
     // Adjust image path for cart page (pages/cart.html)
     let imagePath = item.image || "../images/placeholder.jpg";
-    if (imagePath.startsWith("images/")) {
+    if (imagePath && imagePath.startsWith("images/")) {
       imagePath = "../" + imagePath;
     }
 
     const cartItemHTML = `
-            <div class="cart-item" data-index="${originalIndex}">
+            <div class="cart-item" data-index="${originalIndex}" data-book-id="${item.bookId || item._id}">
                 <div class="item-image">
-                    <img src="${imagePath}" alt="${item.title}"/>
+                    <img src="${imagePath}" alt="${item.title}" loading="lazy" onerror="this.onerror=null; this.src='../images/placeholder.jpg'; console.error('Failed to load image:', '${imagePath}');"/>
                 </div>
                 
                 <div class="item-details">
@@ -267,9 +354,10 @@ function displayCartItems(itemsToDisplay = fullCartData) {
     cartItemsContainer.insertAdjacentHTML("beforeend", cartItemHTML);
   });
 
-  // Reinitialize controls for dynamically added items
-  initQuantityControls();
-  initRemoveButtons();
+  console.log("Finished rendering", itemsToDisplay.length, "cart items");
+
+  // DO NOT reinitialize controls here - they're initialized in loadCart()
+  // This prevents duplicate event listeners
   updateCartTotal();
 }
 
@@ -397,15 +485,22 @@ function showRemovalNotification(itemTitle, removedItem, itemIndex) {
   let dismissed = false;
 
   if (undoBtn) {
-    undoBtn.addEventListener("click", () => {
+    undoBtn.addEventListener("click", async () => {
       if (dismissed) return;
       dismissed = true;
 
-      // Restore item to cart
-      const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-      cart.splice(itemIndex, 0, removedItem);
-      localStorage.setItem("rereadCart", JSON.stringify(cart));
-      loadCartFromStorage();
+      // Restore item to cart in database
+      if (!window.CartService || !CartService.isAuthenticated()) {
+        showNotification("Please sign in to manage your cart");
+        return;
+      }
+
+      await CartService.addToCartDB(
+        removedItem.bookId || removedItem._id,
+        removedItem.quantity || 1,
+      );
+
+      await loadCart();
 
       // Remove notification
       notification.style.animation = "slideOut 0.3s ease";
@@ -463,13 +558,24 @@ function showClearCartNotification(clearedCart) {
   let dismissed = false;
 
   if (undoBtn) {
-    undoBtn.addEventListener("click", () => {
+    undoBtn.addEventListener("click", async () => {
       if (dismissed) return;
       dismissed = true;
 
-      // Restore cart
-      localStorage.setItem("rereadCart", JSON.stringify(clearedCart));
-      loadCartFromStorage();
+      // Restore cart in database
+      if (!window.CartService || !CartService.isAuthenticated()) {
+        showNotification("Please sign in to manage your cart");
+        return;
+      }
+
+      for (const item of clearedCart) {
+        await CartService.addToCartDB(
+          item.bookId || item._id,
+          item.quantity || 1,
+        );
+      }
+
+      await loadCart();
 
       // Remove notification
       notification.style.animation = "slideOut 0.3s ease";

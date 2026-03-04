@@ -370,4 +370,7 @@ const bookController = {
   },
 };
 
+// Export normalizeBook for use in other routes
+bookController.normalizeBook = normalizeBook;
+
 module.exports = bookController;

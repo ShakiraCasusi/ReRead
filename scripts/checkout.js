@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function initCheckout() {
   console.log("Initializing checkout with JSON data...");
   try {
-    loadCart();
+    await loadCart();
     classifyItems(); // Separate digital and physical items
     loadUserData();
     await populateRegions();
@@ -343,14 +343,13 @@ function classifyItems() {
   }
 }
 
-function loadCart() {
-  const savedCart = localStorage.getItem("rereadCart");
-  if (savedCart) {
-    cart = JSON.parse(savedCart);
-    if (cart.length === 0) cart = demoCart();
+async function loadCart() {
+  if (window.CartService && CartService.isAuthenticated()) {
+    cart = await CartService.getCart();
   } else {
-    cart = demoCart();
+    cart = [];
   }
+
   calculateSubtotal();
 }
 
@@ -1036,15 +1035,52 @@ async function finalizeOrder(method) {
     localStorage.getItem("accessToken");
   if (token) {
     try {
-      // First, sync cart to backend
-      const cartSyncSuccess = await syncCartToBackend(token);
+      // Prepare items for backend
+      const orderItems = await Promise.all(
+        cart.map(async (item) => {
+          // Try to get bookId if not present
+          let bookId = item._id || item.bookId;
 
-      if (!cartSyncSuccess) {
-        console.warn("⚠️ Cart sync failed, using localStorage fallback");
-        throw new Error("Cart sync failed");
+          const isMongoId = (value) =>
+            /^[a-f\d]{24}$/i.test(String(value || ""));
+          if (!isMongoId(bookId)) {
+            bookId = null;
+          }
+
+          if (!bookId) {
+            // Search for book by title
+            try {
+              const booksResponse = await fetch(
+                `${API_BASE_URL}/books?search=${encodeURIComponent(item.title)}`,
+              );
+              if (booksResponse.ok) {
+                const booksData = await booksResponse.json();
+                const book = booksData.data?.find(
+                  (b) => b.title === item.title,
+                );
+                if (book) bookId = book._id;
+              }
+            } catch (e) {
+              console.warn(`Could not find bookId for ${item.title}`);
+            }
+          }
+
+          return {
+            bookId: bookId,
+            quantity: item.quantity || 1,
+            price: parseFloat(item.price?.toString().replace(/[₱,]/g, "") || 0),
+          };
+        }),
+      );
+
+      // Filter out items without bookId
+      const validItems = orderItems.filter((item) => item.bookId);
+
+      if (validItems.length === 0) {
+        throw new Error("No valid items for order");
       }
 
-      // Then create order from backend cart
+      // Create order from backend
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
         headers: {
@@ -1052,6 +1088,7 @@ async function finalizeOrder(method) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          items: validItems,
           shippingAddress: isAllDigital
             ? {}
             : {
@@ -1076,13 +1113,19 @@ async function finalizeOrder(method) {
       if (response.ok) {
         const result = await response.json();
         console.log("✅ Order created in backend:", result);
-        // Clear cart and proceed
-        localStorage.removeItem("rereadCart");
+
+        // Clear DB cart
+        if (window.CartService) {
+          await CartService.clearCartDB();
+        }
+
         handleOrderSuccess(orderData);
         return;
       } else {
+        const errorData = await response.json().catch(() => ({}));
         console.warn(
-          "⚠️ Backend order creation failed, using localStorage fallback",
+          "⚠️ Backend order creation failed:",
+          errorData.message || "Unknown error",
         );
       }
     } catch (error) {
@@ -1100,7 +1143,6 @@ async function finalizeOrder(method) {
   existingOrders.unshift(orderData);
   localStorage.setItem("rereadOrders", JSON.stringify(existingOrders));
   localStorage.setItem("rereadLastOrder", JSON.stringify(orderData));
-  localStorage.removeItem("rereadCart");
   handleOrderSuccess(orderData);
 }
 

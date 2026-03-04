@@ -576,7 +576,6 @@ async function performAccountDeletion() {
       sessionStorage.removeItem("user");
       localStorage.removeItem("rereadUser");
       localStorage.removeItem("rereadUserRemembered");
-      localStorage.removeItem("rereadCart");
 
       // Show success message
       showNotification(

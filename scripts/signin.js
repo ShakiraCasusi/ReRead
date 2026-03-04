@@ -502,6 +502,7 @@ function persistAuthSession(result, email, rememberMe) {
       "user",
       JSON.stringify({
         id: data.id,
+        userId: data.userId || data.id,
         username: data.username,
         email: data.email,
         role: data.role,
@@ -514,6 +515,7 @@ function persistAuthSession(result, email, rememberMe) {
     "rereadUser",
     JSON.stringify({
       id: data.id,
+      userId: data.userId || data.id,
       username: data.username,
       email: data.email,
       role: data.role,
@@ -526,6 +528,13 @@ function persistAuthSession(result, email, rememberMe) {
     localStorage.setItem("rereadUserRemembered", JSON.stringify({ email }));
   } else {
     localStorage.removeItem("rereadUserRemembered");
+  }
+
+  // Sync cart from localStorage to database after successful login
+  if (window.CartService && data.accessToken) {
+    CartService.syncCartOnLogin().catch((error) => {
+      console.warn("Failed to sync cart on login:", error);
+    });
   }
 }
 

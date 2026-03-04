@@ -75,7 +75,8 @@ function initializeCarousel() {
 // Show previous image
 function showPreviousImage() {
   if (bookImages.length === 0) return;
-  currentImageIndex = (currentImageIndex - 1 + bookImages.length) % bookImages.length;
+  currentImageIndex =
+    (currentImageIndex - 1 + bookImages.length) % bookImages.length;
   updateImageDisplay();
 }
 
@@ -94,26 +95,36 @@ function updateImageDisplay() {
   if (bookImages.length === 0) return;
 
   const currentImage = bookImages[currentImageIndex];
-  let imageSrc = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+";
+  let imageSrc =
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIj48cmVjdCBmaWxsPSIjZjNmNGY2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNmI3MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiPkJvb2sgQ292ZXI8L3RleHQ+PC9zdmc+";
 
   if (currentImage) {
     let imageUrl = null;
 
     // Handle different image formats
-    if (typeof currentImage === 'string') {
+    if (typeof currentImage === "string") {
       // Image is a plain string URL
       imageUrl = currentImage;
-    } else if (typeof currentImage === 'object' && currentImage.url) {
+    } else if (typeof currentImage === "object" && currentImage.url) {
       // Image is an object with a url property
       imageUrl = currentImage.url;
     }
 
     // Validate and use the URL
-    if (imageUrl && (imageUrl.startsWith("http") || imageUrl.startsWith("data:"))) {
+    if (
+      imageUrl &&
+      (imageUrl.startsWith("http") || imageUrl.startsWith("data:"))
+    ) {
       imageSrc = imageUrl;
-      console.log(`Displaying image ${currentImageIndex + 1}/${bookImages.length}:`, imageUrl.substring(0, 100));
+      console.log(
+        `Displaying image ${currentImageIndex + 1}/${bookImages.length}:`,
+        imageUrl.substring(0, 100),
+      );
     } else {
-      console.warn(`Invalid image URL at index ${currentImageIndex}:`, imageUrl);
+      console.warn(
+        `Invalid image URL at index ${currentImageIndex}:`,
+        imageUrl,
+      );
     }
   }
 
@@ -186,13 +197,13 @@ function displayBookDetails(book) {
   if (book.images && Array.isArray(book.images) && book.images.length > 0) {
     // Filter out invalid images and extract URLs
     bookImages = book.images
-      .filter(img => {
-        if (typeof img === 'string') return img.length > 0;
-        if (typeof img === 'object' && img.url) return img.url.length > 0;
+      .filter((img) => {
+        if (typeof img === "string") return img.length > 0;
+        if (typeof img === "object" && img.url) return img.url.length > 0;
         return false;
       })
-      .map(img => {
-        if (typeof img === 'string') return { url: img };
+      .map((img) => {
+        if (typeof img === "string") return { url: img };
         return img;
       });
 
@@ -200,14 +211,14 @@ function displayBookDetails(book) {
   } else if (book.image) {
     // Fallback to single image
     let imageObj;
-    if (typeof book.image === 'object' && book.image.url) {
+    if (typeof book.image === "object" && book.image.url) {
       imageObj = book.image;
-    } else if (typeof book.image === 'string') {
+    } else if (typeof book.image === "string") {
       imageObj = { url: book.image };
     }
     if (imageObj && imageObj.url) {
       bookImages = [imageObj];
-      console.log('Loaded single image as fallback');
+      console.log("Loaded single image as fallback");
     }
   }
 
@@ -388,7 +399,9 @@ function initializeEventListeners() {
     .addEventListener("click", addCurrentBookToCart);
 
   // Wishlist button
-  const wishlistBtn = document.querySelector(".btn-outline-secondary:has(i.fa-heart)");
+  const wishlistBtn = document.querySelector(
+    ".btn-outline-secondary:has(i.fa-heart)",
+  );
   if (wishlistBtn) {
     wishlistBtn.addEventListener("click", () => {
       if (!currentBook) {
@@ -401,43 +414,30 @@ function initializeEventListeners() {
 }
 
 // Add current book to cart
-function addCurrentBookToCart() {
+async function addCurrentBookToCart() {
   if (!currentBook) {
     showError("Error", "Book data not found");
     return;
   }
 
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-
-  // Add quantity times
-  for (let i = 0; i < quantity; i++) {
-    const existingItem = cart.find((item) => item.title === currentBook.title);
-
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      const cartItem = {
-        title: currentBook.title,
-        author: currentBook.author,
-        price: `₱${currentBook.price}`,
-        image: currentBook.image,
-        quantity: 1,
-        condition: currentBook.quality || "Good",
-        seller: "Sold by Re;Read",
-      };
-
-      // Include bookFile if it exists (for digital books)
-      if (currentBook.bookFile) {
-        cartItem.bookFile = currentBook.bookFile;
-        cartItem.isDigital = true;
-      }
-
-      cart.push(cartItem);
-    }
+  if (!window.CartService || !CartService.isAuthenticated()) {
+    showNotification("Please sign in to add items to your cart", "info");
+    return;
   }
 
-  localStorage.setItem("rereadCart", JSON.stringify(cart));
-  updateCartBadge();
+  try {
+    await CartService.addToCartDB(
+      currentBook._id || currentBook.id,
+      quantity,
+      currentBook.title || "",
+    );
+  } catch (error) {
+    console.warn("Failed to add item to DB cart:", error);
+    showNotification("Could not add item to cart. Please try again.", "error");
+    return;
+  }
+
+  await updateCartBadge();
   showNotification(
     `${quantity}x ${currentBook.title} added to cart!`,
     "success",
@@ -469,7 +469,7 @@ function addToWishlist(book) {
     image: book.image,
     condition: book.quality || "Good",
     seller: book.seller || "Sold by Re;Read",
-    addedDate: new Date().toISOString()
+    addedDate: new Date().toISOString(),
   };
 
   if (book.bookFile) {
@@ -484,9 +484,13 @@ function addToWishlist(book) {
 }
 
 // Update cart badge
-function updateCartBadge() {
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-  const count = cart.reduce((total, item) => total + item.quantity, 0);
+async function updateCartBadge() {
+  let count = 0;
+  if (window.CartService && CartService.isAuthenticated()) {
+    const cart = await CartService.getCart();
+    count = cart.reduce((total, item) => total + (item.quantity || 1), 0);
+  }
+
   const badges = document.querySelectorAll("#cartBadge, #cartBadgeMobile");
 
   badges.forEach((badge) => {

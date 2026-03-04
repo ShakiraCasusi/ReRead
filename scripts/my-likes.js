@@ -439,32 +439,24 @@ function viewBook(bookId, index) {
 }
 
 // Add like to cart
-function addLikeToCart(index) {
+async function addLikeToCart(index) {
   const book = filteredLikes[index];
   if (!book) return;
 
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-  const existingItem = cart.find((item) => item.title === book.title);
-
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    const cartItem = {
-      title: book.title,
-      author: book.author,
-      price:
-        typeof book.price === "string" && book.price.startsWith("₱")
-          ? book.price
-          : `₱${book.price}`,
-      image: book.image || DEFAULT_PLACEHOLDER,
-      quantity: 1,
-      id: book.id,
-    };
-    cart.push(cartItem);
+  if (!window.CartService || !CartService.isAuthenticated()) {
+    showNotification("Please sign in to add items to your cart", "info");
+    return;
   }
 
-  localStorage.setItem("rereadCart", JSON.stringify(cart));
-  updateCartBadge();
+  try {
+    await CartService.addToCartDB(book.id, 1, book.title || "");
+  } catch (error) {
+    console.warn("Failed to add to DB cart from My Likes:", error);
+    showNotification("Could not add to cart. Please try again.", "error");
+    return;
+  }
+
+  await updateCartBadge();
   showNotification(`${book.title} added to cart!`, "success");
 }
 
@@ -670,9 +662,13 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Update cart badge count
-function updateCartBadge() {
-  const cart = JSON.parse(localStorage.getItem("rereadCart")) || [];
-  const count = cart.reduce((total, item) => total + (item.quantity || 1), 0);
+async function updateCartBadge() {
+  let count = 0;
+  if (window.CartService && CartService.isAuthenticated()) {
+    const cart = await CartService.getCart();
+    count = cart.reduce((total, item) => total + (item.quantity || 1), 0);
+  }
+
   const badges = document.querySelectorAll("#cartBadge, #cartBadgeMobile");
 
   badges.forEach((badge) => {
