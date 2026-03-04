@@ -494,9 +494,6 @@ function persistAuthSession(result, email, rememberMe) {
 
   if (data.accessToken) {
     sessionStorage.setItem("accessToken", data.accessToken);
-    if (data.refreshToken) {
-      localStorage.setItem("refreshToken", data.refreshToken);
-    }
 
     const expiresInMs = Number(data.expiresIn || 900000);
     sessionStorage.setItem("tokenExpiryTime", String(Date.now() + expiresInMs));
@@ -513,16 +510,17 @@ function persistAuthSession(result, email, rememberMe) {
     );
   }
 
-  const userSession = {
-    id: data.id,
-    username: data.username,
-    email: data.email,
-    role: data.role,
-    isSeller: data.isSeller,
-    signinTime: new Date().toISOString(),
-  };
-
-  localStorage.setItem("rereadUser", JSON.stringify(userSession));
+  sessionStorage.setItem(
+    "rereadUser",
+    JSON.stringify({
+      id: data.id,
+      username: data.username,
+      email: data.email,
+      role: data.role,
+      isSeller: data.isSeller,
+      signinTime: new Date().toISOString(),
+    }),
+  );
 
   if (rememberMe && email) {
     localStorage.setItem("rereadUserRemembered", JSON.stringify({ email }));
@@ -536,6 +534,7 @@ async function submitGoogleSignin(idToken) {
     const response = await fetch("http://localhost:5000/api/auth/google", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ idToken }),
     });
 
@@ -574,6 +573,7 @@ async function submitSignin(email, password) {
     const response = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
 
@@ -640,6 +640,7 @@ async function submitSignup(name, email, password, confirmPassword) {
     const response = await fetch("http://localhost:5000/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({
         username: email.split("@")[0],
         email,
@@ -753,7 +754,7 @@ function showErrorMessage(message) {
 
 // Check if user is already signed in
 function checkAuthStatus() {
-  const user = localStorage.getItem("rereadUser");
+  const user = sessionStorage.getItem("rereadUser");
   if (user) {
     // User is signed in, could show different UI
     console.log("User is signed in:", JSON.parse(user).email);

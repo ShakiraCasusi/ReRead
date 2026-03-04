@@ -88,10 +88,9 @@ class APIService {
     });
   }
 
-  async refreshToken(refreshToken) {
-    return this.request("/auth/refresh", {
+  async refreshToken() {
+    return this.request("/auth/refresh-token", {
       method: "POST",
-      body: JSON.stringify({ refreshToken }),
     });
   }
 

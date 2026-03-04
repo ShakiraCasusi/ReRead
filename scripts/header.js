@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function updateAuthUI() {
-  const user = localStorage.getItem("rereadUser");
+  const user =
+    sessionStorage.getItem("rereadUser") || localStorage.getItem("rereadUser");
 
   // Find signin/signup buttons with multiple selector patterns
   const signinBtn =
@@ -110,6 +111,10 @@ function logout() {
   console.log("Logging out user...");
   localStorage.removeItem("rereadUser");
   localStorage.removeItem("rereadUserRemembered");
+  sessionStorage.removeItem("rereadUser");
+  sessionStorage.removeItem("user");
+  sessionStorage.removeItem("accessToken");
+  sessionStorage.removeItem("tokenExpiryTime");
 
   showSuccessMessage("You have been logged out successfully.");
 
@@ -122,6 +127,10 @@ function logout() {
 function clearAuth() {
   localStorage.removeItem("rereadUser");
   localStorage.removeItem("rereadUserRemembered");
+  sessionStorage.removeItem("rereadUser");
+  sessionStorage.removeItem("user");
+  sessionStorage.removeItem("accessToken");
+  sessionStorage.removeItem("tokenExpiryTime");
   updateAuthUI();
 }
 

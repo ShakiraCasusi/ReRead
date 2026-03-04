@@ -10,7 +10,9 @@ class AuthManager {
   // Load user from localStorage
   loadUser() {
     try {
-      const userData = localStorage.getItem("rereadUser");
+      const userData =
+        sessionStorage.getItem("rereadUser") ||
+        localStorage.getItem("rereadUser");
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
       console.error("Error loading user:", error);
@@ -20,7 +22,9 @@ class AuthManager {
 
   // Save user to localStorage
   saveUser(userData) {
-    localStorage.setItem("rereadUser", JSON.stringify(userData));
+    sessionStorage.setItem("rereadUser", JSON.stringify(userData));
+    sessionStorage.setItem("user", JSON.stringify(userData));
+    localStorage.removeItem("rereadUser");
     this.user = userData;
     this.initAuthUI();
   }
@@ -66,11 +70,31 @@ class AuthManager {
   }
 
   // Logout user
-  logout() {
+  async logout() {
+    const accessToken = sessionStorage.getItem("accessToken");
+
+    try {
+      await fetch("http://localhost:5000/api/auth/logout", {
+        method: "POST",
+        headers: accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`,
+            }
+          : {},
+        credentials: "include",
+      });
+    } catch (error) {
+      console.warn(
+        "Logout request failed, clearing local session anyway",
+        error,
+      );
+    }
+
     localStorage.removeItem("rereadUser");
     localStorage.removeItem("refreshToken");
     sessionStorage.removeItem("accessToken");
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("rereadUser");
     sessionStorage.removeItem("tokenExpiryTime");
     this.user = null;
     this.closeBootstrapComponents();
@@ -299,7 +323,9 @@ class AuthManager {
 
   // Update header visibility based on authentication state
   updateHeaderVisibility() {
-    const user = localStorage.getItem("rereadUser");
+    const user =
+      sessionStorage.getItem("rereadUser") ||
+      localStorage.getItem("rereadUser");
 
     // Hide Sign In link (Desktop)
     const desktopSignIn = document.querySelector(

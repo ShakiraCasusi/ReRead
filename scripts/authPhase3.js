@@ -6,10 +6,9 @@
 
 class AuthManager {
   constructor() {
-    this.accessToken = localStorage.getItem("accessToken");
-    this.refreshToken = localStorage.getItem("refreshToken");
+    this.accessToken = sessionStorage.getItem("accessToken");
     this.user = this.loadUser();
-    this.tokenExpiryTime = localStorage.getItem("tokenExpiryTime");
+    this.tokenExpiryTime = sessionStorage.getItem("tokenExpiryTime");
     this.initAuthUI();
     this.setupTokenRefresh();
   }
@@ -18,7 +17,8 @@ class AuthManager {
    * Load user from localStorage
    */
   loadUser() {
-    const userStr = localStorage.getItem("user");
+    const userStr =
+      sessionStorage.getItem("user") || sessionStorage.getItem("rereadUser");
     return userStr ? JSON.parse(userStr) : null;
   }
 
@@ -27,7 +27,8 @@ class AuthManager {
    */
   saveUser(user) {
     if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("rereadUser", JSON.stringify(user));
       this.user = user;
     }
   }
@@ -35,19 +36,15 @@ class AuthManager {
   /**
    * Save tokens to localStorage
    */
-  saveTokens(accessToken, refreshToken, expiresIn = 900000) {
+  saveTokens(accessToken, expiresIn = 900000) {
     // 15 minutes default
-    localStorage.setItem("accessToken", accessToken);
-    if (refreshToken) {
-      localStorage.setItem("refreshToken", refreshToken);
-    }
+    sessionStorage.setItem("accessToken", accessToken);
 
     // Store token expiry time (15 minutes from now)
     const expiryTime = Date.now() + expiresIn;
-    localStorage.setItem("tokenExpiryTime", expiryTime.toString());
+    sessionStorage.setItem("tokenExpiryTime", expiryTime.toString());
 
     this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
     this.tokenExpiryTime = expiryTime;
   }
 
@@ -55,13 +52,13 @@ class AuthManager {
    * Clear all tokens and user data from localStorage
    */
   clearTokens() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    localStorage.removeItem("tokenExpiryTime");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("rereadUser");
+    sessionStorage.removeItem("tokenExpiryTime");
     localStorage.removeItem("refreshToken");
 
     this.accessToken = null;
-    this.refreshToken = null;
     this.user = null;
     this.tokenExpiryTime = null;
   }
@@ -85,29 +82,22 @@ class AuthManager {
    * Refresh access token using refresh token
    */
   async refreshAccessToken() {
-    if (!this.refreshToken) {
-      this.logout();
-      return false;
-    }
-
     try {
-      const response = await fetch("http://localhost:5000/api/auth/refresh", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "http://localhost:5000/api/auth/refresh-token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
         },
-        body: JSON.stringify({ refreshToken: this.refreshToken }),
-        credentials: "include",
-      });
+      );
 
       const data = await response.json();
 
       if (data.success) {
-        this.saveTokens(
-          data.data.accessToken,
-          data.data.refreshToken,
-          data.data.expiresIn,
-        );
+        this.saveTokens(data.data.accessToken, data.data.expiresIn);
         console.log("Token refreshed successfully");
         return true;
       } else {
@@ -185,6 +175,7 @@ class AuthManager {
         headers: {
           Authorization: `Bearer ${this.accessToken}`,
         },
+        credentials: "include",
       });
     } catch (error) {
       console.warn("Error calling logout endpoint:", error);

@@ -7,41 +7,43 @@ const { authLimiter, registerLimiter } = require("../middleware/rateLimiter");
 const { logger } = require("../config/logger");
 
 // Unprotected routes with validation and rate limiting
-router.post("/register", registerLimiter, authValidators.register, authController.register);
+router.post(
+  "/register",
+  registerLimiter,
+  authValidators.register,
+  authController.register,
+);
 router.post("/login", authLimiter, authValidators.login, authController.login);
 router.post("/google", authController.googleLogin);
 router.post("/refresh-token", authController.refreshToken);
+router.post("/refresh", authController.refreshToken);
 
 // Protected routes
-router.post(
-  "/logout",
-  tokenManager.authenticateToken,
-  authController.logout
-);
+router.post("/logout", authController.logout);
 
 router.get(
   "/profile",
   tokenManager.authenticateToken,
-  authController.getCurrentProfile
+  authController.getCurrentProfile,
 );
 
 router.put(
   "/profile",
   tokenManager.authenticateToken,
   authValidators.updateProfile,
-  authController.updateProfile
+  authController.updateProfile,
 );
 
 router.delete(
   "/profile",
   tokenManager.authenticateToken,
-  authController.deleteAccount
+  authController.deleteAccount,
 );
 
 router.post(
   "/become-seller",
   tokenManager.authenticateToken,
-  authController.becomeSeller
+  authController.becomeSeller,
 );
 
 // Error logging middleware

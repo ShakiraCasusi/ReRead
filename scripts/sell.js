@@ -75,11 +75,6 @@ async function ensureUserIsSeller() {
         // Update stored tokens with new ones that include seller status
         if (sellerData.data && sellerData.data.accessToken) {
           sessionStorage.setItem("accessToken", sellerData.data.accessToken);
-          localStorage.setItem("accessToken", sellerData.data.accessToken);
-        }
-        if (sellerData.data && sellerData.data.refreshToken) {
-          sessionStorage.setItem("refreshToken", sellerData.data.refreshToken);
-          localStorage.setItem("refreshToken", sellerData.data.refreshToken);
         }
 
         // Store updated user data with seller role (becomeSeller returns user object directly in data)
@@ -94,7 +89,8 @@ async function ensureUserIsSeller() {
             isSeller: sellerData.data.isSeller,
           };
           sessionStorage.setItem("user", JSON.stringify(userData));
-          localStorage.setItem("rereadUser", JSON.stringify(userData));
+          sessionStorage.setItem("rereadUser", JSON.stringify(userData));
+          localStorage.removeItem("rereadUser");
         }
 
         // Refresh auth UI to update navbar with seller role
@@ -637,7 +633,9 @@ async function submitBookListing() {
 
   try {
     // Check if user is logged in
-    const userData = localStorage.getItem("rereadUser");
+    const userData =
+      sessionStorage.getItem("rereadUser") ||
+      localStorage.getItem("rereadUser");
     if (!userData) {
       showWarning(
         "Not signed in",

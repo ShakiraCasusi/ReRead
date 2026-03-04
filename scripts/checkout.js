@@ -368,7 +368,8 @@ function demoCart() {
 }
 
 function loadUserData() {
-  const userData = localStorage.getItem("rereadUser");
+  const userData =
+    sessionStorage.getItem("rereadUser") || localStorage.getItem("rereadUser");
   if (!userData) return;
 
   const user = JSON.parse(userData);

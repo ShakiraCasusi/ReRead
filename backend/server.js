@@ -1,12 +1,10 @@
 require("dotenv").config();
 
-
 // ENVIRONMENT VALIDATION (FIRST!)
 
 const { validateEnv, getConfig } = require("./config/envConfig");
 validateEnv();
 const config = getConfig();
-
 
 // CORE DEPENDENCIES
 
@@ -14,8 +12,8 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
+const cookieParser = require("cookie-parser");
 const connectDB = require("./config/database");
-
 
 // LOGGING & ERROR HANDLING
 
@@ -25,7 +23,6 @@ const {
   notFoundHandler,
   handleUnhandledRejection,
 } = require("./middleware/errorHandler");
-
 
 // SECURITY MIDDLEWARE
 
@@ -37,7 +34,6 @@ const {
   uploadLimiter,
 } = require("./middleware/rateLimiter");
 
-
 // ROUTE IMPORTS
 
 const bookRoutes = require("./routes/books");
@@ -48,24 +44,18 @@ const reviewRoutes = require("./routes/reviews");
 const sellerRoutes = require("./routes/seller");
 const uploadRoutes = require("./routes/upload");
 
-
 // EXPRESS APP SETUP
 
 const app = express();
-
 
 // SECURITY HEADERS (HELMET)
 
 app.use(helmetConfig);
 
-
 // LOGGING (MORGAN)
 
-const morganFormat = process.env.NODE_ENV === "production"
-  ? "combined"
-  : "dev";
+const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat, { stream: morganStream }));
-
 
 // CORS CONFIGURATION
 
@@ -89,20 +79,17 @@ if (config.nodeEnv === "development") {
 
 app.use(cors(corsOptions));
 
-
 // BODY PARSING
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-
+app.use(cookieParser());
 
 // GENERAL API RATE LIMITING
 
 app.use("/api/", apiLimiter);
 
-
 // ROUTE MOUNTING
-
 
 // Auth routes (limiters applied within routes)
 app.use("/api/auth", authRoutes);
@@ -115,7 +102,6 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/upload", uploadLimiter, uploadRoutes);
 
-
 // HEALTH CHECK
 
 app.get("/api/health", (req, res) => {
@@ -127,9 +113,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-
 // ERROR HANDLING MIDDLEWARE
-
 
 // 404 handler (must be before error handler)
 app.use(notFoundHandler);
@@ -137,11 +121,9 @@ app.use(notFoundHandler);
 // Global error handler (must be last)
 app.use(globalErrorHandler);
 
-
 // UNHANDLED REJECTION HANDLING
 
 handleUnhandledRejection();
-
 
 // DATABASE & SERVER START
 
@@ -154,7 +136,7 @@ async function start() {
     const conn = await connectDB();
     if (!conn) {
       throw new Error(
-        "MongoDB connection failed. Check MONGODB_URI in backend/.env"
+        "MongoDB connection failed. Check MONGODB_URI in backend/.env",
       );
     }
 

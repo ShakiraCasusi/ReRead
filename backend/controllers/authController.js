@@ -3,6 +3,25 @@ const bcrypt = require("bcryptjs");
 const tokenManager = require("../utils/tokenManager");
 const { googleClient, GOOGLE_CLIENT_ID } = require("../config/googleConfig");
 
+const getRefreshCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: "/api/auth",
+});
+
+const setRefreshTokenCookie = (res, refreshToken) => {
+  res.cookie("refreshToken", refreshToken, getRefreshCookieOptions());
+};
+
+const clearRefreshTokenCookie = (res) => {
+  res.clearCookie("refreshToken", {
+    ...getRefreshCookieOptions(),
+    maxAge: undefined,
+  });
+};
+
 // Validation function for password strength
 const validatePassword = (password) => {
   const minLength = 8;
@@ -144,6 +163,8 @@ exports.register = async (req, res) => {
         user.isSeller,
       );
 
+    setRefreshTokenCookie(res, refreshToken);
+
     res.status(201).json({
       success: true,
       message: "Account created successfully! Welcome to ReRead.",
@@ -156,7 +177,6 @@ exports.register = async (req, res) => {
         lastName: user.lastName,
         role: user.role,
         accessToken,
-        refreshToken,
         expiresIn,
       },
     });
@@ -245,6 +265,8 @@ exports.login = async (req, res) => {
         user.isSeller,
       );
 
+    setRefreshTokenCookie(res, refreshToken);
+
     res.status(200).json({
       success: true,
       message: `Welcome back, ${user.firstName || user.username}!`,
@@ -258,7 +280,6 @@ exports.login = async (req, res) => {
         role: user.role,
         isSeller: user.isSeller,
         accessToken,
-        refreshToken,
         expiresIn,
       },
     });
@@ -384,6 +405,8 @@ exports.googleLogin = async (req, res) => {
         user.isSeller,
       );
 
+    setRefreshTokenCookie(res, refreshToken);
+
     res.status(200).json({
       success: true,
       message: `Welcome, ${user.firstName || user.username}!`,
@@ -397,7 +420,6 @@ exports.googleLogin = async (req, res) => {
         role: user.role,
         isSeller: user.isSeller,
         accessToken,
-        refreshToken,
         expiresIn,
       },
     });
@@ -414,7 +436,7 @@ exports.googleLogin = async (req, res) => {
 // Refresh token (Phase 3 - New)
 exports.refreshToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
     if (!refreshToken) {
       return res.status(401).json({
@@ -456,12 +478,13 @@ exports.refreshToken = async (req, res) => {
       user.isSeller,
     );
 
+    setRefreshTokenCookie(res, newRefreshToken);
+
     res.status(200).json({
       success: true,
       message: "Token refreshed successfully",
       data: {
         accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
         expiresIn,
       },
     });
@@ -675,7 +698,7 @@ exports.updateProfile = async (req, res) => {
 // Logout (New)
 exports.logout = async (req, res) => {
   try {
-    // Token is simply discarded on client side
+    clearRefreshTokenCookie(res);
 
     res.status(200).json({
       success: true,
@@ -728,6 +751,8 @@ exports.becomeSeller = async (req, res) => {
         user.isSeller,
       );
 
+    setRefreshTokenCookie(res, refreshToken);
+
     res.status(200).json({
       success: true,
       message: "Welcome to ReRead Seller Program!",
@@ -735,7 +760,6 @@ exports.becomeSeller = async (req, res) => {
       data: {
         ...user.toObject(),
         accessToken,
-        refreshToken,
         expiresIn,
       },
     });
