@@ -6,7 +6,7 @@ const helmetConfig = helmet({
       defaultSrc: ["'self'"],
       scriptSrc: [
         "'self'",
-        "'unsafe-inline'", // NOTE: Consider removing in production
+        "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
         "https://accounts.google.com",
@@ -57,7 +57,7 @@ const helmetConfig = helmet({
   hsts:
     process.env.NODE_ENV === "production"
       ? {
-          maxAge: 31536000, // 1 year in seconds
+          maxAge: 31536000,
           includeSubDomains: true,
           preload: true,
         }
@@ -65,7 +65,7 @@ const helmetConfig = helmet({
 
   expectCt: {
     enforce: true,
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
 });
 

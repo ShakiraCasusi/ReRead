@@ -1,13 +1,9 @@
-// Shop page script — books database and UI functions
-
 console.log("shop.js loaded successfully");
 
-// API Configuration
 const API_BASE_URL = "http://localhost:5000/api";
 
-// Books Database - fetched from API
 let booksDatabase = [];
-let availableGenres = new Set(); // Track genres from API
+let availableGenres = new Set();
 let localBooks = [];
 let openLibraryBooks = [];
 

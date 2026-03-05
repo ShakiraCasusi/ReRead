@@ -6,10 +6,8 @@ const Order = require("../models/Phase3Models").Order;
 const tokenManager = require("../utils/tokenManager");
 const { reviewValidators } = require("../middleware/validators");
 
-// Middleware to authenticate requests
 const authenticateToken = tokenManager.authenticateToken;
 
-// Create review (Phase 3 - New)
 router.post(
   "/",
   authenticateToken,

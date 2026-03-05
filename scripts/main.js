@@ -1,6 +1,3 @@
-// scripts/main.js - Re;Read Website Functionality
-
-// Initialize everything when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   initMobileMenu();
   initTypingAnimation();
@@ -30,14 +27,12 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("Re;Read website initialized successfully");
 });
 
-// MOBILE MENU FUNCTIONALITY
 function initMobileMenu() {
   const navbar = document.querySelector(".navbar");
   const headerContainer = document.querySelector(".header-container");
 
   if (!navbar || !headerContainer) return;
 
-  // Create mobile menu toggle button
   function createMobileToggle() {
     // Remove existing toggle if any
     const existingToggle = document.querySelector(".mobile-menu-toggle");
@@ -74,7 +69,6 @@ function initMobileMenu() {
     }
   }
 
-  // Toggle mobile menu
   function toggleMobileMenu() {
     const navbar = document.querySelector(".navbar");
     const mobileToggle = document.querySelector(".mobile-menu-toggle");
@@ -90,7 +84,6 @@ function initMobileMenu() {
     }
   }
 
-  // Open mobile menu
   function openMobileMenu() {
     const navbar = document.querySelector(".navbar");
     const mobileToggle = document.querySelector(".mobile-menu-toggle");

@@ -6,10 +6,8 @@ const tokenManager = require("../utils/tokenManager");
 const { requireRole } = require("../middleware/authorize");
 const { getSignedDownloadUrl, deleteFromS3 } = require("../services/s3Service");
 
-// Middleware to authenticate requests
 const authenticateToken = tokenManager.authenticateToken;
 
-// Helper to generate signed URLs for S3 book images
 async function normalizeBookImages(book) {
   try {
     const bookObj = book.toObject ? book.toObject() : book;
@@ -21,7 +19,6 @@ async function normalizeBookImages(book) {
     ) {
       const imageUrl = bookObj.image.url;
 
-      // Check if this is an S3 URL that needs a signed version
       if (imageUrl.includes(".s3.") && !imageUrl.includes("?X-Amz-Signature")) {
         try {
           const urlParts = imageUrl.split(".amazonaws.com/");

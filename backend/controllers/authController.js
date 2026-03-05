@@ -22,7 +22,6 @@ const clearRefreshTokenCookie = (res) => {
   });
 };
 
-// Validation function for password strength
 const validatePassword = (password) => {
   const minLength = 8;
   const hasUppercase = /[A-Z]/.test(password);
@@ -49,20 +48,17 @@ const validatePassword = (password) => {
   return { valid: true };
 };
 
-// Validation function for email
 const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-// Build a safe base username
 const buildBaseUsername = (email, name) => {
   const raw = (name || email.split("@")[0] || "user").toLowerCase();
   const sanitized = raw.replace(/[^a-z0-9_]/g, "");
   return sanitized || `user${Date.now()}`;
 };
 
-// Ensure username is unique
 const getUniqueUsername = async (base) => {
   let candidate = base;
   let attempts = 0;
@@ -79,7 +75,6 @@ const getUniqueUsername = async (base) => {
   return `${base}${Date.now()}`;
 };
 
-// Register user (Phase 3 - Enhanced)
 exports.register = async (req, res) => {
   try {
     const { username, email, password, firstName, lastName } = req.body;

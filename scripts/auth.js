@@ -1,13 +1,9 @@
-// Frontend Authentication Manager
-// Manages user session, login/logout, and UI updates :)))
-
 class AuthManager {
   constructor() {
     this.user = this.loadUser();
     this.initAuthUI();
   }
 
-  // Load user from localStorage
   loadUser() {
     try {
       const userData =
@@ -20,7 +16,6 @@ class AuthManager {
     }
   }
 
-  // Save user to localStorage
   saveUser(userData) {
     sessionStorage.setItem("rereadUser", JSON.stringify(userData));
     sessionStorage.setItem("user", JSON.stringify(userData));
@@ -29,28 +24,23 @@ class AuthManager {
     this.initAuthUI();
   }
 
-  // Check if user is logged in
   isLoggedIn() {
     return this.user && this.user.id;
   }
 
-  // Get current user
   getUser() {
     return this.user;
   }
 
-  // Get user roles
   getUserRoles() {
     const roles = this.user?.role;
     return Array.isArray(roles) ? roles : roles ? [roles] : [];
   }
 
-  // Check if user is a seller
   isSeller() {
     return this.user?.isSeller || this.getUserRoles().includes("seller");
   }
 
-  // Close any open Bootstrap dropdowns, modals, or offcanvas
   closeBootstrapComponents() {
     // Close all dropdowns
     document.querySelectorAll(".dropdown-menu.show").forEach((menu) => {
@@ -64,12 +54,10 @@ class AuthManager {
       if (instance) instance.hide();
     }
 
-    // Remove backdrop if present
     const backdrops = document.querySelectorAll(".modal-backdrop");
     backdrops.forEach((backdrop) => backdrop.remove());
   }
 
-  // Logout user
   async logout() {
     const accessToken = sessionStorage.getItem("accessToken");
 

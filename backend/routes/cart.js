@@ -6,10 +6,8 @@ const tokenManager = require("../utils/tokenManager");
 const { cartValidators } = require("../middleware/validators");
 const bookController = require("../controllers/bookController");
 
-// Middleware to authenticate requests
 const authenticateToken = tokenManager.authenticateToken;
 
-// Get cart for user (or create empty one)
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const userQuery = {
@@ -22,7 +20,6 @@ router.get("/", authenticateToken, async (req, res) => {
     });
 
     if (!cart) {
-      // Return empty cart instead of 404
       return res.status(200).json({
         success: true,
         data: { userId: req.user.userId, user: req.user.userId, items: [] },
@@ -38,7 +35,6 @@ router.get("/", authenticateToken, async (req, res) => {
     }
     await cart.save();
 
-    // Normalize book data to include signed S3 URLs
     const cartObj = cart.toObject();
     if (cartObj.items && cartObj.items.length > 0) {
       for (let i = 0; i < cartObj.items.length; i++) {
@@ -167,7 +163,6 @@ router.post(
   },
 );
 
-// Update item quantity in cart
 router.put("/update", authenticateToken, async (req, res) => {
   try {
     const { bookId, quantity } = req.body;

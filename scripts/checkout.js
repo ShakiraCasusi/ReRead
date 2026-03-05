@@ -1,5 +1,3 @@
-// Checkout Page JavaScript
-
 console.log("checkout.js loaded (JSON-based)");
 
 const API_BASE_URL = "http://localhost:5000/api";

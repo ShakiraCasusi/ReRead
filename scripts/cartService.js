@@ -1,14 +1,6 @@
-/**
- * Cart Service - API integration for cart operations
- * Handles database cart for authenticated users
- */
-
 const CartService = {
   API_BASE_URL: "http://localhost:5000/api",
 
-  /**
-   * Get authentication token
-   */
   getAuthToken() {
     return (
       sessionStorage.getItem("accessToken") ||
@@ -17,9 +9,6 @@ const CartService = {
     );
   },
 
-  /**
-   * Check if user is authenticated
-   */
   isAuthenticated() {
     return !!this.getAuthToken();
   },
@@ -68,9 +57,6 @@ const CartService = {
     }
   },
 
-  /**
-   * Get user ID from session
-   */
   getUserId() {
     const userStr =
       sessionStorage.getItem("user") || sessionStorage.getItem("rereadUser");

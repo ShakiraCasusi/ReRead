@@ -1,15 +1,5 @@
-/**
- * Express-Validator Input Validation
- * Validates and sanitizes all user inputs
- *
- * USAGE:
- *   router.post('/register', authValidators.register, authController.register);
- */
 const { body, query, param, validationResult } = require("express-validator");
 
-/**
- * Custom error formatter for consistent validation responses
- */
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -28,11 +18,7 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-/**
- * Authentication Validators
- */
 const authValidators = {
-  // Register endpoint validation
   register: [
     body("email")
       .isEmail()
@@ -63,7 +49,6 @@ const authValidators = {
     handleValidationErrors,
   ],
 
-  // Login endpoint validation
   login: [
     body("email")
       .isEmail()
@@ -73,7 +58,6 @@ const authValidators = {
     handleValidationErrors,
   ],
 
-  // Profile update validation
   updateProfile: [
     body("firstName").optional().trim().isLength({ max: 50 }),
     body("lastName").optional().trim().isLength({ max: 50 }),
@@ -86,7 +70,6 @@ const authValidators = {
     handleValidationErrors,
   ],
 
-  // Change password validation
   changePassword: [
     body("currentPassword")
       .notEmpty()
@@ -102,11 +85,7 @@ const authValidators = {
   ],
 };
 
-/**
- * Book Validators
- */
 const bookValidators = {
-  // Create/Update book validation
   upsert: [
     body("title")
       .trim()
@@ -144,7 +123,6 @@ const bookValidators = {
     handleValidationErrors,
   ],
 
-  // Search query validation
   search: [
     query("q")
       .optional()
@@ -167,16 +145,12 @@ const bookValidators = {
     handleValidationErrors,
   ],
 
-  // Book ID validation
   checkBookId: [
     param("id").isMongoId().withMessage("Invalid book ID"),
     handleValidationErrors,
   ],
 };
 
-/**
- * Cart Validators
- */
 const cartValidators = {
   addItem: [
     body("bookId")
@@ -198,9 +172,6 @@ const cartValidators = {
   ],
 };
 
-/**
- * Order Validators
- */
 const orderValidators = {
   create: [
     body("isDigitalOnly")
@@ -233,9 +204,6 @@ const orderValidators = {
   ],
 };
 
-/**
- * Review Validators
- */
 const reviewValidators = {
   create: [
     body("rating")
@@ -250,9 +218,6 @@ const reviewValidators = {
   ],
 };
 
-/**
- * File Upload Validators
- */
 const fileValidators = {
   upload: [
     body("title")

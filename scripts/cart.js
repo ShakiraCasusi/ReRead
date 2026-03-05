@@ -1,5 +1,3 @@
-// scripts/cart.js - JavaScript for the cart page with database integration
-
 let cartSearchQuery = "";
 let fullCartData = [];
 
@@ -18,11 +16,7 @@ async function initCartPage() {
 }
 
 function initCartCalculations() {
-  // Calculate totals when page loads and when quantities change
   updateCartTotal();
-
-  // Auto-update when quantities change (already handled by main.js)
-  // Can add additional logic here if needed
 }
 
 function initQuantityControls() {

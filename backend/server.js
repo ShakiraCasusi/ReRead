@@ -1,12 +1,8 @@
 require("dotenv").config();
 
-// ENVIRONMENT VALIDATION (FIRST!)
-
 const { validateEnv, getConfig } = require("./config/envConfig");
 validateEnv();
 const config = getConfig();
-
-// CORE DEPENDENCIES
 
 const express = require("express");
 const cors = require("cors");
@@ -15,16 +11,12 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/database");
 
-// LOGGING & ERROR HANDLING
-
 const { logger, morganStream } = require("./config/logger");
 const {
   globalErrorHandler,
   notFoundHandler,
   handleUnhandledRejection,
 } = require("./middleware/errorHandler");
-
-// SECURITY MIDDLEWARE
 
 const helmetConfig = require("./config/helmetConfig");
 const {
@@ -34,8 +26,6 @@ const {
   uploadLimiter,
 } = require("./middleware/rateLimiter");
 
-// ROUTE IMPORTS
-
 const bookRoutes = require("./routes/books");
 const cartRoutes = require("./routes/cart");
 const authRoutes = require("./routes/auth");
@@ -44,20 +34,12 @@ const reviewRoutes = require("./routes/reviews");
 const sellerRoutes = require("./routes/seller");
 const uploadRoutes = require("./routes/upload");
 
-// EXPRESS APP SETUP
-
 const app = express();
-
-// SECURITY HEADERS (HELMET)
 
 app.use(helmetConfig);
 
-// LOGGING (MORGAN)
-
 const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat, { stream: morganStream }));
-
-// CORS CONFIGURATION
 
 const corsOptions = {
   origin: config.allowedOrigins,
@@ -68,7 +50,6 @@ const corsOptions = {
 };
 
 if (config.nodeEnv === "development") {
-  // Allow localhost for development
   corsOptions.origin = [
     "http://localhost:3000",
     "http://localhost:5173",
@@ -79,30 +60,19 @@ if (config.nodeEnv === "development") {
 
 app.use(cors(corsOptions));
 
-// BODY PARSING
-
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 
-// GENERAL API RATE LIMITING
-
 app.use("/api/", apiLimiter);
 
-// ROUTE MOUNTING
-
-// Auth routes (limiters applied within routes)
 app.use("/api/auth", authRoutes);
-
-// Other routes
 app.use("/api/books", bookRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/upload", uploadLimiter, uploadRoutes);
-
-// HEALTH CHECK
 
 app.get("/api/health", (req, res) => {
   res.json({
@@ -113,26 +83,15 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ERROR HANDLING MIDDLEWARE
-
-// 404 handler (must be before error handler)
 app.use(notFoundHandler);
-
-// Global error handler (must be last)
 app.use(globalErrorHandler);
-
-// UNHANDLED REJECTION HANDLING
 
 handleUnhandledRejection();
 
-// DATABASE & SERVER START
-
 async function start() {
   try {
-    // Validate environment first
     logger.info("Starting ReRead Backend Server", { version: "1.0" });
 
-    // Connect to MongoDB
     const conn = await connectDB();
     if (!conn) {
       throw new Error(
@@ -140,7 +99,6 @@ async function start() {
       );
     }
 
-    // Start server
     const server = app.listen(config.port, () => {
       logger.info("Server started successfully", {
         port: config.port,
@@ -152,7 +110,6 @@ async function start() {
       console.log(`✓ MongoDB: Connected\n`);
     });
 
-    // Graceful shutdown
     process.on("SIGTERM", () => {
       logger.info("SIGTERM received: Shutting down gracefully");
       server.close(() => {

@@ -10,12 +10,10 @@ const { orderValidators } = require("../middleware/validators");
 const bookController = require("../controllers/bookController");
 const { getSignedDownloadUrl } = require("../services/s3Service");
 
-// Helper function to normalize book image field and generate signed URLs if needed
 async function normalizeBook(book) {
   try {
     const bookObj = book.toObject ? book.toObject() : book;
 
-    // If image is a string, convert to new object format
     if (typeof bookObj.image === "string") {
       bookObj.image = {
         url: bookObj.image,
@@ -23,7 +21,6 @@ async function normalizeBook(book) {
       };
     }
 
-    // Generate signed URL for S3 images if needed
     if (
       bookObj.image &&
       bookObj.image.url &&
@@ -31,7 +28,6 @@ async function normalizeBook(book) {
     ) {
       const imageUrl = bookObj.image.url;
 
-      // Check if this is an S3 URL that needs a signed version
       if (imageUrl.includes(".s3.") && !imageUrl.includes("?X-Amz-Signature")) {
         try {
           // Extract the S3 key from the URL

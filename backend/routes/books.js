@@ -8,7 +8,6 @@ const { bookValidators } = require("../middleware/validators");
 const { logger } = require("../config/logger");
 const tokenManager = require("../utils/tokenManager");
 
-// Specific routes MUST come before generic /:id route
 router.get("/search", bookValidators.search, bookController.searchBooks);
 
 // External Open Library API searches
@@ -54,7 +53,6 @@ router.get(
   }),
 );
 
-// Generic routes
 router.get("/", bookController.getAllBooks);
 router.post(
   "/",

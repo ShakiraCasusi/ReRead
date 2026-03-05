@@ -6,7 +6,6 @@ const { authValidators } = require("../middleware/validators");
 const { authLimiter, registerLimiter } = require("../middleware/rateLimiter");
 const { logger } = require("../config/logger");
 
-// Unprotected routes with validation and rate limiting
 router.post(
   "/register",
   registerLimiter,
@@ -18,7 +17,6 @@ router.post("/google", authController.googleLogin);
 router.post("/refresh-token", authController.refreshToken);
 router.post("/refresh", authController.refreshToken);
 
-// Protected routes
 router.post("/logout", authController.logout);
 
 router.get(
@@ -46,7 +44,6 @@ router.post(
   authController.becomeSeller,
 );
 
-// Error logging middleware
 router.use((err, req, res, next) => {
   logger.error("Auth route error", {
     path: req.path,

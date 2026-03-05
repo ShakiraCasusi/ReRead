@@ -2,12 +2,10 @@ const Book = require("../models/Book");
 const axios = require("axios");
 const { getSignedDownloadUrl } = require("../services/s3Service");
 
-// Helper function to normalize book image field and generate signed URLs if needed
 async function normalizeBook(book) {
   try {
     const bookObj = book.toObject ? book.toObject() : book;
 
-    // If image is a string, convert to new object format
     if (typeof bookObj.image === "string") {
       bookObj.image = {
         url: bookObj.image,
@@ -15,7 +13,6 @@ async function normalizeBook(book) {
       };
     }
 
-    // Generate signed URL for S3 images if needed
     if (
       bookObj.image &&
       bookObj.image.url &&
@@ -23,15 +20,12 @@ async function normalizeBook(book) {
     ) {
       const imageUrl = bookObj.image.url;
 
-      // Check if this is an S3 URL that needs a signed version
       if (imageUrl.includes(".s3.") && !imageUrl.includes("?X-Amz-Signature")) {
         try {
-          // Extract the S3 key from the URL
-          // URL format: https://bucket.s3.region.amazonaws.com/key
           const urlParts = imageUrl.split(".amazonaws.com/");
           if (urlParts.length === 2) {
             const s3Key = decodeURIComponent(urlParts[1]);
-            const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600); // 1 hour
+            const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600);
             if (signedUrlResult.success) {
               bookObj.image.url = signedUrlResult.url;
               bookObj.image.signedUntil = signedUrlResult.expiresAt;
@@ -42,12 +36,10 @@ async function normalizeBook(book) {
             "Could not generate signed URL for image:",
             signedUrlError.message,
           );
-          // Fall back to original URL
         }
       }
     }
 
-    // Handle multiple images array - generate signed URLs for each image
     if (bookObj.images && Array.isArray(bookObj.images)) {
       bookObj.images = await Promise.all(
         bookObj.images.map(async (imageObj) => {
