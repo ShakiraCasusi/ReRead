@@ -39,12 +39,57 @@ function normalizeOrder(rawOrder) {
     const unitPrice = parsePrice(item.price);
     const quantity = Number(item.quantity) || 1;
 
+    // Extract book data - handle both populated and non-populated bookId
+    let book = null;
+    if (typeof item.bookId === "object" && item.bookId !== null) {
+      book = item.bookId;
+    }
+
+    // Extract image - try multiple sources
+    let image = ORDER_IMAGE_PLACEHOLDER;
+    if (book && book.image) {
+      if (typeof book.image === "object" && book.image.url) {
+        image = book.image.url;
+      } else if (typeof book.image === "string") {
+        image = book.image;
+      }
+    } else if (
+      book &&
+      book.images &&
+      Array.isArray(book.images) &&
+      book.images.length > 0
+    ) {
+      if (typeof book.images[0] === "object" && book.images[0].url) {
+        image = book.images[0].url;
+      } else if (typeof book.images[0] === "string") {
+        image = book.images[0];
+      }
+    } else if (item.image) {
+      image = item.image;
+    }
+
+    // Extract author - try multiple sources
+    let author = "Unknown Author";
+    if (book && book.author) {
+      author = book.author;
+    } else if (item.author) {
+      author = item.author;
+    }
+
+    // Extract title
+    const title = (book && book.title) || item.title || "Book";
+
+    // Check if this is a digital item
+    const hasDigitalFile = book && book.bookFile;
+
     return {
-      title: item.title || "Book",
-      author: item.author || item.bookId || "Unknown Author",
-      image: item.image || ORDER_IMAGE_PLACEHOLDER,
+      title,
+      author,
+      image,
       quantity,
       price: unitPrice,
+      hasDigitalFile,
+      bookId: book?._id || item.bookId,
     };
   });
 
@@ -52,6 +97,9 @@ function normalizeOrder(rawOrder) {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+
+  // Check if order has any digital items
+  const hasDigitalItems = items.some((item) => item.hasDigitalFile);
 
   return {
     _id:
@@ -68,6 +116,7 @@ function normalizeOrder(rawOrder) {
       computedTotal,
     trackingNumber: rawOrder.trackingNumber || "",
     items,
+    hasDigitalItems,
   };
 }
 
@@ -220,6 +269,15 @@ function displayOrders() {
                     `
                         : ""
                     }
+                    ${
+                      order.hasDigitalItems
+                        ? `
+                        <button class="btn-download" onclick="downloadDigitalFiles('${order._id}')">
+                            <i class="fas fa-download me-2"></i>Download Digital Copies
+                        </button>
+                    `
+                        : ""
+                    }
                     <button class="btn-secondary" onclick="viewOrderDetails('${order._id}')">
                         <i class="fas fa-eye me-2"></i>View Details
                     </button>
@@ -282,6 +340,11 @@ function contactSeller(orderId) {
   if (order) {
     alert("Contact seller feature coming soon!");
   }
+}
+
+function downloadDigitalFiles(orderId) {
+  // Navigate to digital-downloads page with the order ID
+  window.location.href = `../pages/digital-downloads.html?orderId=${orderId}`;
 }
 
 function setupSearchListener() {

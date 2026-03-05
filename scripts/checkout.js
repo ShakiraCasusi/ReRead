@@ -1143,6 +1143,13 @@ async function finalizeOrder(method) {
   existingOrders.unshift(orderData);
   localStorage.setItem("rereadOrders", JSON.stringify(existingOrders));
   localStorage.setItem("rereadLastOrder", JSON.stringify(orderData));
+
+  // Clear cart in localStorage and DB
+  localStorage.removeItem("rereadCart");
+  if (window.CartService) {
+    await CartService.clearCartDB();
+  }
+
   handleOrderSuccess(orderData);
 }
 
@@ -1177,7 +1184,7 @@ function handleOrderSuccess(orderData) {
     );
 
     showNotification(
-      `Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\nPayment Method: ${method.toUpperCase()}\n\n✓ Digital books ready to download\n✓ Physical books will be shipped`,
+      `Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\nPayment Method: ${orderData.paymentMethod.toUpperCase()}\n\n✓ Digital books ready to download\n✓ Physical books will be shipped`,
       "success",
       4000,
     );
@@ -1197,7 +1204,7 @@ function handleOrderSuccess(orderData) {
     // For physical-only orders
     console.log(`📮 Physical-only order - redirecting to home page...`);
     showNotification(
-      `Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\nPayment Method: ${method.toUpperCase()}\n\nYou will receive a confirmation email shortly.`,
+      `Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\nPayment Method: ${orderData.paymentMethod.toUpperCase()}\n\nYou will receive a confirmation email shortly.`,
       "success",
       4000,
     );

@@ -910,6 +910,15 @@ async function updateCartBadge() {
   badges.forEach((badge) => {
     badge.textContent = count;
     badge.setAttribute("data-count", count);
+
+    // Show/hide badge based on count
+    if (count > 0) {
+      badge.hidden = false;
+      badge.classList.add("animate-badge");
+      setTimeout(() => badge.classList.remove("animate-badge"), 300);
+    } else {
+      badge.hidden = true;
+    }
   });
 }
 

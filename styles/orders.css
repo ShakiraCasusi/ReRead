@@ -258,6 +258,23 @@
     background: #f9fafb;
 }
 
+.btn-download {
+    background: transparent;
+    color: #111827;
+    border: 2px solid #d1d5db;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-download:hover {
+    border-color: #111827;
+    background: #f9fafb;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;

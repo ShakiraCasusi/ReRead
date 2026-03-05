@@ -343,6 +343,7 @@ const CartService = {
       quantity: cartItem.quantity || 1,
       condition: book.quality || "Good", // quality from Book model
       seller: book.sellerName || "Re;Read",
+      bookFile: book.bookFile || null,
     };
     console.log(`[cartService] Converted item: ${converted.title}`, converted);
     return converted;

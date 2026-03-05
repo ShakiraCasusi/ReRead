@@ -7,6 +7,111 @@ const User = require("../models/User");
 const tokenManager = require("../utils/tokenManager");
 const { requireRole } = require("../middleware/authorize");
 const { orderValidators } = require("../middleware/validators");
+const bookController = require("../controllers/bookController");
+const { getSignedDownloadUrl } = require("../services/s3Service");
+
+// Helper function to normalize book image field and generate signed URLs if needed
+async function normalizeBook(book) {
+  try {
+    const bookObj = book.toObject ? book.toObject() : book;
+
+    // If image is a string, convert to new object format
+    if (typeof bookObj.image === "string") {
+      bookObj.image = {
+        url: bookObj.image,
+        uploadedAt: book.createdAt || new Date(),
+      };
+    }
+
+    // Generate signed URL for S3 images if needed
+    if (
+      bookObj.image &&
+      bookObj.image.url &&
+      typeof bookObj.image.url === "string"
+    ) {
+      const imageUrl = bookObj.image.url;
+
+      // Check if this is an S3 URL that needs a signed version
+      if (imageUrl.includes(".s3.") && !imageUrl.includes("?X-Amz-Signature")) {
+        try {
+          // Extract the S3 key from the URL
+          // URL format: https://bucket.s3.region.amazonaws.com/key
+          const urlParts = imageUrl.split(".amazonaws.com/");
+          if (urlParts.length === 2) {
+            const s3Key = decodeURIComponent(urlParts[1]);
+            const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600); // 1 hour
+            if (signedUrlResult.success) {
+              bookObj.image.url = signedUrlResult.url;
+              bookObj.image.signedUntil = signedUrlResult.expiresAt;
+            }
+          }
+        } catch (signedUrlError) {
+          console.warn(
+            "Could not generate signed URL for image:",
+            signedUrlError.message,
+          );
+          // Fall back to original URL
+        }
+      }
+    }
+
+    // Handle multiple images array - generate signed URLs for each image
+    if (bookObj.images && Array.isArray(bookObj.images)) {
+      bookObj.images = await Promise.all(
+        bookObj.images.map(async (imageObj) => {
+          if (!imageObj) return imageObj;
+
+          let imageUrl = null;
+          if (typeof imageObj === "object" && imageObj.url) {
+            imageUrl = imageObj.url;
+          } else if (typeof imageObj === "string") {
+            imageUrl = imageObj;
+          }
+
+          // Generate signed URL if S3 image
+          if (
+            imageUrl &&
+            imageUrl.includes(".s3.") &&
+            !imageUrl.includes("?X-Amz-Signature")
+          ) {
+            try {
+              const urlParts = imageUrl.split(".amazonaws.com/");
+              if (urlParts.length === 2) {
+                const s3Key = decodeURIComponent(urlParts[1]);
+                const signedUrlResult = await getSignedDownloadUrl(s3Key, 3600); // 1 hour
+                if (signedUrlResult.success) {
+                  if (typeof imageObj === "object") {
+                    return {
+                      ...imageObj,
+                      url: signedUrlResult.url,
+                      signedUntil: signedUrlResult.expiresAt,
+                    };
+                  } else {
+                    return signedUrlResult.url;
+                  }
+                }
+              }
+            } catch (imageError) {
+              console.warn(
+                "Could not generate signed URL for image:",
+                imageError.message,
+              );
+              // Fall back to original image object/string
+            }
+          }
+
+          // If not S3 or already signed, return as is
+          return imageObj;
+        }),
+      );
+    }
+
+    return bookObj;
+  } catch (error) {
+    console.error("Error normalizing book:", error);
+    return book.toObject ? book.toObject() : book; // Return original if normalization fails
+  }
+}
 
 // Middleware to authenticate requests
 const authenticateToken = tokenManager.authenticateToken;
@@ -149,12 +254,31 @@ router.get("/buyer", authenticateToken, async (req, res) => {
   try {
     const orders = await Order.find({ buyerId: req.user.userId })
       .populate("sellerId", "username email")
-      .populate("items.bookId", "title author bookFile")
+      .populate("items.bookId", "title author bookFile image images createdAt")
       .sort({ createdAt: -1 });
+
+    // Normalize book images for each order
+    const normalizedOrders = await Promise.all(
+      orders.map(async (order) => {
+        const orderObj = order.toObject();
+
+        // Normalize each book in the order items
+        orderObj.items = await Promise.all(
+          orderObj.items.map(async (item) => {
+            if (item.bookId) {
+              item.bookId = await normalizeBook(item.bookId);
+            }
+            return item;
+          }),
+        );
+
+        return orderObj;
+      }),
+    );
 
     res.status(200).json({
       success: true,
-      data: orders,
+      data: normalizedOrders,
     });
   } catch (error) {
     res.status(500).json({
@@ -182,11 +306,34 @@ router.get(
 
       const orders = await Order.find({ sellerId: req.user.userId })
         .populate("buyerId", "username email address")
+        .populate(
+          "items.bookId",
+          "title author bookFile image images createdAt",
+        )
         .sort({ createdAt: -1 });
+
+      // Normalize book images for each order
+      const normalizedOrders = await Promise.all(
+        orders.map(async (order) => {
+          const orderObj = order.toObject();
+
+          // Normalize each book in the order items
+          orderObj.items = await Promise.all(
+            orderObj.items.map(async (item) => {
+              if (item.bookId) {
+                item.bookId = await normalizeBook(item.bookId);
+              }
+              return item;
+            }),
+          );
+
+          return orderObj;
+        }),
+      );
 
       res.status(200).json({
         success: true,
-        data: orders,
+        data: normalizedOrders,
       });
     } catch (error) {
       res.status(500).json({
@@ -202,7 +349,8 @@ router.get("/:orderId", authenticateToken, async (req, res) => {
   try {
     const order = await Order.findById(req.params.orderId)
       .populate("buyerId", "username email")
-      .populate("sellerId", "username email");
+      .populate("sellerId", "username email")
+      .populate("items.bookId", "title author bookFile image images createdAt");
 
     if (!order) {
       return res.status(404).json({
@@ -222,9 +370,20 @@ router.get("/:orderId", authenticateToken, async (req, res) => {
       });
     }
 
+    // Normalize book images
+    const orderObj = order.toObject();
+    orderObj.items = await Promise.all(
+      orderObj.items.map(async (item) => {
+        if (item.bookId) {
+          item.bookId = await normalizeBook(item.bookId);
+        }
+        return item;
+      }),
+    );
+
     res.status(200).json({
       success: true,
-      data: order,
+      data: orderObj,
     });
   } catch (error) {
     res.status(500).json({

@@ -12,14 +12,15 @@ const authenticateToken = tokenManager.authenticateToken;
 // Get cart for user (or create empty one)
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    const userQuery = { $or: [{ userId: req.user.userId }, { user: req.user.userId }] };
+    const userQuery = {
+      $or: [{ userId: req.user.userId }, { user: req.user.userId }],
+    };
 
-    let cart = await Cart.findOne(userQuery)
-      .populate({
-        path: "items.bookId",
-        select: "title author price quality image images sellerName",
-      });
-    
+    let cart = await Cart.findOne(userQuery).populate({
+      path: "items.bookId",
+      select: "title author price quality image images sellerName bookFile",
+    });
+
     if (!cart) {
       // Return empty cart instead of 404
       return res.status(200).json({
@@ -42,7 +43,9 @@ router.get("/", authenticateToken, async (req, res) => {
     if (cartObj.items && cartObj.items.length > 0) {
       for (let i = 0; i < cartObj.items.length; i++) {
         if (cartObj.items[i].bookId) {
-          cartObj.items[i].bookId = await bookController.normalizeBook(cartObj.items[i].bookId);
+          cartObj.items[i].bookId = await bookController.normalizeBook(
+            cartObj.items[i].bookId,
+          );
         }
       }
     }
@@ -74,9 +77,9 @@ router.post(
     try {
       const { bookId } = req.body;
       const quantity = Number(req.body.quantity) || 1;
-      
+
       const book = await Book.findById(bookId).select(
-        "title author price quality image images sellerName",
+        "title author price quality image images sellerName bookFile",
       );
 
       if (!book) {
@@ -85,7 +88,9 @@ router.post(
           .json({ success: false, message: "Book not found" });
       }
 
-      const userQuery = { $or: [{ userId: req.user.userId }, { user: req.user.userId }] };
+      const userQuery = {
+        $or: [{ userId: req.user.userId }, { user: req.user.userId }],
+      };
       let cart = await Cart.findOne(userQuery);
 
       if (!cart) {
@@ -124,7 +129,7 @@ router.post(
       // Populate book data before sending response
       await cart.populate({
         path: "items.bookId",
-        select: "title author price quality image images sellerName",
+        select: "title author price quality image images sellerName bookFile",
       });
 
       // Normalize book data to include signed S3 URLs
@@ -132,7 +137,9 @@ router.post(
       if (cartObj.items && cartObj.items.length > 0) {
         for (let i = 0; i < cartObj.items.length; i++) {
           if (cartObj.items[i].bookId) {
-            cartObj.items[i].bookId = await bookController.normalizeBook(cartObj.items[i].bookId);
+            cartObj.items[i].bookId = await bookController.normalizeBook(
+              cartObj.items[i].bookId,
+            );
           }
         }
       }
@@ -191,12 +198,14 @@ router.put("/update", authenticateToken, async (req, res) => {
     }
 
     existingItem.quantity = normalizedQuantity;
-    console.log(`Updated cart item quantity: ${bookId} -> ${normalizedQuantity}`);
-    
+    console.log(
+      `Updated cart item quantity: ${bookId} -> ${normalizedQuantity}`,
+    );
+
     await cart.save();
     await cart.populate({
       path: "items.bookId",
-      select: "title author price quality image images sellerName",
+      select: "title author price quality image images sellerName bookFile",
     });
 
     // Normalize book data to include signed S3 URLs
@@ -204,7 +213,9 @@ router.put("/update", authenticateToken, async (req, res) => {
     if (cartObj.items && cartObj.items.length > 0) {
       for (let i = 0; i < cartObj.items.length; i++) {
         if (cartObj.items[i].bookId) {
-          cartObj.items[i].bookId = await bookController.normalizeBook(cartObj.items[i].bookId);
+          cartObj.items[i].bookId = await bookController.normalizeBook(
+            cartObj.items[i].bookId,
+          );
         }
       }
     }
@@ -236,7 +247,7 @@ router.delete("/remove", authenticateToken, async (req, res) => {
 
     const initialCount = cart.items.length;
     cart.items = cart.items.filter((item) => item.bookId.toString() !== bookId);
-    
+
     console.log(
       `Removed item from cart: ${bookId} (${initialCount} -> ${cart.items.length} items)`,
     );
@@ -244,7 +255,7 @@ router.delete("/remove", authenticateToken, async (req, res) => {
     await cart.save();
     await cart.populate({
       path: "items.bookId",
-      select: "title author price quality image images sellerName",
+      select: "title author price quality image images sellerName bookFile",
     });
 
     // Normalize book data to include signed S3 URLs
@@ -252,7 +263,9 @@ router.delete("/remove", authenticateToken, async (req, res) => {
     if (cartObj.items && cartObj.items.length > 0) {
       for (let i = 0; i < cartObj.items.length; i++) {
         if (cartObj.items[i].bookId) {
-          cartObj.items[i].bookId = await bookController.normalizeBook(cartObj.items[i].bookId);
+          cartObj.items[i].bookId = await bookController.normalizeBook(
+            cartObj.items[i].bookId,
+          );
         }
       }
     }
