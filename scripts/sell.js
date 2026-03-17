@@ -566,7 +566,9 @@ async function uploadBookCoverToS3(file) {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to upload book cover");
+      throw new Error(
+        error.message || error.error || "Failed to upload book cover",
+      );
     }
 
     const result = await response.json();
@@ -604,7 +606,9 @@ async function uploadDocumentToS3(file) {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to upload document");
+      throw new Error(
+        error.message || error.error || "Failed to upload document",
+      );
     }
 
     const result = await response.json();
@@ -787,7 +791,11 @@ async function submitBookListing() {
     }
   } catch (error) {
     console.error("Error submitting book:", error);
-    showError("Failed to list book", error.message);
+    if (error.message && error.message.includes("Malicious content")) {
+      showError("Security Alert", error.message);
+    } else {
+      showError("Failed to list book", error.message);
+    }
   } finally {
     // Reset button
     submitBtn.textContent = originalText;

@@ -7,6 +7,7 @@ const {
   handleUploadError,
 } = require("../middleware/fileUpload");
 const { authenticateToken } = require("../utils/tokenManager");
+const { scanFileForMaliciousContent } = require("../middleware/fileScan");
 const { requireRole } = require("../middleware/authorize");
 const s3Service = require("../services/s3Service");
 const path = require("path");
@@ -21,6 +22,7 @@ router.post(
   authenticateToken,
   uploadSingle("image"),
   handleUploadError,
+  scanFileForMaliciousContent,
   async (req, res) => {
     try {
       if (!req.file) {
@@ -70,6 +72,7 @@ router.post(
   authenticateToken,
   uploadSingle("profilePicture"),
   handleUploadError,
+  scanFileForMaliciousContent,
   async (req, res) => {
     try {
       if (!req.file) {
@@ -120,6 +123,7 @@ router.post(
   requireRole("seller"),
   uploadSingle("bookFile"),
   handleUploadError,
+  scanFileForMaliciousContent,
   async (req, res) => {
     try {
       // Check if user is a seller
