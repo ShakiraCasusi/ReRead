@@ -30,28 +30,129 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 });
 
+// Helper function to refresh the access token
+async function refreshAccessToken() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // Important for sending the httpOnly cookie
+    });
+    const data = await response.json();
+    if (data.success && data.data.accessToken) {
+      sessionStorage.setItem("accessToken", data.data.accessToken);
+      const expiresInMs = Number(data.data.expiresIn || 900000);
+      sessionStorage.setItem("tokenExpiryTime", String(Date.now() + expiresInMs));
+      console.log("Token refreshed successfully.");
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    return false;
+  }
+}
+
+// Wrapper for fetch to handle auth and token refreshing
+async function fetchWithAuth(url, options = {}) {
+  let token = sessionStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const headers = { ...options.headers, Authorization: `Bearer ${token}` };
+
+  // For FormData, let the browser set the Content-Type
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  let response = await fetch(url, { ...options, headers });
+
+  if (response.status === 401) {
+    console.log("Access token expired, attempting to refresh...");
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      const newToken = sessionStorage.getItem("accessToken");
+      headers.Authorization = `Bearer ${newToken}`;
+      response = await fetch(url, { ...options, headers }); // Retry the request
+    } else {
+      // If refresh fails, log out the user
+      sessionStorage.clear();
+      window.location.href = "signin.html";
+      throw new Error("Session expired. Please sign in again.");
+    }
+  }
+  return response;
+}
+
 // Setup profile picture upload
 function setupProfilePictureUpload() {
-  const uploadPhotoBtn = document
-    .querySelector(".profile-avatar-placeholder")
-    .parentElement.querySelector("button");
+  const avatarWrapper = document.getElementById("avatarWrapper");
+  const avatarOverlay = document.getElementById("avatarOverlay");
+  const avatarPlaceholder = document.querySelector(".profile-avatar-placeholder");
+  const editBtn = document.getElementById("overlayEditBtn");
+  const deleteBtn = document.getElementById("overlayDeleteBtn");
 
-  if (uploadPhotoBtn) {
-    uploadPhotoBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      // Create hidden file input
-      const fileInput = document.createElement("input");
-      fileInput.type = "file";
-      fileInput.accept = "image/*";
-      fileInput.addEventListener("change", async function (e) {
-        const file = e.target.files[0];
-        if (file) {
-          await handleProfilePictureUpload(file);
-        }
-      });
-      fileInput.click();
+  if (!avatarWrapper || !avatarOverlay || !editBtn || !deleteBtn) return;
+
+  const showOverlay = () => {
+    avatarOverlay.style.opacity = "1";
+    avatarOverlay.style.pointerEvents = "auto";
+    if (avatarPlaceholder.querySelector("img")) {
+      avatarPlaceholder.style.filter = "blur(2px) brightness(0.8)";
+    }
+  };
+
+  const hideOverlay = () => {
+    avatarOverlay.style.opacity = "0";
+    avatarOverlay.style.pointerEvents = "none";
+    if (avatarPlaceholder.querySelector("img")) {
+      avatarPlaceholder.style.filter = "none";
+    }
+  };
+
+  // Toggle overlay on click
+  avatarWrapper.addEventListener("click", (e) => {
+    // Do not toggle if a button inside the overlay was clicked
+    if (e.target.closest("button")) return;
+
+    if (window.getComputedStyle(avatarOverlay).opacity === "0") {
+      showOverlay();
+    } else {
+      hideOverlay();
+    }
+  });
+
+  // Add a listener to the document to hide the overlay when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!avatarWrapper.contains(e.target) && window.getComputedStyle(avatarOverlay).opacity === "1") {
+      hideOverlay();
+    }
+  });
+
+  editBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.addEventListener("change", async function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        await handleProfilePictureUpload(file);
+        hideOverlay();
+      }
     });
-  }
+    fileInput.click();
+  });
+
+  deleteBtn.addEventListener("click", async function (e) {
+    e.preventDefault();
+    if (confirm("Are you sure you want to delete your profile picture?")) {
+      await handleProfilePictureDelete();
+      hideOverlay();
+    }
+  });
 }
 
 // Handle profile picture upload
@@ -80,22 +181,11 @@ async function handleProfilePictureUpload(file) {
     // Show loading state
     showNotification("Uploading profile picture...", "info");
 
-    // Upload to S3
     const formData = new FormData();
     formData.append("profilePicture", file);
 
-    const response = await fetch(`${API_BASE_URL}/upload/profile-picture`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to upload profile picture");
-    }
+    const response = await fetchWithAuth(`${API_BASE_URL}/upload/profile-picture`, { method: "POST", body: formData });
+    if (!response.ok) throw new Error("Failed to upload profile picture");
 
     const result = await response.json();
     if (result.success && result.data) {
@@ -117,26 +207,28 @@ async function handleProfilePictureUpload(file) {
   }
 }
 
+// Handle profile picture deletion
+async function handleProfilePictureDelete() {
+  try {
+    showNotification("Deleting profile picture...", "info");
+    await updateProfilePicture(null);
+    showNotification("Profile picture deleted successfully!", "success");
+  } catch (error) {
+    console.error("Error deleting profile picture:", error);
+    showNotification(error.message || "Failed to delete profile picture", "error");
+  }
+}
+
 // Update user profile with picture URL
 async function updateProfilePicture(pictureUrl) {
   try {
-    const token = sessionStorage.getItem("accessToken");
-    if (!token) {
-      throw new Error("Not authenticated");
-    }
-
     // Update profile with picture URL
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/auth/profile`, {
       method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({
         profilePicture: pictureUrl,
       }),
     });
-
     if (!response.ok) {
       throw new Error("Failed to save profile picture");
     }
@@ -144,11 +236,8 @@ async function updateProfilePicture(pictureUrl) {
     const result = await response.json();
     if (result.success && result.data) {
       currentUser = result.data;
-      displayProfilePicture(pictureUrl);
-      // Reload page to display updated profile picture everywhere
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // Use the URL from the response, which may be a signed URL
+      displayProfilePicture(result.data.profilePicture);
     }
   } catch (error) {
     console.error("Error updating profile picture:", error);
@@ -162,7 +251,10 @@ async function updateProfilePicture(pictureUrl) {
 // Display profile picture
 function displayProfilePicture(pictureUrl) {
   const avatarContainer = document.querySelector(".profile-avatar-placeholder");
-  if (avatarContainer) {
+  const editBtn = document.getElementById("overlayEditBtn");
+  const deleteBtn = document.getElementById("overlayDeleteBtn");
+
+  if (avatarContainer && editBtn && deleteBtn) {
     // Handle both string URLs and object format safely
     let imageUrl = null;
     if (typeof pictureUrl === "string") {
@@ -188,13 +280,30 @@ function displayProfilePicture(pictureUrl) {
         height: 100%;
         object-fit: cover;
         border-radius: 50%;
+        transition: filter 0.3s ease;
       `;
       img.onerror = function () {
         avatarContainer.innerHTML =
           '<i class="fas fa-user" style="font-size: 72px; color: #9ca3af"></i>';
+        if (editBtn)
+          editBtn.innerHTML =
+            '<i class="fas fa-camera me-2"></i>Upload';
+        if (deleteBtn) deleteBtn.style.display = "none";
       };
 
       avatarContainer.appendChild(img);
+
+      // Update buttons for existing photo
+      if (editBtn)
+        editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Change';
+      if (deleteBtn) deleteBtn.style.display = "inline-block";
+    } else {
+      // No image URL, show placeholder and update buttons
+      avatarContainer.innerHTML =
+        '<i class="fas fa-user" style="font-size: 72px; color: #9ca3af"></i>';
+      if (editBtn)
+        editBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Upload';
+      if (deleteBtn) deleteBtn.style.display = "none";
     }
   }
 }
@@ -204,29 +313,13 @@ async function loadProfile() {
   try {
     showLoadingState();
 
-    const token = sessionStorage.getItem("accessToken");
-    if (!token) {
-      throw new Error("No access token found");
-    }
-
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/auth/profile`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
     });
 
+    // The 401 case is now handled by fetchWithAuth, which will retry or redirect.
     if (!response.ok) {
-      if (response.status === 401) {
-        // Token expired or invalid
-        sessionStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        sessionStorage.removeItem("user");
-        window.location.href = "signin.html";
-        return;
-      }
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({})); // Gracefully handle non-json errors
       throw new Error(errorData.message || "Failed to load profile");
     }
 
@@ -239,10 +332,13 @@ async function loadProfile() {
       throw new Error("Invalid response from server");
     }
   } catch (error) {
-    console.error("Error loading profile:", error);
-    showErrorState(
-      error.message || "Failed to load profile. Please try again.",
-    );
+    // Avoid showing error if redirection is in progress
+    if (!error.message.includes("Session expired")) {
+      console.error("Error loading profile:", error);
+      showErrorState(
+        error.message || "Failed to load profile. Please try again.",
+      );
+    }
   }
 }
 
@@ -383,13 +479,6 @@ async function handleProfileUpdate(e) {
   e.preventDefault();
 
   try {
-    const token = sessionStorage.getItem("accessToken");
-    if (!token) {
-      showNotification("Please sign in to update your profile", "error");
-      window.location.href = "signin.html";
-      return;
-    }
-
     // Get form values
     const firstName = document.getElementById("editFirstName").value.trim();
     const lastName = document.getElementById("editLastName").value.trim();
@@ -413,12 +502,8 @@ async function handleProfileUpdate(e) {
     }
 
     // Send update request (email excluded)
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/auth/profile`, {
       method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({
         firstName,
         lastName,
@@ -544,24 +629,9 @@ function handleDeleteAccount() {
 // Perform the actual account deletion
 async function performAccountDeletion() {
   try {
-    const token = sessionStorage.getItem("accessToken");
-    if (!token) {
-      showNotification("Please sign in to delete your account", "error");
-      window.location.href = "signin.html";
-      return;
-    }
-
-    // Show loading state
     showNotification("Deleting account...", "info");
 
-    // Send DELETE request
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetchWithAuth(`${API_BASE_URL}/auth/profile`, { method: "DELETE" });
 
     const result = await response.json();
 

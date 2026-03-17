@@ -625,7 +625,9 @@ exports.updateProfile = async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (profilePicture !== undefined) {
       // Handle S3 file uploads (object with url and key)
-      if (typeof profilePicture === "object" && profilePicture.url) {
+      if (profilePicture === null) {
+        updateData.profilePicture = null;
+      } else if (typeof profilePicture === "object" && profilePicture.url) {
         updateData.profilePicture = profilePicture;
       } else if (typeof profilePicture === "string" && profilePicture) {
         // Handle legacy URL strings

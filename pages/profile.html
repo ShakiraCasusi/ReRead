@@ -361,21 +361,43 @@
         style="background: #f9fafb; border-color: #e5e7eb !important">
         <div class="row align-items-center">
           <!-- Profile Picture -->
-          <div class="col-md-3 text-center mb-4 mb-md-0">
-            <div class="profile-avatar-placeholder rounded-circle mx-auto mb-3" style="
-                  width: 150px;
-                  height: 150px;
-                  background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  border: 3px solid #d1d5db;
-                ">
-              <i class="fas fa-user" style="font-size: 72px; color: #9ca3af"></i>
+          <div class="col-md-3 text-center mb-4 mb-md-0 d-flex justify-content-center">
+            <div id="avatarWrapper" class="rounded-circle"
+              style="position: relative; width: 150px; height: 150px; cursor: pointer;">
+              <div class="profile-avatar-placeholder rounded-circle" style="
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 3px solid #d1d5db;
+                    transition: filter 0.3s ease;
+                  ">
+                <i class="fas fa-user" style="font-size: 72px; color: #9ca3af"></i>
+              </div>
+              <div id="avatarOverlay" class="profile-avatar-overlay" style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0,0,0,0.5);
+                    border-radius: 50%;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 10px;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                    pointer-events: none;
+                  ">
+                <button class="btn btn-light btn-sm" id="overlayEditBtn"><i class="fas fa-edit me-2"></i>Edit</button>
+                <button class="btn btn-danger btn-sm" id="overlayDeleteBtn" style="display: none;"><i
+                    class="fas fa-trash-alt me-2"></i>Delete</button>
+              </div>
             </div>
-            <button class="btn btn-outline-dark btn-sm" style="border-width: 2px">
-              <i class="fas fa-camera me-2"></i>Upload Photo
-            </button>
           </div>
 
           <!-- Profile Info -->
@@ -602,7 +624,8 @@
               <a href="pages/shop.html" class="text-light text-decoration-none d-block mb-1">Shop Books</a>
             </li>
             <li>
-              <a href="pages/sell.html" class="text-light text-decoration-none d-block mb-1" data-role="seller">Sell Your Books</a>
+              <a href="pages/sell.html" class="text-light text-decoration-none d-block mb-1" data-role="seller">Sell
+                Your Books</a>
             </li>
             <li>
               <a href="pages/about.html" class="text-light text-decoration-none d-block mb-1">About Us</a>
