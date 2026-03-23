@@ -1,7 +1,7 @@
 // Orders page script
 console.log("orders.js loaded");
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://reread-kz72.onrender.com/api";
 const ORDER_IMAGE_PLACEHOLDER =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIxMDAiPjxyZWN0IGZpbGw9IiNmM2Y0ZjYiIHdpZHRoPSI4MCIgaGVpZ2h0PSIxMDAiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Qm9vazwvdGV4dD48L3N2Zz4=";
 

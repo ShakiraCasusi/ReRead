@@ -62,7 +62,7 @@ class AuthManager {
     const accessToken = sessionStorage.getItem("accessToken");
 
     try {
-      await fetch("http://localhost:5000/api/auth/logout", {
+      await fetch("https://reread-kz72.onrender.com/api/auth/logout", {
         method: "POST",
         headers: accessToken
           ? {

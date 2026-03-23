@@ -41,7 +41,7 @@ async function ensureUserIsSeller() {
     // Get current user profile
     console.log("Fetching user profile...");
     const profileResponse = await fetch(
-      "http://localhost:5000/api/auth/profile",
+      "https://reread-kz72.onrender.com/api/auth/profile",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -71,7 +71,7 @@ async function ensureUserIsSeller() {
 
       // Register as seller with default values
       const sellerResponse = await fetch(
-        "http://localhost:5000/api/auth/become-seller",
+        "https://reread-kz72.onrender.com/api/auth/become-seller",
         {
           method: "POST",
           headers: {
@@ -133,13 +133,16 @@ async function loadSellerBooks() {
     console.log("Fetching books from API...");
 
     // Fetch seller's books
-    const response = await fetch("http://localhost:5000/api/seller/books", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://reread-kz72.onrender.com/api/seller/books",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     console.log("API Response Status:", response.status);
 
@@ -390,7 +393,7 @@ async function openEditModal(bookId) {
   try {
     const token = sessionStorage.getItem("accessToken");
     const response = await fetch(
-      `http://localhost:5000/api/seller/books/${bookId}`,
+      `https://reread-kz72.onrender.com/api/seller/books/${bookId}`,
       {
         method: "GET",
         headers: {
@@ -513,7 +516,7 @@ async function saveBookChanges() {
         uploadFormData.append("image", uploadedEditImage);
 
         const uploadResponse = await fetch(
-          "http://localhost:5000/api/upload/book-cover",
+          "https://reread-kz72.onrender.com/api/upload/book-cover",
           {
             method: "POST",
             headers: {
@@ -539,7 +542,7 @@ async function saveBookChanges() {
     }
 
     const response = await fetch(
-      `http://localhost:5000/api/seller/books/${bookId}`,
+      `https://reread-kz72.onrender.com/api/seller/books/${bookId}`,
       {
         method: "PUT",
         headers: {
@@ -591,7 +594,7 @@ async function confirmDeleteBook() {
   try {
     const token = sessionStorage.getItem("accessToken");
     const response = await fetch(
-      `http://localhost:5000/api/seller/books/${bookId}`,
+      `https://reread-kz72.onrender.com/api/seller/books/${bookId}`,
       {
         method: "DELETE",
         headers: {
@@ -646,7 +649,7 @@ async function confirmBulkDelete() {
     // Delete each book
     for (const bookId of selectedBookIds) {
       const response = await fetch(
-        `http://localhost:5000/api/seller/books/${bookId}`,
+        `https://reread-kz72.onrender.com/api/seller/books/${bookId}`,
         {
           method: "DELETE",
           headers: {

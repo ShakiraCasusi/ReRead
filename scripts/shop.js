@@ -1,6 +1,6 @@
 console.log("shop.js loaded successfully");
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://reread-kz72.onrender.com/api";
 
 let booksDatabase = [];
 let availableGenres = new Set();

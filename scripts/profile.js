@@ -2,7 +2,7 @@
 
 console.log("profile.js loaded");
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://reread-kz72.onrender.com/api";
 let currentUser = null;
 let isEditMode = false;
 let uploadedProfilePicture = null;
@@ -42,7 +42,10 @@ async function refreshAccessToken() {
     if (data.success && data.data.accessToken) {
       sessionStorage.setItem("accessToken", data.data.accessToken);
       const expiresInMs = Number(data.data.expiresIn || 900000);
-      sessionStorage.setItem("tokenExpiryTime", String(Date.now() + expiresInMs));
+      sessionStorage.setItem(
+        "tokenExpiryTime",
+        String(Date.now() + expiresInMs),
+      );
       console.log("Token refreshed successfully.");
       return true;
     }
@@ -90,7 +93,9 @@ async function fetchWithAuth(url, options = {}) {
 function setupProfilePictureUpload() {
   const avatarWrapper = document.getElementById("avatarWrapper");
   const avatarOverlay = document.getElementById("avatarOverlay");
-  const avatarPlaceholder = document.querySelector(".profile-avatar-placeholder");
+  const avatarPlaceholder = document.querySelector(
+    ".profile-avatar-placeholder",
+  );
   const editBtn = document.getElementById("overlayEditBtn");
   const deleteBtn = document.getElementById("overlayDeleteBtn");
 
@@ -126,7 +131,10 @@ function setupProfilePictureUpload() {
 
   // Add a listener to the document to hide the overlay when clicking outside
   document.addEventListener("click", (e) => {
-    if (!avatarWrapper.contains(e.target) && window.getComputedStyle(avatarOverlay).opacity === "1") {
+    if (
+      !avatarWrapper.contains(e.target) &&
+      window.getComputedStyle(avatarOverlay).opacity === "1"
+    ) {
       hideOverlay();
     }
   });
@@ -184,7 +192,10 @@ async function handleProfilePictureUpload(file) {
     const formData = new FormData();
     formData.append("profilePicture", file);
 
-    const response = await fetchWithAuth(`${API_BASE_URL}/upload/profile-picture`, { method: "POST", body: formData });
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/upload/profile-picture`,
+      { method: "POST", body: formData },
+    );
     if (!response.ok) throw new Error("Failed to upload profile picture");
 
     const result = await response.json();
@@ -215,7 +226,10 @@ async function handleProfilePictureDelete() {
     showNotification("Profile picture deleted successfully!", "success");
   } catch (error) {
     console.error("Error deleting profile picture:", error);
-    showNotification(error.message || "Failed to delete profile picture", "error");
+    showNotification(
+      error.message || "Failed to delete profile picture",
+      "error",
+    );
   }
 }
 
@@ -286,16 +300,14 @@ function displayProfilePicture(pictureUrl) {
         avatarContainer.innerHTML =
           '<i class="fas fa-user" style="font-size: 72px; color: #9ca3af"></i>';
         if (editBtn)
-          editBtn.innerHTML =
-            '<i class="fas fa-camera me-2"></i>Upload';
+          editBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Upload';
         if (deleteBtn) deleteBtn.style.display = "none";
       };
 
       avatarContainer.appendChild(img);
 
       // Update buttons for existing photo
-      if (editBtn)
-        editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Change';
+      if (editBtn) editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Change';
       if (deleteBtn) deleteBtn.style.display = "inline-block";
     } else {
       // No image URL, show placeholder and update buttons
@@ -631,7 +643,9 @@ async function performAccountDeletion() {
   try {
     showNotification("Deleting account...", "info");
 
-    const response = await fetchWithAuth(`${API_BASE_URL}/auth/profile`, { method: "DELETE" });
+    const response = await fetchWithAuth(`${API_BASE_URL}/auth/profile`, {
+      method: "DELETE",
+    });
 
     const result = await response.json();
 

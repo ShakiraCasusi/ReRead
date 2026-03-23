@@ -1,5 +1,5 @@
 const CartService = {
-  API_BASE_URL: "http://localhost:5000/api",
+  API_BASE_URL: "https://reread-kz72.onrender.com/api",
 
   getAuthToken() {
     return (
@@ -525,7 +525,7 @@ window.getProxiedImageUrl = function (imageUrl) {
     urlString.includes("amazonaws")
   ) {
     try {
-      const API_BASE_URL = "http://localhost:5000/api";
+      const API_BASE_URL = "https://reread-kz72.onrender.com/api";
       const encodedUrl = btoa(unescape(encodeURIComponent(urlString)));
       return `${API_BASE_URL}/books/image-proxy/${encodedUrl}`;
     } catch (error) {

@@ -540,12 +540,15 @@ function persistAuthSession(result, email, rememberMe) {
 
 async function submitGoogleSignin(idToken) {
   try {
-    const response = await fetch("http://localhost:5000/api/auth/google", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ idToken }),
-    });
+    const response = await fetch(
+      "https://reread-kz72.onrender.com/api/auth/google",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ idToken }),
+      },
+    );
 
     const result = await response.json();
 
@@ -579,12 +582,15 @@ async function submitSignin(email, password) {
   submitBtn.disabled = true;
 
   try {
-    const response = await fetch("http://localhost:5000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
+    const response = await fetch(
+      "https://reread-kz72.onrender.com/api/auth/login",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      },
+    );
 
     const result = await response.json();
 
@@ -646,18 +652,21 @@ async function submitSignup(name, email, password, confirmPassword) {
   const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
 
   try {
-    const response = await fetch("http://localhost:5000/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        username: email.split("@")[0],
-        email,
-        password,
-        firstName,
-        lastName,
-      }),
-    });
+    const response = await fetch(
+      "https://reread-kz72.onrender.com/api/auth/register",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          username: email.split("@")[0],
+          email,
+          password,
+          firstName,
+          lastName,
+        }),
+      },
+    );
 
     const result = await response.json();
 

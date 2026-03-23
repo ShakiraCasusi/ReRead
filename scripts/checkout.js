@@ -1,6 +1,6 @@
 console.log("checkout.js loaded (JSON-based)");
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://reread-kz72.onrender.com/api";
 const LOCATION_DATA_PATH = "../delivery%20form/ph-locations.json";
 
 // Toast Notification Function

@@ -23,7 +23,7 @@ async function ensureUserIsSeller() {
 
     // Get current user profile
     const profileResponse = await fetch(
-      "http://localhost:5000/api/auth/profile",
+      "https://reread-kz72.onrender.com/api/auth/profile",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -49,7 +49,7 @@ async function ensureUserIsSeller() {
 
       // Register as seller with default values
       const sellerResponse = await fetch(
-        "http://localhost:5000/api/auth/become-seller",
+        "https://reread-kz72.onrender.com/api/auth/become-seller",
         {
           method: "POST",
           headers: {
@@ -554,7 +554,7 @@ async function uploadBookCoverToS3(file) {
     }
 
     const response = await fetch(
-      "http://localhost:5000/api/upload/book-cover",
+      "https://reread-kz72.onrender.com/api/upload/book-cover",
       {
         method: "POST",
         headers: {
@@ -596,13 +596,16 @@ async function uploadDocumentToS3(file) {
       throw new Error("You must be logged in to upload");
     }
 
-    const response = await fetch("http://localhost:5000/api/upload/book-file", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      "https://reread-kz72.onrender.com/api/upload/book-file",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadFormData,
       },
-      body: uploadFormData,
-    });
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -718,14 +721,17 @@ async function submitBookListing() {
     }
 
     // Make API call to create book using seller endpoint (authenticated)
-    const response = await fetch("http://localhost:5000/api/seller/books", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      "https://reread-kz72.onrender.com/api/seller/books",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(bookData),
       },
-      body: JSON.stringify(bookData),
-    });
+    );
 
     // Check content type before parsing
     const contentType = response.headers.get("content-type");

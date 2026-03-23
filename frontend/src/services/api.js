@@ -5,7 +5,7 @@
 
 class APIService {
   constructor() {
-    this.baseURL = "http://localhost:5000/api";
+    this.baseURL = "https://reread-kz72.onrender.com/api";
     this.maxRetries = 3;
   }
 

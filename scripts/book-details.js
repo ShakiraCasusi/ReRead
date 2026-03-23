@@ -2,7 +2,7 @@
 
 console.log("book-details.js loaded successfully");
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://reread-kz72.onrender.com/api";
 
 // Store book data in session for quick access
 let currentBook = null;

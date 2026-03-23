@@ -84,7 +84,7 @@ class AuthManager {
   async refreshAccessToken() {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/refresh-token",
+        "https://reread-kz72.onrender.com/api/auth/refresh-token",
         {
           method: "POST",
           headers: {
@@ -170,7 +170,7 @@ class AuthManager {
   async logout() {
     try {
       // Call logout endpoint to invalidate on server (optional)
-      await fetch("http://localhost:5000/api/auth/logout", {
+      await fetch("https://reread-kz72.onrender.com/api/auth/logout", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.accessToken}`,

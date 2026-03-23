@@ -1,6 +1,6 @@
 // Digital Downloads Page Script
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://reread-kz72.onrender.com/api";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadDownloads();
@@ -360,7 +360,8 @@ async function handleDownloadClick(event) {
 
     // Fetch signed URL from backend (public endpoint - no auth required)
     console.log(`🔐 Fetching signed URL for: ${fileKey}`);
-    const apiBaseUrl = window.API_BASE_URL || "http://localhost:5000/api"; // Use global config or fallback
+    const apiBaseUrl =
+      window.API_BASE_URL || "https://reread-kz72.onrender.com/api"; // Use global config or fallback
     const response = await fetch(
       `${apiBaseUrl}/upload/public-download/${encodeURIComponent(fileKey)}`,
       {
