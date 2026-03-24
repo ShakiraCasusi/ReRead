@@ -1,23 +1,26 @@
 ## 📄 Re;Read Website
 
-Re;Read is an online platform for buying and selling second-hand books.  
-It gives students and readers access to quality and affordable books.  
+Re;Read is an online platform for buying and selling second-hand books.
+It gives students and readers access to quality and affordable books.
 The site is built with HTML, CSS, JavaScript, Bootstrap, Node.js, and MongoDB.
 
 ---
 
 ## 📄 Overview
 
-Re;Read provides a simple way to browse, select, and purchase used books.  
-It focuses on ease of use, mobile responsiveness, and a clean shopping flow.  
-The project follows a static front-end structure that can be integrated with backend services. The project is a full-stack application integrated with a Node.js backend and MongoDB database.
+Re;Read provides a simple way to browse, select, and purchase used books.
+It focuses on ease of use, mobile responsiveness, and a clean shopping flow.
+The project started with a static front-end structure and is now integrated with a Node.js backend and MongoDB database.
 
-**Key Highlights:**
+---
 
-- Mobile-responsive UI
-- PH region-based checkout logic
-- Organized page structure
-- Bootstrap UI components
+## 📌 Recent Changes (March 2026)
+
+- Frontend API base URL updated to deployed backend: `https://reread-kz72.onrender.com/api`.
+- Jest added/verified in backend devDependencies and scripts (`test`, `test:watch`, `test:coverage`).
+- Token and validator unit tests with coverage artifacts added.
+- Profile picture handling improved in profile-related pages and scripts.
+- Upload flow hardened with malicious-content scan middleware and file-type blocking.
 
 ---
 
@@ -30,86 +33,141 @@ The project follows a static front-end structure that can be integrated with bac
 - Checkout with PH regions and provinces
 - Responsive header and footer
 - Unified navigation across pages
-- **RESTful API** integration
-- **CRUD operations** for cart and orders
+- RESTful API integration
+- CRUD operations for cart and orders
+- JWT-based authentication with refresh flow
+- S3-backed upload handling for assets/files
 
 ---
 
 ## 📁 Project Structure
 
 ```text
-ReRead-Website/
+ReRead/
 │
-├─ index.html                 → Homepage
+├─ backend/
+│  ├─ controllers/
+│  ├─ middleware/
+│  ├─ models/
+│  ├─ routes/
+│  ├─ services/
+│  ├─ tests/
+│  ├─ utils/
+│  ├─ package.json
+│  └─ server.js
+│
+├─ frontend/
+│  └─ src/services/api.js
+│
 ├─ pages/
-│  ├─ shop.html               → Shop listing
-│  ├─ cart.html               → Cart page
-│  ├─ signin.html             → Sign in
-│  ├─ about.html              → About page
-│  ├─ profile.html            → User profile
-│  ├─ orders.html             → Order history
-│  ├─ sell.html               → Sell books page
-│
-├─ styles/
-│  └─ main.css                → Global styling
+│  ├─ shop.html
+│  ├─ cart.html
+│  ├─ signin.html
+│  ├─ about.html
+│  ├─ profile.html
+│  ├─ orders.html
+│  ├─ sell.html
+│  └─ digital-downloads.html
 │
 ├─ scripts/
-│  ├─ main.js                 → Header and navigation logic
-│  ├─ shop.js                 → Shop logic
-│  ├─ auth.js                 → Authentication logic
-│  ├─ profile.js              → Profile management
-│  ├─ orders.js               → Order history logic
-│  ├─ checkout.js             → Checkout and PH regions handling
+│  ├─ shop.js
+│  ├─ cartService.js
+│  ├─ checkout.js
+│  ├─ signin.js
+│  ├─ auth.js
+│  ├─ authPhase3.js
+│  ├─ profile.js
+│  ├─ orders.js
+│  ├─ sell.js
+│  ├─ manage-listings.js
+│  ├─ digital-downloads.js
+│  └─ book-details.js
 │
-├─ images/                    → Assets and icons (FRONTEND ASSETS FROM LAST TERM)
-├─ ph-locations.json          → PH regions dataset
-└─ README.md                  → Project documentation
+├─ styles/
+├─ images/
+├─ ph-locations.json
+├─ README.md
+└─ README_FINAL.md
 ```
 
 ---
 
 ## 🧰 Tech Stack
+
 - Node.js
 - Express.js
 - MongoDB (Mongoose)
-- JWT Authentication (access + refresh flow)
+- JWT Authentication (access + refresh)
 - AWS S3 file storage integration
-- API routing layer (service endpoints grouped under `/api/*`)
-- Security middleware (Helmet, rate limiting, validation)
+- Helmet + rate limiting + validation middleware
+- Jest (unit testing + coverage)
 
 ---
 
 ## 🖥️ Installation Guide
 
+### Backend
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+### Backend Tests
+
+```bash
+cd backend
+npm test
+npm run test:watch
+npm run test:coverage
+```
+
+### Documentation Link
 
 [Documentation](https://docs.google.com/document/d/e/2PACX-1vTvfrCYI20_51vzLveFvCZ2oU3REWhclaSW9Hstf9uHFjYp5le1V4jBEMPjGQoor6Q5WomuTDnkj8Qg/pub)
-
 
 ---
 
 ## System Architecture
 
-The current integration follows a standard client-server pattern where the frontend sends API requests to backend route groups (acting as the API routing layer), and those services interact with MongoDB and S3/file storage.
+The current integration follows a standard client-server pattern where frontend scripts call a centralized API service layer, then backend route groups, then MongoDB/S3 services.
 
 ```mermaid
 flowchart LR
-    User --> Frontend
-    Frontend --> APIGateway[API Routing Layer / Express API]
-    APIGateway --> AuthService
-    APIGateway --> UserService
-    APIGateway --> FinanceService
-    APIGateway --> UploadService
-    AuthService --> MongoDB
-    UserService --> MongoDB
-    FinanceService --> MongoDB
-    UploadService --> FileStorage[S3 / File Storage]
-    UploadService --> MongoDB
+    User --> FrontendPages[Frontend Pages + Scripts]
+    FrontendPages --> APIService[frontend/src/services/api.js]
+
+    APIService -->|/api/*| ExpressAPI[Express API Router]
+
+    ExpressAPI --> AuthRoutes[Auth Routes]
+    ExpressAPI --> BooksRoutes[Books Routes]
+    ExpressAPI --> CartRoutes[Cart Routes]
+    ExpressAPI --> OrdersRoutes[Orders Routes]
+    ExpressAPI --> ReviewsRoutes[Reviews Routes]
+    ExpressAPI --> UploadRoutes[Upload Routes]
+
+    AuthRoutes --> TokenManager[JWT Token Manager]
+    AuthRoutes --> Users[(Users Collection)]
+
+    BooksRoutes --> Books[(Books Collection)]
+    CartRoutes --> Carts[(Carts Collection)]
+    OrdersRoutes --> Orders[(Orders Collection)]
+    ReviewsRoutes --> Reviews[(Reviews Collection)]
+
+    UploadRoutes --> UploadMiddleware[Multer Middleware]
+    UploadRoutes --> FileScan[Malicious Content Scan]
+    UploadRoutes --> S3Service[S3 Service]
+
+    S3Service --> S3[(AWS S3)]
+    S3Service --> MongoRefs[(MongoDB URL/Key References)]
 ```
 
 **Request Flow (Authentication Example)**
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant User
     participant Frontend
     participant API_Gateway
@@ -118,23 +176,30 @@ sequenceDiagram
 
     User->>Frontend: Login Request
     Frontend->>API_Gateway: POST /auth/login
-    API_Gateway->>Auth_Service: Forward request
-    Auth_Service->>Database: Validate user
+    API_Gateway->>Auth_Service: Validate credentials
+    Auth_Service->>Database: Check user
     Database-->>Auth_Service: User data
-    Auth_Service-->>API_Gateway: JWT Token
-    API_Gateway-->>Frontend: Auth Response
+    Auth_Service-->>API_Gateway: accessToken + refreshToken
+    API_Gateway-->>Frontend: Auth response
+
+    Frontend->>API_Gateway: Call protected route
+    API_Gateway->>Auth_Service: authenticateToken
+    Auth_Service-->>API_Gateway: allow/deny
 ```
+
 ---
+
 ## Authentication System
 
-The backend authentication flow includes registration, login, token issuing, and token verification middleware for protected routes.
+The backend authentication flow includes registration, login, token issuing, refresh, and token verification middleware for protected routes.
 
 **Core Flow**
 
 - **User Registration**: Creates a new user after validating required fields, email format, and password strength.
 - **User Login**: Verifies credentials and returns JWT-based session credentials.
 - **JWT Token Generation**: Access and refresh tokens are generated on successful authentication.
-- **Token Validation Middleware**: `authenticateToken` middleware verifies token authenticity before allowing protected-route access.
+- **Token Refresh**: Frontend retries requests after receiving 401 by attempting refresh.
+- **Token Validation Middleware**: `authenticateToken` middleware verifies token authenticity before protected-route access.
 
 **Authentication Endpoints**
 
@@ -142,16 +207,12 @@ The backend authentication flow includes registration, login, token issuing, and
 | --- | --- | --- |
 | /auth/register | POST | Register new user |
 | /auth/login | POST | Authenticate user |
+| /auth/refresh-token | POST | Refresh access token |
 | /auth/request-password-reset | POST | Request password reset |
-
-**Security Notes**
-
-- Access tokens should be sent in authorized requests to protected endpoints.
-- Authentication middleware blocks unauthenticated requests.
-- Secure route protection ensures profile/account operations are available only to valid authenticated users.
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant User
     participant Frontend
     participant API
@@ -163,33 +224,62 @@ sequenceDiagram
     API->>AuthService: Validate credentials
     AuthService->>Database: Check user
     Database-->>AuthService: User record
-    AuthService-->>API: Generate JWT
-    API-->>Frontend: Return token
+    AuthService-->>API: Generate access + refresh tokens
+    API-->>Frontend: Return token payload
+
+    Frontend->>API: Protected request with access token
+    API->>AuthService: authenticateToken
+
+    alt Access token valid
+        AuthService-->>API: authorized
+        API-->>Frontend: Protected data
+    else Access token expired
+        API-->>Frontend: 401
+        Frontend->>API: POST /auth/refresh-token
+        API->>AuthService: authenticateRefreshToken
+        AuthService-->>API: new access token
+        API-->>Frontend: refreshed access token
+    end
 ```
+
 ---
 
 ## File Upload System
 
-The backend upload pipeline accepts multipart requests, validates files, and stores uploaded assets in external storage.
+The backend upload pipeline accepts multipart requests, validates files, scans content, and stores assets in S3.
 
 **Upload Controls**
 
-- **File validation** before upload begins.
-- **Allowed file types**: `jpg`, `png`, `pdf`.
-- **Maximum file size**: `5MB`.
+- File validation before upload begins.
+- Malicious content signature scanning middleware.
+- Allowed file types are validated by MIME + extension checks.
+- Uploaded file keys/URLs are persisted for later retrieval.
 
 ```mermaid
 flowchart TD
     User --> Frontend
     Frontend --> API
-    API --> Validation
-    Validation --> Storage
-    Storage --> Database
+    API --> Auth[authenticateToken]
+    Auth --> Upload[uploadSingle]
+    Upload --> UploadErr[handleUploadError]
+    UploadErr --> Scan[scanFileForMaliciousContent]
+
+    Scan --> Decision{Malicious signature?}
+    Decision -->|Yes| Reject403[403 Upload Rejected]
+    Decision -->|No| TypeCheck[Validate MIME + extension]
+
+    TypeCheck --> Allowed{Allowed type?}
+    Allowed -->|No| Reject400[400 Invalid File Type]
+    Allowed -->|Yes| Storage[S3 Upload]
+
+    Storage --> Database[Store URL/Key in MongoDB]
+    Database --> Success[200 Success Response]
 ```
 
 **How URL persistence works**
 
-After successful upload, the storage service returns a file key/URL. That file URL is stored in the corresponding MongoDB document (for example, profile image or listing asset reference), allowing the frontend to fetch/render the file later.
+After successful upload, the storage service returns a file key/URL.
+That file URL is stored in the corresponding MongoDB document (for example, profile image or listing asset reference), allowing frontend pages to render those assets later.
 
 ---
 
@@ -201,11 +291,12 @@ Re;Read uses role-based access control (RBAC) to define what each authenticated 
 
 - `user`
 - `admin`
+- `seller`
 
 **Middleware Functions**
 
 - `authenticateToken`: verifies JWT and attaches user identity to the request.
-- `requireRole`: ensures the authenticated user has the required role(s) before endpoint execution.
+- `requireRole`: ensures the authenticated user has required role(s) before endpoint execution.
 
 **Access Rules**
 
@@ -213,6 +304,7 @@ Re;Read uses role-based access control (RBAC) to define what each authenticated 
 | --- | --- |
 | Access dashboard | user |
 | Manage users | admin |
+| Upload seller-only book files | seller |
 | View financial data | admin |
 
 ---
@@ -229,43 +321,47 @@ The backend is modeled with MongoDB collections for user identity/account data a
 - `role`
 - `profilePicture`
 
-**Transaction Schema (example fields)**
+**Transaction / Commerce Schema (example fields)**
 
+- `bookId`
+- `buyerId`
+- `sellerId`
 - `amount`
-- `type`
-- `userId`
+- `status`
 - `timestamp`
 
 **Relationships**
 
-- A user can own many transaction records (`User` 1-to-many `Transaction`).
-- File references (such as profile pictures or uploaded assets) are stored as URL/key fields in user or domain documents.
+- A user can own many transaction/order records.
+- File references (profile pictures, book assets/files) are stored as URL/key fields in user or domain documents.
 
 ---
 
 ## Security Measures
 
-Milestone 2 backend hardening includes multiple security layers:
+Backend hardening includes multiple security layers:
 
-- **Helmet.js** for secure HTTP headers
-- **Input validation** in request validators
-- **JWT authentication** for user identity and session security
-- **Role-based access control** for privileged endpoints
-- **Secure password hashing** with `bcrypt`
-- **Rate limiting** on sensitive routes (e.g., auth endpoints)
+- Helmet.js for secure HTTP headers
+- Input validation in request validators
+- JWT authentication for session security
+- Role-based access control for privileged endpoints
+- Secure password hashing with bcrypt
+- Rate limiting on sensitive routes
+- Upload malicious-content scan middleware
 
 **Protected route behavior**
 
-Protected routes run authentication middleware first. If the token is missing/invalid, the request is rejected. If role checks fail, access is denied before controller logic executes.
+Protected routes run authentication middleware first. If token checks fail, requests are rejected before controller logic executes.
 
 ---
 
 ## Error Handling
 
-The backend uses consistent status codes and centralized middleware to standardize error responses.
+The backend uses consistent status codes and centralized middleware to standardize API error responses.
 
 **Common API Errors**
 
+- `400 Bad Request`
 - `401 Unauthorized`
 - `403 Forbidden`
 - `404 Not Found`
@@ -274,10 +370,6 @@ The backend uses consistent status codes and centralized middleware to standardi
 **Centralized middleware**
 
 A global error handler captures thrown/forwarded errors, logs context, and returns sanitized responses so clients receive predictable error payloads.
-
----
-
-
 
 ---
 
@@ -294,18 +386,16 @@ A global error handler captures thrown/forwarded errors, logs context, and retur
 
 ## 📄 Acknowledgments
 
-I would like to thank the following people and resources for their valuable guidance and support in my web development journey:
+I would like to thank the following people and resources for valuable guidance and support:
 
 - **SDPT Solutions (YouTube)**
 - **W3Schools**
-- **StackOverflow** - some devs insights/quick tutorials
-- **Felix Macaspac (TikTok Dev Content Creator, FrontEnd Dev)** — tips and best practices using HTML/CSS/JS.
-- **Bryl Lim (TikTok Dev Content Creator, FullStack Dev)** — tips and best practices.
-- **Rics (TikTok Dev Content Creator, Cloud Engineer)** — tips and best practices.
-- **PaulSong213 (GitHub)** — ph-locations dataset
-- **Lebron Piraman** — assistance with [book].png URL links finding in G00gle scripts/shop.js. [NOW IN API, Dec 2025]
-
-Their insights and educational content helped me gain a deeper understanding of web development concepts and best practices.
+- **StackOverflow**
+- **Felix Macaspac (TikTok Dev Content Creator, FrontEnd Dev)**
+- **Bryl Lim (TikTok Dev Content Creator, FullStack Dev)**
+- **Rics (TikTok Dev Content Creator, Cloud Engineer)**
+- **PaulSong213 (GitHub)** — PH locations dataset
+- **Leb P.** — assistance with book image URL sourcing (WST)
 
 ---
 
@@ -317,7 +407,6 @@ Their insights and educational content helped me gain a deeper understanding of 
 - **Date Ended:** --- 2026
 - **Project Status:** ---
 
-
 ---
 
 - **Support/Co-Developer:** Paul Kenneth Agripa
@@ -325,4 +414,3 @@ Their insights and educational content helped me gain a deeper understanding of 
 - **Date Started:** December 2025
 - **Date Ended:** --- 2026
 - **Project Status:** ---
-
